@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Dossiês{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-folder me-2"></i>
+                Gestão de Dossiês
+            </h1>
+            <a href="{{ url_for('dossie.novo') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Novo Dossiê
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros e Busca -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="search" class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Número, nome do aluno...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="situacao" class="form-label">Situação</label>
+                        <select class="form-select" id="situacao" name="situacao">
+                            <option value="">Todas</option>
+                            <option value="ativo" {{ 'selected' if situacao == 'ativo' else '' }}>Ativo</option>
+                            <option value="arquivado" {{ 'selected' if situacao == 'arquivado' else '' }}>Arquivado</option>
+                            <option value="transferido" {{ 'selected' if situacao == 'transferido' else '' }}>Transferido</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="escola" class="form-label">Escola</label>
+                        <select class="form-select" id="escola" name="escola">
+                            <option value="">Todas</option>
+                            {% for escola in escolas %}
+                                <option value="{{ escola.id }}" {{ 'selected' if escola_id == escola.id|string else '' }}>
+                                    {{ escola.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Dossiês -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if dossies.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Aluno</th>
+                                    <th>Escola</th>
+                                    <th>Ano</th>
+                                    <th>Status</th>
+                                    <th>Local/Pasta</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dossie in dossies.items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ dossie.n_dossie }}</strong>
+                                    </td>
+                                    <td>
+                                        <strong>{{ dossie.nome }}</strong>
+                                        {% if dossie.cpf %}
+                                            <br><small class="text-muted">CPF: {{ dossie.cpf }}</small>
+                                        {% endif %}
+                                        {% if dossie.n_mae %}
+                                            <br><small class="text-muted">Mãe: {{ dossie.n_mae }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dossie.escola %}
+                                            <a href="{{ url_for('escola.ver', id=dossie.escola.id) }}" class="text-decoration-none">
+                                                {{ dossie.escola.nome }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Não informado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dossie.ano %}
+                                            <span class="badge bg-info">{{ dossie.ano }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Não informado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dossie.status == 'ativo' %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% elif dossie.status == 'arquivado' %}
+                                            <span class="badge bg-secondary">Arquivado</span>
+                                        {% elif dossie.status == 'transferido' %}
+                                            <span class="badge bg-warning">Transferido</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ dossie.status.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if dossie.local %}
+                                            <small><strong>Local:</strong> {{ dossie.local }}</small>
+                                        {% endif %}
+                                        {% if dossie.pasta %}
+                                            <br><small><strong>Pasta:</strong> {{ dossie.pasta }}</small>
+                                        {% endif %}
+                                        {% if not dossie.local and not dossie.pasta %}
+                                            <span class="text-muted">Não informado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('dossie.ver', id=dossie.id_dossie) }}" class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('dossie.editar', id=dossie.id_dossie) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                                    onclick="confirmarExclusao({{ dossie.id_dossie }}, '{{ dossie.n_dossie }}', '{{ url_for('dossie.excluir', id=dossie.id_dossie) }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if dossies.pages > 1 %}
+                    <nav aria-label="Navegação de páginas">
+                        <ul class="pagination justify-content-center">
+                            {% if dossies.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('dossie.listar', page=dossies.prev_num, search=search, situacao=situacao, escola=escola_id) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in dossies.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != dossies.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('dossie.listar', page=page_num, search=search, situacao=situacao, escola=escola_id) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if dossies.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('dossie.listar', page=dossies.next_num, search=search, situacao=situacao, escola=escola_id) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum dossiê encontrado</h5>
+                        {% if search or situacao or escola_id %}
+                            <p class="text-muted">Tente ajustar os filtros de busca</p>
+                            <a href="{{ url_for('dossie.listar') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-times me-2"></i>
+                                Limpar filtros
+                            </a>
+                        {% else %}
+                            <p class="text-muted">Comece cadastrando o primeiro dossiê</p>
+                            <a href="{{ url_for('dossie.novo') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Cadastrar Dossiê
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ dossies.total }}</h4>
+                <p class="mb-0">Total de Dossiês</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ dossies.items | selectattr('status', 'equalto', 'ativo') | list | length }}</h4>
+                <p class="mb-0">Ativos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h4>{{ dossies.items | selectattr('status', 'equalto', 'arquivado') | list | length }}</h4>
+                <p class="mb-0">Arquivados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h4>{{ dossies.items | selectattr('status', 'equalto', 'transferido') | list | length }}</h4>
+                <p class="mb-0">Transferidos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o dossiê <strong id="dossieNumero"></strong>?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formExcluir" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmarExclusao(id, numero, url) {
+        document.getElementById('dossieNumero').textContent = numero;
+        document.getElementById('formExcluir').action = url;
+        new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+    }
+</script>
+{% endblock %}

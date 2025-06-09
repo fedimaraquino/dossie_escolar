@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários do Perfil {{ perfil.perfil }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('perfil.listar') }}">Perfis</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('perfil.ver', id=perfil.id_perfil) }}">{{ perfil.perfil }}</a></li>
+                        <li class="breadcrumb-item active">Usuários</li>
+                    </ol>
+                </nav>
+                <h1>
+                    <i class="fas fa-users me-2"></i>
+                    Usuários do Perfil: {{ perfil.perfil }}
+                </h1>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('usuario.novo') }}?perfil={{ perfil.id_perfil }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Novo Usuário
+                </a>
+                <a href="{{ url_for('perfil.ver', id=perfil.id_perfil) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Perfil -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-shield me-2"></i>
+                    Informações do Perfil
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Nome do Perfil</h6>
+                        <p><strong>{{ perfil.perfil }}</strong></p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Descrição</h6>
+                        <p>{{ perfil.descricao }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Total de Usuários</h6>
+                        <p><span class="badge bg-info fs-6">{{ usuarios | length }}</span></p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Tipo</h6>
+                        {% set perfis_sistema = ['Administrador Geral', 'Administrador da Escola', 'Operador', 'Consulta'] %}
+                        {% if perfil.perfil in perfis_sistema %}
+                            <p><span class="badge bg-warning">Sistema</span></p>
+                        {% else %}
+                            <p><span class="badge bg-secondary">Personalizado</span></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Usuários -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Usuários
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if usuarios %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Escola</th>
+                                    <th>Situação</th>
+                                    <th>Último Acesso</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for usuario in usuarios %}
+                                <tr>
+                                    <td>
+                                        <code>{{ usuario.id }}</code>
+                                    </td>
+                                    <td>
+                                        <strong>{{ usuario.nome }}</strong>
+                                        {% if usuario.cpf %}
+                                            <br><small class="text-muted">CPF: {{ usuario.cpf }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ usuario.email }}
+                                        {% if usuario.telefone %}
+                                            <br><small class="text-muted">{{ usuario.telefone }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.escola %}
+                                            <a href="{{ url_for('escola.ver', id=usuario.escola.id) }}" class="text-decoration-none">
+                                                {{ usuario.escola.nome }}
+                                            </a>
+                                            <br><small class="text-muted">{{ usuario.escola.uf }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Não informado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.situacao == 'ativo' %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% elif usuario.situacao == 'inativo' %}
+                                            <span class="badge bg-secondary">Inativo</span>
+                                        {% elif usuario.situacao == 'bloqueado' %}
+                                            <span class="badge bg-danger">Bloqueado</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ usuario.situacao.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.ultimo_acesso %}
+                                            {{ usuario.ultimo_acesso.strftime('%d/%m/%Y') }}
+                                            <br><small class="text-muted">{{ usuario.ultimo_acesso.strftime('%H:%M') }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Nunca acessou</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('usuario.ver', id=usuario.id) }}" class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('usuario.editar', id=usuario.id) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum usuário encontrado</h5>
+                        <p class="text-muted">Este perfil ainda não possui usuários vinculados</p>
+                        <a href="{{ url_for('usuario.novo') }}?perfil={{ perfil.id_perfil }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Cadastrar Primeiro Usuário
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+{% if usuarios %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ usuarios | selectattr('situacao', 'equalto', 'ativo') | list | length }}</h4>
+                <p class="mb-0">Usuários Ativos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h4>{{ usuarios | selectattr('situacao', 'equalto', 'inativo') | list | length }}</h4>
+                <p class="mb-0">Usuários Inativos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h4>{{ usuarios | selectattr('situacao', 'equalto', 'bloqueado') | list | length }}</h4>
+                <p class="mb-0">Usuários Bloqueados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>{{ usuarios | selectattr('ultimo_acesso') | list | length }}</h4>
+                <p class="mb-0">Já Acessaram</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Ações em Lote -->
+{% if usuarios %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Ações em Lote
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-info" onclick="alert('Funcionalidade em desenvolvimento')">
+                                <i class="fas fa-envelope me-2"></i>
+                                Enviar Email para Todos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-warning" onclick="alert('Funcionalidade em desenvolvimento')">
+                                <i class="fas fa-key me-2"></i>
+                                Resetar Senhas
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-success" onclick="alert('Funcionalidade em desenvolvimento')">
+                                <i class="fas fa-download me-2"></i>
+                                Exportar Lista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

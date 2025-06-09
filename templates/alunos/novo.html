@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Aluno - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-plus me-2"></i>
+                Cadastrar Novo Aluno
+            </h1>
+            <a href="{{ url_for('listar_alunos') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" id="formAluno">
+                    <!-- Dados Pessoais -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-user me-2"></i>
+                                Dados Pessoais
+                            </h5>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="nome" class="form-label">Nome Completo *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="matricula" class="form-label">Matrícula *</label>
+                            <input type="text" class="form-control" id="matricula" name="matricula" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="data_nascimento" class="form-label">Data de Nascimento *</label>
+                            <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cpf" class="form-label">CPF</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="rg" class="form-label">RG</label>
+                            <input type="text" class="form-control" id="rg" name="rg">
+                        </div>
+                    </div>
+                    
+                    <!-- Contato -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-address-book me-2"></i>
+                                Informações de Contato
+                            </h5>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="endereco" class="form-label">Endereço</label>
+                            <textarea class="form-control" id="endereco" name="endereco" rows="2"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                    </div>
+                    
+                    <!-- Responsável -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-users me-2"></i>
+                                Dados do Responsável
+                            </h5>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="nome_responsavel" class="form-label">Nome do Responsável</label>
+                            <input type="text" class="form-control" id="nome_responsavel" name="nome_responsavel">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="telefone_responsavel" class="form-label">Telefone do Responsável</label>
+                            <input type="text" class="form-control" id="telefone_responsavel" name="telefone_responsavel" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+                    
+                    <!-- Dados Acadêmicos -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary border-bottom pb-2">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Dados Acadêmicos
+                            </h5>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="turma" class="form-label">Turma</label>
+                            <input type="text" class="form-control" id="turma" name="turma" placeholder="Ex: 3º A, 1º Ano">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ano_letivo" class="form-label">Ano Letivo</label>
+                            <input type="text" class="form-control" id="ano_letivo" name="ano_letivo" placeholder="Ex: 2024">
+                        </div>
+                    </div>
+                    
+                    <!-- Botões -->
+                    <div class="row">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('listar_alunos') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    Salvar Aluno
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Máscara para CPF
+    $('#cpf').mask('000.000.000-00');
+    
+    // Máscara para telefones
+    $('#telefone, #telefone_responsavel').mask('(00) 00000-0000');
+    
+    // Validação do formulário
+    $('#formAluno').on('submit', function(e) {
+        var nome = $('#nome').val().trim();
+        var matricula = $('#matricula').val().trim();
+        var dataNascimento = $('#data_nascimento').val();
+        
+        if (!nome || !matricula || !dataNascimento) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        // Validar se a matrícula não está vazia
+        if (matricula.length < 3) {
+            e.preventDefault();
+            alert('A matrícula deve ter pelo menos 3 caracteres');
+            $('#matricula').focus();
+            return false;
+        }
+    });
+    
+    // Auto-completar ano letivo com o ano atual
+    if (!$('#ano_letivo').val()) {
+        $('#ano_letivo').val(new Date().getFullYear());
+    }
+});
+</script>
+
+<!-- Incluir jQuery Mask Plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+{% endblock %}

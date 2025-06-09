@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitantes - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Solicitantes</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-friends me-2"></i>
+                Gestão de Solicitantes
+            </h1>
+            <a href="{{ url_for('solicitantes.novo') }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Novo Solicitante
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Nome, CPF ou email" value="{{ search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Parentesco</label>
+                        <select name="parentesco" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="pai" {% if parentesco == 'pai' %}selected{% endif %}>Pai</option>
+                            <option value="mae" {% if parentesco == 'mae' %}selected{% endif %}>Mãe</option>
+                            <option value="responsavel" {% if parentesco == 'responsavel' %}selected{% endif %}>Responsável</option>
+                            <option value="irmao" {% if parentesco == 'irmao' %}selected{% endif %}>Irmão/Irmã</option>
+                            <option value="avo" {% if parentesco == 'avo' %}selected{% endif %}>Avô/Avó</option>
+                            <option value="tio" {% if parentesco == 'tio' %}selected{% endif %}>Tio/Tia</option>
+                            <option value="outro" {% if parentesco == 'outro' %}selected{% endif %}>Outro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="ativo" {% if status == 'ativo' %}selected{% endif %}>Ativo</option>
+                            <option value="inativo" {% if status == 'inativo' %}selected{% endif %}>Inativo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Solicitantes -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Lista de Solicitantes
+                    {% if solicitantes.total %}
+                        <span class="badge bg-primary ms-2">{{ solicitantes.total }}</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if solicitantes.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Email</th>
+                                <th>Parentesco</th>
+                                <th>Cidade</th>
+                                <th>Status</th>
+                                <th>Data Cadastro</th>
+                                <th width="120">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for solicitante in solicitantes.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ solicitante.nome }}</strong>
+                                    {% if solicitante.celular %}
+                                        <br><small class="text-muted">
+                                            <i class="fas fa-phone fa-sm me-1"></i>{{ solicitante.celular }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if solicitante.cpf %}
+                                        <code>{{ solicitante.cpf }}</code>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if solicitante.email %}
+                                        <a href="mailto:{{ solicitante.email }}">{{ solicitante.email }}</a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if solicitante.parentesco %}
+                                        <span class="badge bg-info">{{ solicitante.parentesco|title }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if solicitante.cidade %}
+                                        {{ solicitante.cidade }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if solicitante.status == 'ativo' %}
+                                        <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ solicitante.data_cadastro.strftime('%d/%m/%Y') if solicitante.data_cadastro else '-' }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('solicitantes.ver', id=solicitante.id_solicitante) }}" 
+                                           class="btn btn-outline-primary" title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('solicitantes.editar', id=solicitante.id_solicitante) }}" 
+                                           class="btn btn-outline-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum solicitante encontrado</h5>
+                    <p class="text-muted">
+                        {% if search or parentesco or status %}
+                            Tente ajustar os filtros ou 
+                        {% endif %}
+                        <a href="{{ url_for('solicitantes.novo') }}">cadastre o primeiro solicitante</a>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Paginação -->
+{% if solicitantes.pages > 1 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <nav aria-label="Navegação de páginas">
+            <ul class="pagination justify-content-center">
+                {% if solicitantes.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('solicitantes.listar', page=solicitantes.prev_num, search=search, parentesco=parentesco, status=status) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in solicitantes.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != solicitantes.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('solicitantes.listar', page=page_num, search=search, parentesco=parentesco, status=status) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if solicitantes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('solicitantes.listar', page=solicitantes.next_num, search=search, parentesco=parentesco, status=status) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Limpar filtros
+    $('.btn-clear-filters').on('click', function() {
+        window.location.href = "{{ url_for('solicitantes.listar') }}";
+    });
+});
+</script>
+{% endblock %}

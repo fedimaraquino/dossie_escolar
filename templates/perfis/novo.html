@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Perfil{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-shield me-2"></i>
+                Novo Perfil
+            </h1>
+            <a href="{{ url_for('perfil.listar') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Cadastrar Novo Perfil
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-12">
+                            <label for="perfil" class="form-label">Nome do Perfil *</label>
+                            <input type="text" class="form-control" id="perfil" name="perfil" required
+                                   placeholder="Ex: Coordenador Pedagógico, Secretário, etc.">
+                            <div class="form-text">
+                                O nome deve ser único e descritivo das funções do perfil.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="3" maxlength="500"
+                                      placeholder="Descreva as responsabilidades e funções deste perfil..."></textarea>
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Descrição opcional das responsabilidades e funções do perfil.</span>
+                                <span id="contador-descricao" class="text-muted">0/500</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Informações importantes:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>O nome do perfil deve ser único no sistema</li>
+                                    <li>Perfis personalizados podem ser editados e excluídos</li>
+                                    <li>Perfis do sistema (Administrador Geral, etc.) não podem ser alterados</li>
+                                    <li>Após criar, você poderá vincular usuários a este perfil</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('perfil.listar') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar Perfil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Dicas
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Criação de Perfis</h6>
+                <p class="small">Os perfis são utilizados para:</p>
+                <ul class="small">
+                    <li>Controlar acesso às funcionalidades</li>
+                    <li>Organizar usuários por função</li>
+                    <li>Definir permissões específicas</li>
+                    <li>Facilitar a gestão de usuários</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Exemplos de Perfis</h6>
+                <ul class="small">
+                    <li><strong>Coordenador Pedagógico:</strong> Acesso a relatórios educacionais</li>
+                    <li><strong>Secretário:</strong> Gestão de documentos e dossiês</li>
+                    <li><strong>Auxiliar Administrativo:</strong> Operações básicas</li>
+                    <li><strong>Diretor Adjunto:</strong> Acesso administrativo limitado</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Perfis do Sistema
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small">Perfis padrão já existentes:</p>
+                <ul class="small">
+                    <li><span class="badge bg-danger">Administrador Geral</span> - Acesso total</li>
+                    <li><span class="badge bg-warning">Administrador da Escola</span> - Admin da escola</li>
+                    <li><span class="badge bg-info">Operador</span> - Operações básicas</li>
+                    <li><span class="badge bg-secondary">Consulta</span> - Apenas consulta</li>
+                </ul>
+                <small class="text-muted">
+                    Estes perfis não podem ser alterados ou excluídos.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Converter nome para formato adequado
+    document.getElementById('perfil').addEventListener('blur', function() {
+        let perfil = this.value.trim();
+        if (perfil) {
+            // Capitalizar primeira letra de cada palavra
+            perfil = perfil.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+            this.value = perfil;
+        }
+    });
+
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const perfil = document.getElementById('perfil').value.trim();
+        const descricao = document.getElementById('descricao').value.trim();
+
+        if (!perfil) {
+            e.preventDefault();
+            alert('Por favor, preencha o nome do perfil');
+            return false;
+        }
+
+        if (perfil.length < 3) {
+            e.preventDefault();
+            alert('O nome do perfil deve ter pelo menos 3 caracteres');
+            return false;
+        }
+
+        // Validar descrição se preenchida
+        if (descricao && descricao.length > 500) {
+            e.preventDefault();
+            alert('A descrição deve ter no máximo 500 caracteres');
+            return false;
+        }
+        
+        // Verificar se não é um nome de perfil do sistema
+        const perfisReservados = [
+            'administrador geral',
+            'administrador da escola', 
+            'operador',
+            'consulta'
+        ];
+        
+        if (perfisReservados.includes(perfil.toLowerCase())) {
+            e.preventDefault();
+            alert('Este nome é reservado para perfis do sistema. Escolha outro nome.');
+            return false;
+        }
+        
+        // Confirmar cadastro
+        if (!confirm(`Confirma o cadastro do perfil "${perfil}"?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Sugestões de nomes
+    const sugestoes = [
+        'Coordenador Pedagógico',
+        'Secretário Escolar',
+        'Auxiliar Administrativo',
+        'Diretor Adjunto',
+        'Supervisor Educacional',
+        'Orientador Educacional',
+        'Bibliotecário',
+        'Inspetor Escolar'
+    ];
+
+    // Adicionar datalist para sugestões
+    const input = document.getElementById('perfil');
+    const datalist = document.createElement('datalist');
+    datalist.id = 'sugestoes-perfil';
+    
+    sugestoes.forEach(sugestao => {
+        const option = document.createElement('option');
+        option.value = sugestao;
+        datalist.appendChild(option);
+    });
+    
+    input.setAttribute('list', 'sugestoes-perfil');
+    input.parentNode.appendChild(datalist);
+
+    // Contador de caracteres para descrição
+    const descricaoTextarea = document.getElementById('descricao');
+    const contadorDescricao = document.getElementById('contador-descricao');
+
+    function atualizarContador() {
+        const length = descricaoTextarea.value.length;
+        contadorDescricao.textContent = `${length}/500`;
+
+        if (length > 450) {
+            contadorDescricao.classList.add('text-warning');
+        } else if (length > 480) {
+            contadorDescricao.classList.remove('text-warning');
+            contadorDescricao.classList.add('text-danger');
+        } else {
+            contadorDescricao.classList.remove('text-warning', 'text-danger');
+        }
+    }
+
+    descricaoTextarea.addEventListener('input', atualizarContador);
+    descricaoTextarea.addEventListener('keyup', atualizarContador);
+</script>
+{% endblock %}

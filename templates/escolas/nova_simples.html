@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Escola - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="/escolas/">Escolas</a></li>
+<li class="breadcrumb-item active">Nova Escola</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-school me-2"></i>
+                Cadastrar Nova Escola
+            </h1>
+            <a href="/escolas/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Dados da Escola
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formEscola">
+                    <!-- Dados Básicos -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="nome" class="form-label">Nome da Escola *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required
+                                   placeholder="Ex: Escola Municipal João Silva">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="uf" class="form-label">UF *</label>
+                            <select class="form-select" id="uf" name="uf" required>
+                                <option value="">Selecione...</option>
+                                <option value="AC">Acre</option>
+                                <option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option>
+                                <option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option>
+                                <option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option>
+                                <option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option>
+                                <option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option>
+                                <option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option>
+                                <option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option>
+                                <option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option>
+                                <option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option>
+                                <option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option>
+                                <option value="SC">Santa Catarina</option>
+                                <option value="SP" selected>São Paulo</option>
+                                <option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="endereco" class="form-label">Endereço Completo</label>
+                            <textarea class="form-control" id="endereco" name="endereco" rows="2"
+                                      placeholder="Rua, número, bairro, cidade - CEP"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="cnpj" class="form-label">CNPJ</label>
+                            <input type="text" class="form-control" id="cnpj" name="cnpj"
+                                   placeholder="00.000.000/0000-00">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="inep" class="form-label">Código INEP</label>
+                            <input type="text" class="form-control" id="inep" name="inep"
+                                   placeholder="12345678">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email da Escola</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   placeholder="escola@municipio.gov.br">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone"
+                                   placeholder="(11) 1234-5678">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="diretor" class="form-label">Nome do Diretor</label>
+                            <input type="text" class="form-control" id="diretor" name="diretor"
+                                   placeholder="Nome completo do diretor">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="vice_diretor" class="form-label">Nome do Vice-Diretor</label>
+                            <input type="text" class="form-control" id="vice_diretor" name="vice_diretor"
+                                   placeholder="Nome completo do vice-diretor">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3"
+                                      placeholder="Informações adicionais sobre a escola..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Botões -->
+                    <div class="row">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="/escolas/" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check me-2"></i>
+                                    Cadastrar Escola
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card de Ajuda -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Importantes
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Campos obrigatórios:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-asterisk text-danger me-2"></i>Nome da Escola</li>
+                            <li><i class="fas fa-asterisk text-danger me-2"></i>UF (Estado)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Campos recomendados:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-star text-warning me-2"></i>CNPJ</li>
+                            <li><i class="fas fa-star text-warning me-2"></i>Código INEP</li>
+                            <li><i class="fas fa-star text-warning me-2"></i>Email</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Validação do formulário
+    $('#formEscola').on('submit', function(e) {
+        var nome = $('#nome').val().trim();
+        var uf = $('#uf').val();
+        
+        if (!nome || !uf) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        // Confirmar cadastro
+        if (!confirm('Confirma o cadastro da escola "' + nome + '"?')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

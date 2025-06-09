@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Escola - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="/escolas/">Escolas</a></li>
+<li class="breadcrumb-item active">Editar {{ escola.nome }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-edit me-2"></i>
+                Editar Escola
+            </h1>
+            <a href="/escolas/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-school me-2"></i>
+                    {{ escola.nome }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formEscola">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nome" class="form-label">Nome da Escola *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required
+                                   value="{{ escola.nome }}" placeholder="Ex: Escola Municipal João Silva">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="uf" class="form-label">UF *</label>
+                            <select class="form-select" id="uf" name="uf" required>
+                                <option value="">Selecione...</option>
+                                {% for uf_option in ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'] %}
+                                <option value="{{ uf_option }}" {% if escola.uf == uf_option %}selected{% endif %}>{{ uf_option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="situacao" class="form-label">Situação</label>
+                            <select class="form-select" id="situacao" name="situacao">
+                                <option value="ativa" {% if escola.situacao == 'ativa' %}selected{% endif %}>Ativa</option>
+                                <option value="inativa" {% if escola.situacao == 'inativa' %}selected{% endif %}>Inativa</option>
+                                <option value="suspensa" {% if escola.situacao == 'suspensa' %}selected{% endif %}>Suspensa</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="endereco" class="form-label">Endereço Completo</label>
+                            <textarea class="form-control" id="endereco" name="endereco" rows="2"
+                                      placeholder="Rua, número, bairro, cidade - CEP">{{ escola.endereco or '' }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="id_cidade" class="form-label">Cidade</label>
+                            <select class="form-select" id="id_cidade" name="id_cidade">
+                                <option value="">Selecione a cidade...</option>
+                                {% if escola.cidade %}
+                                <option value="{{ escola.id_cidade }}" selected>{{ escola.cidade.nome }}/{{ escola.cidade.uf }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="cnpj" class="form-label">CNPJ</label>
+                            <input type="text" class="form-control" id="cnpj" name="cnpj"
+                                   value="{{ escola.cnpj or '' }}" placeholder="00.000.000/0000-00">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="inep" class="form-label">Código INEP</label>
+                            <input type="text" class="form-control" id="inep" name="inep"
+                                   value="{{ escola.inep or '' }}" placeholder="12345678">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email da Escola</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   value="{{ escola.email or '' }}" placeholder="escola@municipio.gov.br">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone"
+                                   value="{{ escola.telefone or '' }}" placeholder="(11) 1234-5678">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="diretor_id" class="form-label">Diretor Responsável</label>
+                            <select class="form-select" id="diretor_id" name="diretor_id">
+                                <option value="">Selecione...</option>
+                                {% if escola.diretor_obj %}
+                                <option value="{{ escola.diretor_id }}" selected>{{ escola.diretor_obj.nome }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="diretor" class="form-label">Nome do Diretor (Texto)</label>
+                            <input type="text" class="form-control" id="diretor" name="diretor"
+                                   value="{{ escola.diretor or '' }}" placeholder="Nome completo do diretor">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="vice_diretor" class="form-label">Nome do Vice-Diretor</label>
+                            <input type="text" class="form-control" id="vice_diretor" name="vice_diretor"
+                                   value="{{ escola.vice_diretor or '' }}" placeholder="Nome completo do vice-diretor">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3"
+                                      placeholder="Informações adicionais sobre a escola...">{{ escola.observacoes or '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="/escolas/" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save me-2"></i>
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#formEscola').on('submit', function(e) {
+        var nome = $('#nome').val().trim();
+        var uf = $('#uf').val();
+        
+        if (!nome || !uf) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        if (!confirm('Confirma as alterações na escola "' + nome + '"?')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

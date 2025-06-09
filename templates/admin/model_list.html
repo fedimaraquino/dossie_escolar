@@ -1,0 +1,187 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ model.title() }}{% endblock %}
+{% block header %}Gerenciar {{ model.title() }}{% endblock %}
+
+{% block content %}
+<!-- Busca e Filtros -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="GET" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" 
+                   placeholder="Buscar..." value="{{ search }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('admin.models') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Lista de Registros -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>{{ model.title() }}
+            <span class="badge bg-secondary ms-2">{{ pagination.total }}</span>
+        </h5>
+    </div>
+    
+    <div class="card-body p-0">
+        {% if objects %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        {% if model == 'usuario' %}
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Perfil</th>
+                            <th>Situação</th>
+                        {% elif model == 'escola' %}
+                            <th>Nome</th>
+                            <th>CNPJ</th>
+                            <th>Diretor</th>
+                            <th>Situação</th>
+                        {% elif model == 'dossie' %}
+                            <th>Número</th>
+                            <th>Nome</th>
+                            <th>Ano</th>
+                            <th>Status</th>
+                        {% elif model == 'perfil' %}
+                            <th>Perfil</th>
+                            <th>Descrição</th>
+                        {% elif model == 'cidade' %}
+                            <th>Nome</th>
+                            <th>UF</th>
+                            <th>País</th>
+                        {% else %}
+                            <th>Nome/Descrição</th>
+                            <th>Detalhes</th>
+                        {% endif %}
+                        <th width="100">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in objects %}
+                    <tr>
+                        <td>{{ obj.id if obj.id else obj.id_perfil if hasattr(obj, 'id_perfil') else 'N/A' }}</td>
+                        
+                        {% if model == 'usuario' %}
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.email }}</td>
+                            <td>
+                                {% if obj.perfil_obj %}
+                                    <span class="badge bg-info">{{ obj.perfil_obj.perfil }}</span>
+                                {% else %}
+                                    <span class="text-muted">Sem perfil</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if obj.situacao == 'ativo' else 'secondary' }}">
+                                    {{ obj.situacao }}
+                                </span>
+                            </td>
+                        {% elif model == 'escola' %}
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.cnpj }}</td>
+                            <td>{{ obj.diretor }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if obj.situacao == 'ativa' else 'secondary' }}">
+                                    {{ obj.situacao }}
+                                </span>
+                            </td>
+                        {% elif model == 'dossie' %}
+                            <td><strong>{{ obj.n_dossie }}</strong></td>
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.ano }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if obj.status == 'ativo' else 'secondary' }}">
+                                    {{ obj.status }}
+                                </span>
+                            </td>
+                        {% elif model == 'perfil' %}
+                            <td><strong>{{ obj.perfil }}</strong></td>
+                            <td>{{ obj.descricao or 'Sem descrição' }}</td>
+                        {% elif model == 'cidade' %}
+                            <td>{{ obj.nome }}</td>
+                            <td>{{ obj.uf }}</td>
+                            <td>{{ obj.pais }}</td>
+                        {% else %}
+                            <td>{{ obj.nome if hasattr(obj, 'nome') else obj.descricao if hasattr(obj, 'descricao') else 'N/A' }}</td>
+                            <td>{{ obj.tipo if hasattr(obj, 'tipo') else obj.modulo if hasattr(obj, 'modulo') else 'N/A' }}</td>
+                        {% endif %}
+                        
+                        <td>
+                            <a href="{{ url_for('admin.model_detail', model=model, object_id=obj.id if obj.id else obj.id_perfil if hasattr(obj, 'id_perfil') else 1) }}" 
+                               class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum registro encontrado</h5>
+            {% if search %}
+            <p class="text-muted">Tente uma busca diferente</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Paginação -->
+    {% if pagination.pages > 1 %}
+    <div class="card-footer">
+        <nav aria-label="Paginação">
+            <ul class="pagination justify-content-center mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.model_list', model=model, page=pagination.prev_num, search=search) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pagination.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.model_list', model=model, page=page_num, search=search) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.model_list', model=model, page=pagination.next_num, search=search) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

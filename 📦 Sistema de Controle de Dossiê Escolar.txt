@@ -1,0 +1,23 @@
+📦 Sistema de Controle de Dossiê Escolar
+├── 📁 models/                    # Modelos separados por entidade
+│   ├── __init__.py              # Configuração do SQLAlchemy
+│   ├── perfil.py               # Modelo de perfis de usuário
+│   ├── cidade.py               # Modelo de cidades
+│   ├── escola.py               # Modelo de escolas
+│   ├── usuario.py              # Modelo de usuários
+│   ├── dossie.py               # Modelo de dossiês
+│   └── movimentacao.py         # Modelo de movimentações
+├── 📁 controllers/              # Controladores separados por entidade
+│   ├── __init__.py             # Registro dos blueprints
+│   ├── auth_controller.py      # Autenticação e autorização
+│   ├── escola_controller.py    # CRUD de escolas
+│   ├── usuario_controller.py   # CRUD de usuários
+│   ├── dossie_controller.py    # CRUD de dossiês
+│   └── movimentacao_controller.py # CRUD de movimentações
+├── 📁 templates/               # Templates organizados por entidade
+│   ├── 📁 auth/               # Templates de autenticação
+│   ├── 📁 escolas/            # Templates de escolas
+│   ├── 📁 usuarios/           # Templates de usuários
+│   ├── 📁 dossies/            # Templates de dossiês
+│   └── 📁 movimentacoes/      # Templates de movimentações
+└── app.py                     # Aplicação principal com factory pattern

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório de Movimentações{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-chart-bar me-2"></i>Relatório de Movimentações</h2>
+            <p class="text-muted">Estatísticas e informações das movimentações de dossiês</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Imprimir
+            </button>
+        </div>
+    </div>
+
+    <!-- Estatísticas Gerais -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-exchange-alt fa-3x text-primary mb-3"></i>
+                    <h3>{{ stats.total_movimentacoes }}</h3>
+                    <p class="text-muted mb-0">Total de Movimentações</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                    <h3>{{ stats.pendentes }}</h3>
+                    <p class="text-muted mb-0">Pendentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h3>{{ stats.concluidas }}</h3>
+                    <p class="text-muted mb-0">Concluídas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                    <h3>{{ stats.em_atraso }}</h3>
+                    <p class="text-muted mb-0">Em Atraso</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo Detalhado -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Resumo das Movimentações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.total_movimentacoes > 0 %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Situação Atual</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-circle text-primary me-2"></i>
+                                    <strong>{{ stats.total_movimentacoes }}</strong> movimentações registradas no total
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-circle text-warning me-2"></i>
+                                    <strong>{{ stats.pendentes }}</strong> movimentações aguardando conclusão
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-circle text-success me-2"></i>
+                                    <strong>{{ stats.concluidas }}</strong> movimentações já concluídas
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-circle text-danger me-2"></i>
+                                    <strong>{{ stats.em_atraso }}</strong> movimentações em atraso
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Indicadores</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Taxa de Conclusão</span>
+                                    <span><strong>{{ "%.1f"|format((stats.concluidas / stats.total_movimentacoes * 100) if stats.total_movimentacoes > 0 else 0) }}%</strong></span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {{ (stats.concluidas / stats.total_movimentacoes * 100) if stats.total_movimentacoes > 0 else 0 }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Taxa de Atraso</span>
+                                    <span><strong>{{ "%.1f"|format((stats.em_atraso / stats.total_movimentacoes * 100) if stats.total_movimentacoes > 0 else 0) }}%</strong></span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" 
+                                         style="width: {{ (stats.em_atraso / stats.total_movimentacoes * 100) if stats.total_movimentacoes > 0 else 0 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-exchange-alt fa-3x mb-3"></i>
+                        <h5>Nenhuma movimentação registrada</h5>
+                        <p>Comece registrando a primeira movimentação de dossiê</p>
+                        <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nova Movimentação
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .no-print { 
+        display: none !important; 
+    }
+    .card { 
+        border: none !important; 
+        box-shadow: none !important; 
+    }
+    .card-body { 
+        padding: 0 !important; 
+    }
+    body { 
+        font-size: 12px; 
+    }
+    h2 { 
+        font-size: 18px; 
+    }
+    h5 { 
+        font-size: 14px; 
+    }
+}
+</style>
+{% endblock %}

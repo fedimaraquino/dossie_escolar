@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ solicitante.nome }} - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('solicitantes.listar') }}">Solicitantes</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('solicitantes.ver', id=solicitante.id_solicitante) }}">{{ solicitante.nome }}</a></li>
+<li class="breadcrumb-item active">Editar</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-edit me-2"></i>
+                Editar Solicitante
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('solicitantes.ver', id=solicitante.id_solicitante) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a href="{{ url_for('solicitantes.listar') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-2"></i>Lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>
+                    Dados do Solicitante
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formSolicitante" class="needs-validation" novalidate>
+                    <div class="row">
+                        <!-- Dados Pessoais -->
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-user me-2"></i>Dados Pessoais
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                            <input type="text" name="nome" class="form-control" required 
+                                   value="{{ solicitante.nome }}" placeholder="Nome completo do solicitante">
+                            <div class="invalid-feedback">
+                                Por favor, informe o nome completo.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">CPF <span class="text-danger">*</span></label>
+                            <input type="text" name="cpf" class="form-control cpf-mask" required 
+                                   value="{{ solicitante.cpf }}" placeholder="000.000.000-00" data-mask="000.000.000-00">
+                            <div class="invalid-feedback">
+                                Por favor, informe um CPF válido.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Data de Nascimento</label>
+                            <input type="date" name="data_nascimento" class="form-control" 
+                                   value="{{ solicitante.data_nascimento.strftime('%Y-%m-%d') if solicitante.data_nascimento else '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" 
+                                   value="{{ solicitante.email or '' }}" placeholder="email@exemplo.com">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Celular</label>
+                            <input type="text" name="celular" class="form-control phone-mask" 
+                                   value="{{ solicitante.celular or '' }}" placeholder="(11) 99999-9999" data-mask="(00) 00000-0000">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" name="cidade" class="form-control" 
+                                   value="{{ solicitante.cidade or '' }}" placeholder="Nome da cidade">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Endereço</label>
+                            <textarea name="endereco" class="form-control" rows="2" 
+                                      placeholder="Endereço completo">{{ solicitante.endereco or '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <!-- Dados da Solicitação -->
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-file-alt me-2"></i>Dados da Solicitação
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Parentesco</label>
+                            <select name="parentesco" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option value="pai" {% if solicitante.parentesco == 'pai' %}selected{% endif %}>Pai</option>
+                                <option value="mae" {% if solicitante.parentesco == 'mae' %}selected{% endif %}>Mãe</option>
+                                <option value="responsavel" {% if solicitante.parentesco == 'responsavel' %}selected{% endif %}>Responsável</option>
+                                <option value="irmao" {% if solicitante.parentesco == 'irmao' %}selected{% endif %}>Irmão/Irmã</option>
+                                <option value="avo" {% if solicitante.parentesco == 'avo' %}selected{% endif %}>Avô/Avó</option>
+                                <option value="tio" {% if solicitante.parentesco == 'tio' %}selected{% endif %}>Tio/Tia</option>
+                                <option value="outro" {% if solicitante.parentesco == 'outro' %}selected{% endif %}>Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de Solicitação</label>
+                            <select name="tipo_solicitacao" class="form-select">
+                                <option value="consulta" {% if solicitante.tipo_solicitacao == 'consulta' %}selected{% endif %}>Consulta</option>
+                                <option value="copia_documento" {% if solicitante.tipo_solicitacao == 'copia_documento' %}selected{% endif %}>Cópia de Documento</option>
+                                <option value="historico_escolar" {% if solicitante.tipo_solicitacao == 'historico_escolar' %}selected{% endif %}>Histórico Escolar</option>
+                                <option value="declaracao" {% if solicitante.tipo_solicitacao == 'declaracao' %}selected{% endif %}>Declaração</option>
+                                <option value="transferencia" {% if solicitante.tipo_solicitacao == 'transferencia' %}selected{% endif %}>Transferência</option>
+                                <option value="outro" {% if solicitante.tipo_solicitacao == 'outro' %}selected{% endif %}>Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="ativo" {% if solicitante.status == 'ativo' %}selected{% endif %}>Ativo</option>
+                                <option value="inativo" {% if solicitante.status == 'inativo' %}selected{% endif %}>Inativo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Data de Cadastro</label>
+                            <input type="text" class="form-control" readonly 
+                                   value="{{ solicitante.data_cadastro.strftime('%d/%m/%Y às %H:%M') if solicitante.data_cadastro else 'Não informado' }}">
+                            <small class="form-text text-muted">Campo somente leitura</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <!-- Botão de exclusão (apenas para admins) -->
+                                    {% if current_user and current_user.perfil_obj.nome in ['Administrador Geral', 'Administrador da Escola'] %}
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir">
+                                        <i class="fas fa-trash me-2"></i>Excluir Solicitante
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('solicitantes.ver', id=solicitante.id_solicitante) }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+{% if current_user and current_user.perfil_obj.nome in ['Administrador Geral', 'Administrador da Escola'] %}
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o solicitante <strong>{{ solicitante.nome }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atenção:</strong> Esta ação não pode ser desfeita. 
+                    {% if solicitante.movimentacoes %}
+                    Este solicitante possui {{ solicitante.movimentacoes|length }} movimentação(ões) vinculada(s) e não poderá ser excluído.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                {% if not solicitante.movimentacoes %}
+                <form method="POST" action="{{ url_for('solicitantes.excluir', id=solicitante.id_solicitante) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Confirmar Exclusão
+                    </button>
+                </form>
+                {% else %}
+                <button type="button" class="btn btn-danger" disabled>
+                    <i class="fas fa-ban me-2"></i>Não é possível excluir
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Aplicar máscaras
+    $('[data-mask]').each(function() {
+        $(this).mask($(this).data('mask'));
+    });
+    
+    // Validação de CPF em tempo real
+    $('input[name="cpf"]').on('blur', function() {
+        var cpf = $(this).val().replace(/[^\d]/g, '');
+        if (cpf && !validarCPF(cpf)) {
+            $(this).addClass('is-invalid');
+            if (!$(this).next('.invalid-feedback').length) {
+                $(this).after('<div class="invalid-feedback">CPF inválido</div>');
+            }
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+    
+    // Validação do formulário
+    $('#formSolicitante').on('submit', function(e) {
+        var nome = $('input[name="nome"]').val().trim();
+        var cpf = $('input[name="cpf"]').val().trim();
+        
+        if (!nome || !cpf) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        // Validar CPF
+        var cpfLimpo = cpf.replace(/[^\d]/g, '');
+        if (!validarCPF(cpfLimpo)) {
+            e.preventDefault();
+            alert('Por favor, informe um CPF válido');
+            $('input[name="cpf"]').focus();
+            return false;
+        }
+    });
+});
+
+function validarCPF(cpf) {
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    
+    var soma = 0;
+    for (var i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    var resto = 11 - (soma % 11);
+    var dv1 = resto < 2 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(9)) !== dv1) return false;
+    
+    soma = 0;
+    for (var i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    var dv2 = resto < 2 ? 0 : resto;
+    
+    return parseInt(cpf.charAt(10)) === dv2;
+}
+</script>
+{% endblock %}

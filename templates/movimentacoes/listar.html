@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo if titulo else 'Movimentações' }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-exchange-alt me-2"></i>{{ titulo if titulo else 'Movimentações' }}</h2>
+            <p class="text-muted">
+                {% if titulo == 'Movimentações Pendentes' %}
+                    Movimentações aguardando conclusão
+                {% elif titulo == 'Dossiês Emprestados' %}
+                    Dossiês atualmente emprestados
+                {% else %}
+                    Controle de movimentações de dossiês
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nova Movimentação
+            </a>
+            <a href="{{ url_for('movimentacao.relatorio') }}" class="btn btn-outline-info">
+                <i class="fas fa-chart-bar me-2"></i>Relatório
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar:</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Dossiê, aluno, solicitante..." value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tipo:</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="consulta" {% if tipo == 'consulta' %}selected{% endif %}>Consulta</option>
+                        <option value="emprestimo" {% if tipo == 'emprestimo' %}selected{% endif %}>Empréstimo</option>
+                        <option value="devolucao" {% if tipo == 'devolucao' %}selected{% endif %}>Devolução</option>
+                        <option value="transferencia" {% if tipo == 'transferencia' %}selected{% endif %}>Transferência</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status:</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pendente" {% if status == 'pendente' %}selected{% endif %}>Pendente</option>
+                        <option value="concluido" {% if status == 'concluido' %}selected{% endif %}>Concluído</option>
+                        <option value="cancelado" {% if status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                    </select>
+                </div>
+                {% if session.user_perfil == 'Administrador Geral' %}
+                <div class="col-md-3">
+                    <label class="form-label">Escola:</label>
+                    <select name="escola" class="form-select">
+                        <option value="">Todas</option>
+                        {% for escola in escolas %}
+                        <option value="{{ escola.id }}" {% if escola_filtro and escola.id == escola_filtro.id %}selected{% endif %}>
+                            {{ escola.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Movimentações -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Lista de Movimentações
+                <span class="badge bg-secondary ms-2">{{ movimentacoes.total }}</span>
+            </h5>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if movimentacoes.items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Dossiê</th>
+                            <th>Tipo</th>
+                            <th>Solicitante</th>
+                            <th>Status</th>
+                            <th>Previsão</th>
+                            <th width="120">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimentacoes.items %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">{{ mov.data_movimentacao.strftime('%d/%m/%Y') if mov.data_movimentacao else 'N/A' }}</small><br>
+                                <small class="text-muted">{{ mov.data_movimentacao.strftime('%H:%M') if mov.data_movimentacao else '' }}</small>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ mov.dossie.numero_dossie if mov.dossie else 'N/A' }}</strong><br>
+                                    <small class="text-muted">{{ mov.dossie.nome_aluno if mov.dossie else 'N/A' }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if mov.tipo_movimentacao == 'consulta' %}
+                                    <span class="badge bg-info">Consulta</span>
+                                {% elif mov.tipo_movimentacao == 'emprestimo' %}
+                                    <span class="badge bg-warning">Empréstimo</span>
+                                {% elif mov.tipo_movimentacao == 'devolucao' %}
+                                    <span class="badge bg-success">Devolução</span>
+                                {% elif mov.tipo_movimentacao == 'transferencia' %}
+                                    <span class="badge bg-primary">Transferência</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ mov.tipo_movimentacao.title() }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if mov.solicitante_nome %}
+                                    <div>
+                                        <strong>{{ mov.solicitante_nome }}</strong><br>
+                                        {% if mov.solicitante_documento %}
+                                        <small class="text-muted">{{ mov.solicitante_documento }}</small>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if mov.status == 'pendente' %}
+                                    {% if mov.is_em_atraso %}
+                                        <span class="badge bg-danger">Em Atraso</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pendente</span>
+                                    {% endif %}
+                                {% elif mov.status == 'concluido' %}
+                                    <span class="badge bg-success">Concluído</span>
+                                {% elif mov.status == 'cancelado' %}
+                                    <span class="badge bg-secondary">Cancelado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if mov.data_prevista_devolucao %}
+                                    <small class="{% if mov.is_em_atraso %}text-danger{% else %}text-muted{% endif %}">
+                                        {{ mov.data_prevista_devolucao.strftime('%d/%m/%Y') }}
+                                    </small>
+                                    {% if mov.is_em_atraso %}
+                                        <br><small class="badge bg-danger">Em Atraso</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('movimentacao.ver', id=mov.id) }}" 
+                                       class="btn btn-outline-primary" title="Ver detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if mov.status == 'pendente' %}
+                                    <button class="btn btn-outline-success" 
+                                            onclick="concluirMovimentacao({{ mov.id }})" 
+                                            title="Concluir">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma movimentação encontrada</h5>
+                {% if search or tipo or status %}
+                <p class="text-muted">Tente ajustar os filtros de busca</p>
+                <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-times me-2"></i>Limpar Filtros
+                </a>
+                {% else %}
+                <p class="text-muted">Comece registrando a primeira movimentação</p>
+                <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Nova Movimentação
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Paginação -->
+        {% if movimentacoes.pages > 1 %}
+        <div class="card-footer">
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if movimentacoes.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('movimentacao.listar', page=movimentacoes.prev_num, search=search, tipo=tipo, status=status) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in movimentacoes.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != movimentacoes.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('movimentacao.listar', page=page_num, search=search, tipo=tipo, status=status) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if movimentacoes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('movimentacao.listar', page=movimentacoes.next_num, search=search, tipo=tipo, status=status) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalConcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Concluir Movimentação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja marcar esta movimentação como concluída?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formConcluir" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Concluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function concluirMovimentacao(id) {
+    document.getElementById('formConcluir').action = '/movimentacoes/concluir/' + id;
+    new bootstrap.Modal(document.getElementById('modalConcluir')).show();
+}
+</script>
+{% endblock %}

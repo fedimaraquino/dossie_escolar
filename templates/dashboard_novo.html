@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Estatísticas Principais -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_escolas }}</h4>
+                        <p class="mb-0">Escolas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-school fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('escola.listar') }}" class="text-white text-decoration-none">
+                    <small>Ver todas <i class="fas fa-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_usuarios }}</h4>
+                        <p class="mb-0">Usuários</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('usuario.listar') }}" class="text-white text-decoration-none">
+                    <small>Ver todos <i class="fas fa-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_dossies }}</h4>
+                        <p class="mb-0">Dossiês</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-folder fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('dossie.listar') }}" class="text-white text-decoration-none">
+                    <small>Ver todos <i class="fas fa-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_movimentacoes }}</h4>
+                        <p class="mb-0">Movimentações</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exchange-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('movimentacao.listar') }}" class="text-dark text-decoration-none">
+                    <small>Ver todas <i class="fas fa-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aplicações Modulares -->
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-4">
+            <i class="fas fa-th-large me-2"></i>
+            Aplicações Modulares
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Aplicação Escolas -->
+    {% if session.user_perfil == 'Administrador Geral' %}
+    <div class="col-md-4 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-school me-2"></i>
+                    ESCOLAS
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Gestão completa de escolas do sistema</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('escola.listar') }}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Listar Escolas
+                    </a>
+                    <a href="{{ url_for('escola.nova') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>Nova Escola
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Aplicação Usuários -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    USUÁRIOS
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Gestão de usuários do sistema</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('usuario.listar') }}" class="btn btn-success">
+                        <i class="fas fa-list me-2"></i>Listar Usuários
+                    </a>
+                    <a href="{{ url_for('usuario.novo') }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus me-2"></i>Novo Usuário
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aplicação Dossiês -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder me-2"></i>
+                    DOSSIÊS
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Gestão de dossiês escolares</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('dossie.listar') }}" class="btn btn-info">
+                        <i class="fas fa-list me-2"></i>Listar Dossiês
+                    </a>
+                    <a href="{{ url_for('dossie.novo') }}" class="btn btn-outline-info">
+                        <i class="fas fa-plus me-2"></i>Novo Dossiê
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aplicação Solicitantes -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-friends me-2"></i>
+                    SOLICITANTES
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Gestão de solicitantes</p>
+                <div class="d-grid gap-2">
+                    <a href="/solicitantes/" class="btn btn-secondary">
+                        <i class="fas fa-list me-2"></i>Listar Solicitantes
+                    </a>
+                    <a href="/solicitantes/novo" class="btn btn-outline-secondary">
+                        <i class="fas fa-plus me-2"></i>Novo Solicitante
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aplicação Movimentações -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    MOVIMENTAÇÕES
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Controle de movimentações</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-warning">
+                        <i class="fas fa-list me-2"></i>Listar Movimentações
+                    </a>
+                    <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-plus me-2"></i>Nova Movimentação
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aplicação Relatórios -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-dark">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    RELATÓRIOS
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Relatórios e estatísticas</p>
+                <div class="d-grid gap-2">
+                    <a href="/relatorios/" class="btn btn-dark">
+                        <i class="fas fa-chart-pie me-2"></i>Dashboard
+                    </a>
+                    <a href="/relatorios/por-solicitante" class="btn btn-outline-dark">
+                        <i class="fas fa-file-alt me-2"></i>Por Solicitante
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Sistema -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Usuário Logado:</h6>
+                        <p><strong>{{ usuario.nome }}</strong></p>
+                        <p>Perfil: <span class="badge bg-primary">{{ usuario.perfil_obj.nome }}</span></p>
+                        <p>Escola: {{ usuario.escola.nome }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Sistema:</h6>
+                        <p>Arquitetura: <strong>Modular</strong></p>
+                        <p>Aplicações: <strong>9 módulos</strong></p>
+                        <p>Conformidade: <strong>CLAUDE.md</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

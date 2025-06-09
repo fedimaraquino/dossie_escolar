@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Cidades{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-map-marker-alt me-2"></i>
+                Gestão de Cidades
+            </h1>
+            <a href="{{ url_for('cidade.nova') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Nova Cidade
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros e Busca -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Nome da cidade, UF ou país...">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="uf" class="form-label">UF</label>
+                        <select class="form-select" id="uf" name="uf">
+                            <option value="">Todas</option>
+                            {% for uf_option in ufs %}
+                                <option value="{{ uf_option }}" {{ 'selected' if uf == uf_option else '' }}>{{ uf_option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Cidades -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if cidades.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>UF</th>
+                                    <th>País</th>
+                                    <th>Escolas</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cidade in cidades.items %}
+                                <tr>
+                                    <td>
+                                        <code>{{ cidade.id_cidade }}</code>
+                                    </td>
+                                    <td>
+                                        <strong>{{ cidade.nome }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ cidade.uf }}</span>
+                                    </td>
+                                    <td>
+                                        {{ cidade.pais }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ cidade.escolas | length }} escola(s)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('cidade.ver', id=cidade.id_cidade) }}" class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('cidade.editar', id=cidade.id_cidade) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                                    onclick="confirmarExclusao({{ cidade.id_cidade }}, '{{ cidade.nome }}', '{{ url_for('cidade.excluir', id=cidade.id_cidade) }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if cidades.pages > 1 %}
+                    <nav aria-label="Navegação de páginas">
+                        <ul class="pagination justify-content-center">
+                            {% if cidades.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('cidade.listar', page=cidades.prev_num, search=search, uf=uf) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in cidades.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != cidades.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('cidade.listar', page=page_num, search=search, uf=uf) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if cidades.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('cidade.listar', page=cidades.next_num, search=search, uf=uf) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma cidade encontrada</h5>
+                        {% if search %}
+                            <p class="text-muted">Tente ajustar os filtros de busca</p>
+                            <a href="{{ url_for('cidade.listar') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-times me-2"></i>
+                                Limpar filtros
+                            </a>
+                        {% else %}
+                            <p class="text-muted">Comece cadastrando a primeira cidade</p>
+                            <a href="{{ url_for('cidade.nova') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Cadastrar Cidade
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ cidades.total }}</h4>
+                <p class="mb-0">Total de Cidades</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>{{ ufs | length }}</h4>
+                <p class="mb-0">Estados (UFs)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ cidades.items | selectattr('escolas') | list | length }}</h4>
+                <p class="mb-0">Com Escolas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h4>{{ cidades.items | rejectattr('escolas') | list | length }}</h4>
+                <p class="mb-0">Sem Escolas</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a cidade <strong id="cidadeNome"></strong>?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formExcluir" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmarExclusao(id, nome, url) {
+        document.getElementById('cidadeNome').textContent = nome;
+        document.getElementById('formExcluir').action = url;
+        new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+    }
+</script>
+{% endblock %}

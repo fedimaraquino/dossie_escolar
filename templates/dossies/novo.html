@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Dossiê{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-folder-plus me-2"></i>
+                Novo Dossiê
+            </h1>
+            <a href="{{ url_for('dossie.listar') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder-plus me-2"></i>
+                    Cadastrar Novo Dossiê
+                </h5>
+            </div>
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs card-header-tabs" id="dossieTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="informacoes-tab" data-bs-toggle="tab" data-bs-target="#informacoes" type="button" role="tab">
+                            <i class="fas fa-info-circle me-2"></i>Informações do Dossiê
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="anexos-tab" data-bs-toggle="tab" data-bs-target="#anexos" type="button" role="tab">
+                            <i class="fas fa-paperclip me-2"></i>Anexos
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="tab-content" id="dossieTabContent">
+                        <!-- Aba Informações -->
+                        <div class="tab-pane fade show active" id="informacoes" role="tabpanel">
+                    <!-- Dados Básicos -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom pb-2">
+                                <i class="fas fa-id-card me-2"></i>
+                                Dados Básicos do Dossiê
+                            </h6>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="n_dossie" class="form-label">Número do Dossiê *</label>
+                            <input type="text" class="form-control" id="n_dossie" name="n_dossie" required
+                                   placeholder="Ex: 2024001">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="ano" class="form-label">Ano *</label>
+                            <input type="number" class="form-control" id="ano" name="ano" required
+                                   min="1900" max="2030" placeholder="2024">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="ativo" selected>Ativo</option>
+                                <option value="arquivado">Arquivado</option>
+                                <option value="transferido">Transferido</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="id_escola" class="form-label">Escola *</label>
+                            <select class="form-select" id="id_escola" name="id_escola" required>
+                                <option value="">Selecione...</option>
+                                {% for escola in escolas %}
+                                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dados do Aluno -->
+                    <div class="row mb-4 mt-4">
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom pb-2">
+                                <i class="fas fa-user-graduate me-2"></i>
+                                Dados do Aluno
+                            </h6>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label for="nome" class="form-label">Nome Completo do Aluno *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required
+                                   placeholder="Nome completo do aluno">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cpf" class="form-label">CPF do Aluno</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf"
+                                   placeholder="000.000.000-00">
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="n_mae" class="form-label">Nome da Mãe</label>
+                            <input type="text" class="form-control" id="n_mae" name="n_mae"
+                                   placeholder="Nome completo da mãe">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="n_pai" class="form-label">Nome do Pai</label>
+                            <input type="text" class="form-control" id="n_pai" name="n_pai"
+                                   placeholder="Nome completo do pai">
+                        </div>
+                    </div>
+
+                    <!-- Localização e Documentos -->
+                    <div class="row mb-4 mt-4">
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom pb-2">
+                                <i class="fas fa-archive me-2"></i>
+                                Localização e Documentos
+                            </h6>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="local" class="form-label">Local Físico</label>
+                            <input type="text" class="form-control" id="local" name="local"
+                                   placeholder="Ex: Arquivo Central, Sala 10">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="pasta" class="form-label">Número da Pasta</label>
+                            <input type="text" class="form-control" id="pasta" name="pasta"
+                                   placeholder="Ex: P001, Pasta-2024-01">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="tipo_documento" class="form-label">Tipo de Documento</label>
+                            <select class="form-select" id="tipo_documento" name="tipo_documento">
+                                <option value="">Selecione...</option>
+                                <option value="Histórico Escolar">Histórico Escolar</option>
+                                <option value="Certificado">Certificado</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Boletim">Boletim</option>
+                                <option value="Documentos Pessoais">Documentos Pessoais</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Foto e Observações -->
+                    <div class="row mb-4 mt-4">
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom pb-2">
+                                <i class="fas fa-camera me-2"></i>
+                                Foto e Observações
+                            </h6>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="foto" class="form-label">Foto Digital</label>
+                            <input type="file" class="form-control" id="foto" name="foto" accept="image/*">
+                            <div class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 5MB)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Dica:</strong> A foto digital facilita a identificação do aluno no sistema.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="observacao" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacao" name="observacao" rows="4"
+                                      placeholder="Observações gerais sobre o dossiê, documentos especiais, etc."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Importante:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>O número do dossiê deve ser único no sistema</li>
+                                    <li>Verifique se todos os dados estão corretos antes de salvar</li>
+                                    <li>A localização física ajuda na organização do arquivo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                        </div>
+
+                        <!-- Aba Anexos -->
+                        <div class="tab-pane fade" id="anexos" role="tabpanel">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6 class="text-info border-bottom pb-2 mb-3">
+                                        <i class="fas fa-paperclip me-2"></i>
+                                        Anexar Arquivos ao Dossiê
+                                    </h6>
+
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Dica:</strong> Você pode anexar arquivos junto com o cadastro do dossiê.
+                                    </div>
+
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-cloud-upload-alt me-2"></i>Anexar Arquivos (Opcional)
+                                            </h6>
+
+                                            <div id="anexosContainer">
+                                                <!-- Primeiro anexo -->
+                                                <div class="anexo-item mb-3 p-3 border rounded">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Arquivo</label>
+                                                            <input type="file" class="form-control" name="anexos_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt,.zip,.rar">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Nome/Descrição *</label>
+                                                            <input type="text" class="form-control" name="anexos_nomes[]" placeholder="Ex: Histórico Escolar, Certificado..." required>
+                                                            <div class="form-text">Campo obrigatório para identificar o documento</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-center">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarCampoAnexo()">
+                                                    <i class="fas fa-plus me-2"></i>Adicionar Mais um Arquivo
+                                                </button>
+                                            </div>
+
+                                            <div class="form-text mt-2">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Tipos permitidos: PDF, DOC, XLS, imagens, TXT, ZIP. Máximo 16MB por arquivo.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('dossie.listar') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-save me-2"></i>Salvar Dossiê
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Função para adicionar mais campos de anexo
+    function adicionarCampoAnexo() {
+        const container = document.getElementById('anexosContainer');
+        const novoAnexo = document.createElement('div');
+        novoAnexo.className = 'anexo-item mb-3 p-3 border rounded';
+        novoAnexo.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Arquivo</label>
+                    <input type="file" class="form-control" name="anexos_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt,.zip,.rar">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Nome/Descrição *</label>
+                    <input type="text" class="form-control" name="anexos_nomes[]" placeholder="Ex: Histórico Escolar, Certificado..." required>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removerCampoAnexo(this)" title="Remover">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(novoAnexo);
+    }
+
+    function removerCampoAnexo(button) {
+        button.closest('.anexo-item').remove();
+    }
+
+    // Inicializar abas Bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ativar abas Bootstrap
+        var triggerTabList = [].slice.call(document.querySelectorAll('#dossieTab button'))
+        triggerTabList.forEach(function (triggerEl) {
+            var tabTrigger = new bootstrap.Tab(triggerEl)
+
+            triggerEl.addEventListener('click', function (event) {
+                event.preventDefault()
+                tabTrigger.show()
+            })
+        })
+    })
+    // Máscara para CPF
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = value;
+        });
+    }
+
+    // Auto-gerar número do dossiê baseado no ano
+    const anoInput = document.getElementById('ano');
+    const nDossieInput = document.getElementById('n_dossie');
+    if (anoInput && nDossieInput) {
+        anoInput.addEventListener('change', function() {
+            const ano = this.value;
+
+            if (ano && !nDossieInput.value) {
+                // Gerar número sequencial baseado no ano
+                const numeroSugerido = ano + '001';
+                nDossieInput.value = numeroSugerido;
+            }
+        });
+    }
+
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const nDossie = document.getElementById('n_dossie').value.trim();
+        const nome = document.getElementById('nome').value.trim();
+        const idEscola = document.getElementById('id_escola').value;
+
+        if (!nDossie || !nome || !idEscola) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+
+        // Validar anexos - se há arquivo, deve ter nome
+        const arquivos = document.querySelectorAll('input[name="anexos_files[]"]');
+        const nomes = document.querySelectorAll('input[name="anexos_nomes[]"]');
+
+        for (let i = 0; i < arquivos.length; i++) {
+            const arquivo = arquivos[i];
+            const nome = nomes[i];
+
+            if (arquivo.files.length > 0 && !nome.value.trim()) {
+                e.preventDefault();
+                alert('Por favor, preencha o nome/descrição para todos os arquivos selecionados');
+                nome.focus();
+                return false;
+            }
+
+            if (!arquivo.files.length && nome.value.trim()) {
+                e.preventDefault();
+                alert('Por favor, selecione um arquivo para o nome/descrição informado');
+                arquivo.focus();
+                return false;
+            }
+        }
+
+        // Confirmar cadastro
+        if (!confirm(`Confirma o cadastro do dossiê "${nDossie}" para o aluno "${nome}"?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Converter nome para maiúsculas
+    const nomeInput = document.getElementById('nome');
+    if (nomeInput) {
+        nomeInput.addEventListener('blur', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+
+    const nMaeInput = document.getElementById('n_mae');
+    if (nMaeInput) {
+        nMaeInput.addEventListener('blur', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+
+    const nPaiInput = document.getElementById('n_pai');
+    if (nPaiInput) {
+        nPaiInput.addEventListener('blur', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}Dossiê {{ dossie.n_dossie }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('dossie.listar') }}">Dossiês</a></li>
+                        <li class="breadcrumb-item active">{{ dossie.n_dossie }}</li>
+                    </ol>
+                </nav>
+                <h1>
+                    <i class="fas fa-folder me-2"></i>
+                    <span class="badge bg-primary fs-4 me-3">{{ dossie.n_dossie }}</span>
+                    {% if dossie.pasta %}
+                        <span class="badge bg-info fs-6 me-2">Pasta: {{ dossie.pasta }}</span>
+                    {% endif %}
+                    <span class="badge bg-{{ 'success' if dossie.status == 'ativo' else 'secondary' if dossie.status == 'arquivado' else 'warning' }} ms-2">
+                        {{ dossie.status.title() }}
+                    </span>
+                </h1>
+                <p class="text-muted mb-0"><strong>{{ dossie.nome }}</strong></p>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('dossie.editar', id=dossie.id_dossie) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+                <a href="{{ url_for('dossie.listar') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Abas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs card-header-tabs" id="dossieTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="informacoes-tab" data-bs-toggle="tab" data-bs-target="#informacoes" type="button" role="tab">
+                            <i class="fas fa-info-circle me-2"></i>Informações do Dossiê
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="anexos-tab" data-bs-toggle="tab" data-bs-target="#anexos" type="button" role="tab">
+                            <i class="fas fa-paperclip me-2"></i>Anexos
+                            <span class="badge bg-primary ms-1" id="contador-anexos">{{ dossie.anexos | length }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="dossieTabContent">
+                    <!-- Aba Informações -->
+                    <div class="tab-pane fade show active" id="informacoes" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <!-- Dados Básicos -->
+                                <h5 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-id-card me-2"></i>Dados Básicos
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card bg-primary text-white">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-1">{{ dossie.n_dossie }}</h3>
+                                                <p class="mb-0">Número do Dossiê</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% if dossie.pasta %}
+                                        <div class="card bg-info text-white">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-1">{{ dossie.pasta }}</h3>
+                                                <p class="mb-0">Pasta Física</p>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="card bg-secondary text-white">
+                                            <div class="card-body text-center">
+                                                <h3 class="mb-1">-</h3>
+                                                <p class="mb-0">Pasta não informada</p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted">Ano</h6>
+                                        <p><span class="badge bg-warning fs-6">{{ dossie.ano or 'Não informado' }}</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted">Status</h6>
+                                        <p>
+                                            <span class="badge bg-{{ 'success' if dossie.status == 'ativo' else 'secondary' if dossie.status == 'arquivado' else 'warning' }} fs-6">
+                                                {{ dossie.status.title() }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Dados do Aluno -->
+                                <h5 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user-graduate me-2"></i>Dados do Aluno
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-8">
+                                        <h6 class="text-muted">Nome Completo</h6>
+                                        <p><strong>{{ dossie.nome }}</strong></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="text-muted">CPF</h6>
+                                        <p>{{ dossie.cpf or 'Não informado' }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted">Nome da Mãe</h6>
+                                        <p>{{ dossie.n_mae or 'Não informado' }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted">Nome do Pai</h6>
+                                        <p>{{ dossie.n_pai or 'Não informado' }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Localização -->
+                                <h5 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Localização Física
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted">Local</h6>
+                                        <p>{{ dossie.local or 'Não informado' }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted">Pasta</h6>
+                                        <p>{{ dossie.pasta or 'Não informado' }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Observações -->
+                                {% if dossie.observacao %}
+                                <h5 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-sticky-note me-2"></i>Observações
+                                </h5>
+                                <div class="alert alert-light">
+                                    {{ dossie.observacao }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <!-- Escola -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-school me-2"></i>Escola
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if dossie.escola %}
+                                            <h6>{{ dossie.escola.nome }}</h6>
+                                            <p class="small text-muted">{{ dossie.escola.endereco }}</p>
+                                            <a href="{{ url_for('escola.ver', id=dossie.escola.id) }}" class="btn btn-outline-info btn-sm">
+                                                <i class="fas fa-eye me-1"></i>Ver Escola
+                                            </a>
+                                        {% else %}
+                                            <p class="text-muted">Escola não informada</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Tipo de Documento -->
+                                {% if dossie.tipo_documento %}
+                                <div class="card mb-3">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-file-alt me-2"></i>Tipo de Documento
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>{{ dossie.tipo_documento }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Informações do Sistema -->
+                                <div class="card">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-cog me-2"></i>Informações do Sistema
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>ID:</strong> {{ dossie.id_dossie }}</p>
+                                        <p><strong>Cadastrado em:</strong> {{ dossie.dt_cadastro.strftime('%d/%m/%Y às %H:%M') if dossie.dt_cadastro else 'Não informado' }}</p>
+                                        {% if dossie.dt_arquivo %}
+                                            <p><strong>Arquivado em:</strong> {{ dossie.dt_arquivo.strftime('%d/%m/%Y às %H:%M') }}</p>
+                                        {% endif %}
+                                        {% if dossie.usuario_cadastro %}
+                                            <p><strong>Cadastrado por:</strong> {{ dossie.usuario_cadastro.nome }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba Anexos -->
+                    <div class="tab-pane fade" id="anexos" role="tabpanel">
+                        <!-- Upload de Arquivos -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-cloud-upload-alt me-2"></i>Enviar Novos Anexos
+                                        </h6>
+                                        <form id="uploadForm" enctype="multipart/form-data">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <input type="file" class="form-control" id="arquivos" name="arquivos" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt,.zip,.rar">
+                                                    <div class="form-text">
+                                                        Tipos permitidos: PDF, DOC, XLS, imagens, TXT, ZIP. Máximo 16MB por arquivo.
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <button type="submit" class="btn btn-primary w-100">
+                                                        <i class="fas fa-upload me-2"></i>Enviar Arquivos
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Anexos -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div id="listaAnexos">
+                                    <!-- Conteúdo carregado via JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const dossieId = {{ dossie.id_dossie }};
+
+    // Carregar anexos ao abrir a aba
+    document.getElementById('anexos-tab').addEventListener('click', function() {
+        carregarAnexos();
+    });
+
+    // Upload de arquivos
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        const arquivos = document.getElementById('arquivos').files;
+        
+        if (arquivos.length === 0) {
+            alert('Selecione pelo menos um arquivo');
+            return;
+        }
+        
+        for (let i = 0; i < arquivos.length; i++) {
+            formData.append('arquivos', arquivos[i]);
+        }
+        
+        // Mostrar loading
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+        btn.disabled = true;
+        
+        fetch(`/anexos/upload/${dossieId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('arquivos').value = '';
+                carregarAnexos();
+                atualizarContadorAnexos();
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Erro ao enviar arquivos: ' + error);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    });
+
+    function carregarAnexos() {
+        fetch(`/anexos/listar/${dossieId}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('listaAnexos');
+            
+            if (data.anexos.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-paperclip fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum anexo encontrado</h5>
+                        <p class="text-muted">Use o formulário acima para enviar arquivos</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="table-responsive"><table class="table table-hover"><thead class="table-dark"><tr><th>Arquivo</th><th>Tamanho</th><th>Enviado</th><th>Ações</th></tr></thead><tbody>';
+            
+            data.anexos.forEach(anexo => {
+                html += `
+                    <tr>
+                        <td>
+                            <i class="${anexo.icone} me-2"></i>
+                            <strong>${anexo.nome_exibicao}</strong>
+                            ${anexo.nome_personalizado ? `<br><small class="text-muted">Arquivo: ${anexo.nome}</small>` : ''}
+                        </td>
+                        <td>${anexo.tamanho_formatado}</td>
+                        <td>
+                            ${anexo.data_upload}<br>
+                            <small class="text-muted">por ${anexo.usuario}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="/anexos/download/${anexo.id}" class="btn btn-sm btn-outline-primary" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <button onclick="excluirAnexo(${anexo.id})" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        });
+    }
+
+    function excluirAnexo(anexoId) {
+        if (!confirm('Tem certeza que deseja excluir este anexo?')) {
+            return;
+        }
+        
+        fetch(`/anexos/excluir/${anexoId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                carregarAnexos();
+                atualizarContadorAnexos();
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        });
+    }
+
+    function atualizarContadorAnexos() {
+        fetch(`/anexos/listar/${dossieId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('contador-anexos').textContent = data.anexos.length;
+        });
+    }
+
+    // Carregar anexos na primeira vez
+    carregarAnexos();
+</script>
+{% endblock %}

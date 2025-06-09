@@ -1,0 +1,252 @@
+# controllers/usuario_controller.py
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from datetime import datetime
+from models import db, Usuario, Escola, Perfil
+from .auth_controller import login_required, admin_required
+
+usuario_bp = Blueprint('usuario', __name__, url_prefix='/usuarios')
+
+@usuario_bp.route('/')
+@login_required
+def listar():
+    """Lista usuários"""
+    search = request.args.get('search', '')
+    escola_id = request.args.get('escola', '')
+    perfil_id = request.args.get('perfil', '')
+    situacao = request.args.get('situacao', '')
+    page = request.args.get('page', 1, type=int)
+
+    query = Usuario.query
+    if search:
+        query = query.filter(
+            db.or_(
+                Usuario.nome.contains(search),
+                Usuario.email.contains(search),
+                Usuario.cpf.contains(search)
+            )
+        )
+    
+    if escola_id:
+        query = query.filter(Usuario.escola_id == escola_id)
+    
+    if perfil_id:
+        query = query.filter(Usuario.perfil_id == perfil_id)
+    
+    if situacao:
+        query = query.filter(Usuario.situacao == situacao)
+
+    usuarios = query.paginate(page=page, per_page=10, error_out=False)
+
+    escola_filtro = None
+    if escola_id:
+        escola_filtro = Escola.query.get(escola_id)
+    
+    perfil_filtro = None
+    if perfil_id:
+        perfil_filtro = Perfil.query.get(perfil_id)
+
+    escolas = Escola.query.all()
+    perfis = Perfil.query.all()
+
+    return render_template('usuarios/listar.html', 
+                         usuarios=usuarios, 
+                         search=search, 
+                         escola_filtro=escola_filtro,
+                         perfil_filtro=perfil_filtro,
+                         escolas=escolas,
+                         perfis=perfis,
+                         situacao=situacao)
+
+@usuario_bp.route('/novo', methods=['GET', 'POST'])
+@login_required
+def novo():
+    """Cadastra novo usuário"""
+    usuario_logado = Usuario.query.get(session['user_id'])
+    if not usuario_logado.is_admin_escola():
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        nome = request.form.get('nome', '').strip()
+        email = request.form.get('email', '').strip()
+        cpf = request.form.get('cpf', '').strip()
+        
+        if not nome or not email:
+            flash('Nome e email são obrigatórios!', 'error')
+            return render_template('usuarios/cadastrar.html', 
+                                 escolas=Escola.query.all(), 
+                                 perfis=Perfil.query.all())
+
+        if Usuario.query.filter_by(email=email).first():
+            flash('Email já cadastrado no sistema!', 'error')
+            return render_template('usuarios/cadastrar.html', 
+                                 escolas=Escola.query.all(), 
+                                 perfis=Perfil.query.all())
+
+        usuario = Usuario(
+            nome=nome,
+            email=email,
+            cpf=cpf,
+            telefone=request.form.get('telefone', '').strip(),
+            escola_id=request.form.get('escola_id'),
+            perfil_id=request.form.get('perfil_id'),
+            situacao=request.form.get('situacao', 'ativo'),
+            data_nascimento=datetime.strptime(request.form.get('data_nascimento'), '%Y-%m-%d').date() if request.form.get('data_nascimento') else None
+        )
+        
+        senha_padrao = request.form.get('senha', '123456')
+        usuario.set_password(senha_padrao)
+
+        try:
+            db.session.add(usuario)
+            db.session.commit()
+            flash('Usuário cadastrado com sucesso!', 'success')
+            return redirect(url_for('usuario.listar'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao cadastrar usuário: {str(e)}', 'error')
+
+    escolas = Escola.query.all()
+    perfis = Perfil.query.all()
+    return render_template('usuarios/cadastrar.html', escolas=escolas, perfis=perfis)
+
+@usuario_bp.route('/ver/<int:id>')
+@login_required
+def ver(id):
+    """Visualiza detalhes do usuário"""
+    usuario = Usuario.query.get_or_404(id)
+    return render_template('usuarios/ver.html', usuario=usuario)
+
+@usuario_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar(id):
+    """Edita usuário"""
+    usuario_logado = Usuario.query.get(session['user_id'])
+    if not usuario_logado.is_admin_escola():
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('dashboard'))
+
+    usuario = Usuario.query.get_or_404(id)
+
+    if request.method == 'POST':
+        usuario.nome = request.form.get('nome', '').strip()
+        usuario.email = request.form.get('email', '').strip()
+        usuario.cpf = request.form.get('cpf', '').strip()
+        usuario.telefone = request.form.get('telefone', '').strip()
+        usuario.escola_id = request.form.get('escola_id')
+        usuario.perfil_id = request.form.get('perfil_id')
+        usuario.situacao = request.form.get('situacao', 'ativo')
+        
+        if request.form.get('data_nascimento'):
+            usuario.data_nascimento = datetime.strptime(request.form.get('data_nascimento'), '%Y-%m-%d').date()
+        
+        nova_senha = request.form.get('nova_senha', '').strip()
+        if nova_senha:
+            usuario.set_password(nova_senha)
+
+        if not usuario.nome or not usuario.email:
+            flash('Nome e email são obrigatórios!', 'error')
+            return render_template('usuarios/editar.html', 
+                                 usuario=usuario, 
+                                 escolas=Escola.query.all(), 
+                                 perfis=Perfil.query.all())
+
+        try:
+            db.session.commit()
+            flash('Usuário atualizado com sucesso!', 'success')
+            return redirect(url_for('usuario.listar'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao atualizar usuário: {str(e)}', 'error')
+
+    escolas = Escola.query.all()
+    perfis = Perfil.query.all()
+    return render_template('usuarios/editar.html', 
+                         usuario=usuario, 
+                         escolas=escolas, 
+                         perfis=perfis)
+
+@usuario_bp.route('/excluir/<int:id>', methods=['POST'])
+@admin_required
+def excluir(id):
+    """Exclui usuário"""
+    usuario_logado = Usuario.query.get(session['user_id'])
+    usuario = Usuario.query.get_or_404(id)
+    
+    if usuario.id == usuario_logado.id:
+        flash('Não é possível excluir seu próprio usuário!', 'error')
+        return redirect(url_for('usuario.listar'))
+
+    try:
+        db.session.delete(usuario)
+        db.session.commit()
+        flash(f'Usuário "{usuario.nome}" excluído com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir usuário: {str(e)}', 'error')
+
+    return redirect(url_for('usuario.listar'))
+
+@usuario_bp.route('/resetar-senha/<int:id>', methods=['POST'])
+@login_required
+def resetar_senha(id):
+    """Reseta a senha do usuário"""
+    from flask import jsonify
+
+    usuario_logado = Usuario.query.get(session['user_id'])
+    if not usuario_logado.is_admin_escola():
+        return jsonify({'success': False, 'message': 'Acesso negado'}), 403
+
+    usuario = Usuario.query.get_or_404(id)
+
+    try:
+        usuario.set_password('123456')
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Senha resetada com sucesso'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@usuario_bp.route('/bloquear/<int:id>', methods=['POST'])
+@login_required
+def bloquear(id):
+    """Bloqueia usuário"""
+    from flask import jsonify
+
+    usuario_logado = Usuario.query.get(session['user_id'])
+    if not usuario_logado.is_admin_escola():
+        return jsonify({'success': False, 'message': 'Acesso negado'}), 403
+
+    usuario = Usuario.query.get_or_404(id)
+
+    if usuario.id == usuario_logado.id:
+        return jsonify({'success': False, 'message': 'Não é possível bloquear seu próprio usuário'}), 400
+
+    try:
+        usuario.situacao = 'bloqueado'
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Usuário bloqueado com sucesso'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@usuario_bp.route('/desbloquear/<int:id>', methods=['POST'])
+@login_required
+def desbloquear(id):
+    """Desbloqueia usuário"""
+    from flask import jsonify
+
+    usuario_logado = Usuario.query.get(session['user_id'])
+    if not usuario_logado.is_admin_escola():
+        return jsonify({'success': False, 'message': 'Acesso negado'}), 403
+
+    usuario = Usuario.query.get_or_404(id)
+
+    try:
+        usuario.situacao = 'ativo'
+        usuario.tentativas_login = 0  # Reset tentativas
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Usuário desbloqueado com sucesso'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

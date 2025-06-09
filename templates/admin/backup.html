@@ -1,0 +1,221 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Backup{% endblock %}
+{% block header %}Gerenciar Backups{% endblock %}
+
+{% block content %}
+<!-- Criar Novo Backup -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-plus-circle me-2"></i>Criar Novo Backup</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Crie um backup completo do banco de dados atual.
+                </p>
+                
+                <form method="POST" action="{{ url_for('admin.create_backup') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Backup:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="backup_type" id="full" value="full" checked>
+                            <label class="form-check-label" for="full">
+                                <strong>Completo</strong> - Todos os dados
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="backup_type" id="structure" value="structure">
+                            <label class="form-check-label" for="structure">
+                                <strong>Estrutura</strong> - Apenas tabelas (sem dados)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-download me-2"></i>Criar Backup
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>Informações</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                            <h6>Banco Atual</h6>
+                            <small class="text-muted">PostgreSQL</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                            <h6>Último Backup</h6>
+                            <small class="text-muted">
+                                {% if backup_files %}
+                                    {{ backup_files[0].created.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    Nunca
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Importante:</strong> Faça backups regulares para proteger seus dados.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Backups Existentes -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-archive me-2"></i>Backups Existentes
+                    <span class="badge bg-secondary ms-2">{{ backup_files|length }}</span>
+                </h5>
+                <button class="btn btn-outline-danger btn-sm" onclick="cleanOldBackups()">
+                    <i class="fas fa-trash me-2"></i>Limpar Antigos
+                </button>
+            </div>
+            
+            <div class="card-body p-0">
+                {% if backup_files %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nome do Arquivo</th>
+                                <th>Tamanho</th>
+                                <th>Data de Criação</th>
+                                <th>Tipo</th>
+                                <th width="150">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for backup in backup_files %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-archive me-2 text-primary"></i>
+                                    <strong>{{ backup.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ "%.2f"|format(backup.size / 1024 / 1024) }} MB
+                                    </span>
+                                </td>
+                                <td>{{ backup.created.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    {% if 'postgresql' in backup.name %}
+                                        <span class="badge bg-info">PostgreSQL</span>
+                                    {% elif 'sqlite' in backup.name %}
+                                        <span class="badge bg-success">SQLite</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Desconhecido</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/download/{{ backup.name }}" class="btn btn-outline-primary" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger" onclick="deleteBackup('{{ backup.name }}')" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum backup encontrado</h5>
+                    <p class="text-muted">Crie seu primeiro backup usando o formulário acima.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comandos de Backup Manual -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-terminal me-2"></i>Comandos Manuais</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Use estes comandos para fazer backup via linha de comando:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>PostgreSQL:</h6>
+                        <div class="bg-dark text-light p-3 rounded">
+                            <code>python manage.py backup-db</code>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Backup Completo:</h6>
+                        <div class="bg-dark text-light p-3 rounded">
+                            <code>pg_dump postgresql://dossie:fep09151@localhost/dossie_escola > backup.sql</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteBackup(filename) {
+    if (confirm('Tem certeza que deseja excluir o backup "' + filename + '"?')) {
+        fetch('/admin/backup/delete/' + filename, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao excluir backup: ' + data.error);
+            }
+        });
+    }
+}
+
+function cleanOldBackups() {
+    if (confirm('Tem certeza que deseja excluir backups antigos (mais de 30 dias)?')) {
+        fetch('/admin/backup/clean', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

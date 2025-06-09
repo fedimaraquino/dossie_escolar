@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}{{ diretor.nome }} - Detalhes{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="fas fa-user-tie me-2"></i>{{ diretor.nome }}
+                <span class="badge bg-{{ diretor.get_status_badge() }} ms-2">{{ diretor.get_status_display() }}</span>
+            </h2>
+            <p class="text-muted">
+                {% if diretor.tipo_mandato %}{{ diretor.tipo_mandato }}{% endif %}
+                {% if diretor.cidade %} - {{ diretor.cidade }}{% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('diretor.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <a href="{{ url_for('diretor.editar', id_diretor=diretor.id_diretor) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Editar
+            </a>
+            <button class="btn btn-danger" onclick="confirmarExclusao()">
+                <i class="fas fa-trash me-2"></i>Excluir
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Principais -->
+        <div class="col-lg-8">
+            <!-- Dados Pessoais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Dados Pessoais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Nome Completo:</strong><br>
+                                <span class="text-muted">{{ diretor.nome }}</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>CPF:</strong><br>
+                                {% if diretor.cpf %}
+                                    <code>{{ diretor.format_cpf() }}</code>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Status:</strong><br>
+                                <span class="badge bg-{{ diretor.get_status_badge() }}">
+                                    {{ diretor.get_status_display() }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Celular:</strong><br>
+                                {% if diretor.celular %}
+                                    <a href="tel:{{ diretor.celular }}" class="text-decoration-none">
+                                        <i class="fas fa-phone me-1"></i>{{ diretor.format_celular() }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Cidade:</strong><br>
+                                {% if diretor.cidade %}
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ diretor.cidade }}
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Data de Cadastro:</strong><br>
+                                <span class="text-muted">
+                                    {{ diretor.data_cadastro.strftime('%d/%m/%Y às %H:%M') if diretor.data_cadastro else 'N/A' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if diretor.endereco %}
+                    <div class="row">
+                        <div class="col-12">
+                            <hr>
+                            <strong>Endereço:</strong><br>
+                            <span class="text-muted">{{ diretor.endereco }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informações Profissionais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-briefcase me-2"></i>Informações Profissionais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Tipo de Mandato:</strong><br>
+                                {% if diretor.tipo_mandato %}
+                                    <span class="badge bg-info">{{ diretor.tipo_mandato }}</span>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>Data de Admissão:</strong><br>
+                                {% if diretor.admissao %}
+                                    {{ diretor.admissao.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if diretor.admissao %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                <strong>Tempo de Mandato:</strong> {{ diretor.get_tempo_mandato() }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Ações Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('diretor.editar', id_diretor=diretor.id_diretor) }}" class="btn btn-outline-warning">
+                            <i class="fas fa-edit me-2"></i>Editar Informações
+                        </a>
+                        
+                        {% if diretor.celular %}
+                        <a href="tel:{{ diretor.celular }}" class="btn btn-outline-success">
+                            <i class="fas fa-phone me-2"></i>Ligar
+                        </a>
+                        {% endif %}
+                        
+                        <button class="btn btn-outline-primary" onclick="imprimirDetalhes()">
+                            <i class="fas fa-print me-2"></i>Imprimir
+                        </button>
+                        
+                        <hr>
+                        
+                        <button class="btn btn-outline-danger" onclick="confirmarExclusao()">
+                            <i class="fas fa-trash me-2"></i>Excluir Diretor
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informações do Sistema -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações do Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-2">
+                            <strong>ID:</strong> {{ diretor.id_diretor }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Cadastrado em:</strong><br>
+                            {{ diretor.data_cadastro.strftime('%d/%m/%Y às %H:%M') if diretor.data_cadastro else 'N/A' }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Status Atual:</strong><br>
+                            <span class="badge bg-{{ diretor.get_status_badge() }}">
+                                {{ diretor.get_status_display() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Tem certeza que deseja excluir o diretor <strong>{{ diretor.nome }}</strong>?</p>
+                <p class="text-muted">Todas as informações relacionadas serão perdidas permanentemente.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('diretor.excluir', id_diretor=diretor.id_diretor) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Excluir Definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarExclusao() {
+    new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+}
+
+function imprimirDetalhes() {
+    window.print();
+}
+
+// Estilos para impressão
+document.addEventListener('DOMContentLoaded', function() {
+    var style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .btn, .card-header, nav, .modal { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .card-body { padding: 0 !important; }
+            body { font-size: 12px; }
+            h2 { font-size: 18px; }
+            h5 { font-size: 14px; }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

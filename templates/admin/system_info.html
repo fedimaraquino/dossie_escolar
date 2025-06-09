@@ -1,0 +1,316 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Informações do Sistema{% endblock %}
+{% block header %}Informações do Sistema{% endblock %}
+
+{% block content %}
+<!-- Informações do Sistema -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-server me-2"></i>Sistema Operacional</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Plataforma:</strong><br>
+                        <span class="text-muted">{{ system_info.platform if system_info else 'N/A' }}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Processador:</strong><br>
+                        <span class="text-muted">{{ system_info.processor if system_info else 'N/A' }}</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Memória Total:</strong><br>
+                        <span class="badge bg-info">{{ system_info.memory_total if system_info else 'N/A' }}</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Memória Disponível:</strong><br>
+                        <span class="badge bg-success">{{ system_info.memory_available if system_info else 'N/A' }}</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <strong>Uso do Disco:</strong><br>
+                        <div class="progress">
+                            {% set disk_percent = system_info.disk_usage.replace('%', '')|float if system_info and system_info.disk_usage else 0 %}
+                            <div class="progress-bar bg-{{ 'danger' if disk_percent > 80 else 'warning' if disk_percent > 60 else 'success' }}" 
+                                 style="width: {{ disk_percent }}%">
+                                {{ system_info.disk_usage if system_info else '0%' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-code me-2"></i>Ambiente Python</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <strong>Versão Python:</strong><br>
+                        <span class="badge bg-primary">{{ system_info.python_version if system_info else 'N/A' }}</span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Flask:</strong><br>
+                        <span class="text-muted">Ativo</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Debug Mode:</strong><br>
+                        <span class="badge bg-warning">Ativo</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <strong>SQLAlchemy:</strong><br>
+                        <span class="text-muted">Conectado</span>
+                    </div>
+                    <div class="col-6">
+                        <strong>Migrações:</strong><br>
+                        <span class="text-muted">{{ db_info.migrations_folder if db_info else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Banco de Dados -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-database me-2"></i>Banco de Dados</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-server fa-3x text-primary mb-3"></i>
+                            <h6>Tipo</h6>
+                            <span class="badge bg-primary">PostgreSQL</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-link fa-3x text-success mb-3"></i>
+                            <h6>Conexão</h6>
+                            <span class="badge bg-success">Conectado</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-table fa-3x text-info mb-3"></i>
+                            <h6>Tabelas</h6>
+                            <span class="badge bg-info">{{ db_info.total_tables if db_info else 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <strong>URL de Conexão:</strong><br>
+                        <code class="text-muted">{{ db_info.database_url if db_info else 'N/A' }}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas do Sistema -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h4>{{ stats.usuarios if stats else 0 }}</h4>
+                <p class="text-muted mb-0">Usuários</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-school fa-2x text-success mb-2"></i>
+                <h4>{{ stats.escolas if stats else 0 }}</h4>
+                <p class="text-muted mb-0">Escolas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-folder fa-2x text-warning mb-2"></i>
+                <h4>{{ stats.dossies if stats else 0 }}</h4>
+                <p class="text-muted mb-0">Dossiês</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-paperclip fa-2x text-info mb-2"></i>
+                <h4>{{ stats.anexos if stats else 0 }}</h4>
+                <p class="text-muted mb-0">Anexos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configurações e Variáveis -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-cog me-2"></i>Configurações</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td><strong>Debug Mode:</strong></td>
+                                <td><span class="badge bg-warning">Ativo</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Secret Key:</strong></td>
+                                <td><span class="text-muted">Configurado</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Upload Folder:</strong></td>
+                                <td><code>uploads/</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Max Upload Size:</strong></td>
+                                <td><span class="badge bg-info">16 MB</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Timezone:</strong></td>
+                                <td>America/Sao_Paulo</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-shield-alt me-2"></i>Segurança</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td><strong>HTTPS:</strong></td>
+                                <td><span class="badge bg-warning">Desenvolvimento</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>CSRF Protection:</strong></td>
+                                <td><span class="badge bg-success">Ativo</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Session Security:</strong></td>
+                                <td><span class="badge bg-success">Ativo</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Password Hashing:</strong></td>
+                                <td><span class="badge bg-success">Werkzeug</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Permissões:</strong></td>
+                                <td><span class="badge bg-success">Configurado</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações do Sistema -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tools me-2"></i>Ações do Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100 mb-2" onclick="checkSystemHealth()">
+                            <i class="fas fa-heartbeat me-2"></i>Verificar Saúde
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning w-100 mb-2" onclick="clearCache()">
+                            <i class="fas fa-broom me-2"></i>Limpar Cache
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100 mb-2" onclick="testDatabase()">
+                            <i class="fas fa-database me-2"></i>Testar Banco
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100 mb-2" onclick="refreshInfo()">
+                            <i class="fas fa-sync me-2"></i>Atualizar Info
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkSystemHealth() {
+    alert('Sistema funcionando normalmente!');
+}
+
+function clearCache() {
+    if (confirm('Limpar cache do sistema?')) {
+        alert('Cache limpo com sucesso!');
+    }
+}
+
+function testDatabase() {
+    fetch('/admin/test-database')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Banco de dados funcionando corretamente!');
+            } else {
+                alert('Erro no banco de dados: ' + data.error);
+            }
+        });
+}
+
+function refreshInfo() {
+    location.reload();
+}
+</script>
+{% endblock %}

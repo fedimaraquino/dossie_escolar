@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}{{ aluno.nome }} - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user me-2"></i>
+                {{ aluno.nome }}
+            </h1>
+            <div>
+                <a href="{{ url_for('listar_alunos') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar
+                </a>
+                <button class="btn btn-warning me-2">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar
+                </button>
+                <button class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>
+                    Novo Dossiê
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Aluno -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Pessoais
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Matrícula:</strong> {{ aluno.matricula }}</p>
+                        <p><strong>Data de Nascimento:</strong> {{ aluno.data_nascimento.strftime('%d/%m/%Y') }}</p>
+                        <p><strong>Idade:</strong> {{ aluno.idade }} anos</p>
+                        {% if aluno.cpf %}
+                        <p><strong>CPF:</strong> {{ aluno.cpf }}</p>
+                        {% endif %}
+                        {% if aluno.rg %}
+                        <p><strong>RG:</strong> {{ aluno.rg }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if aluno.telefone %}
+                        <p><strong>Telefone:</strong> {{ aluno.telefone }}</p>
+                        {% endif %}
+                        {% if aluno.email %}
+                        <p><strong>Email:</strong> {{ aluno.email }}</p>
+                        {% endif %}
+                        <p><strong>Turma:</strong> {{ aluno.turma or 'Não informado' }}</p>
+                        <p><strong>Ano Letivo:</strong> {{ aluno.ano_letivo or 'Não informado' }}</p>
+                        <p><strong>Cadastrado em:</strong> {{ aluno.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</p>
+                    </div>
+                </div>
+                
+                {% if aluno.endereco %}
+                <hr>
+                <p><strong>Endereço:</strong><br>{{ aluno.endereco }}</p>
+                {% endif %}
+                
+                {% if aluno.nome_responsavel %}
+                <hr>
+                <h6 class="text-primary">Responsável</h6>
+                <p><strong>Nome:</strong> {{ aluno.nome_responsavel }}</p>
+                {% if aluno.telefone_responsavel %}
+                <p><strong>Telefone:</strong> {{ aluno.telefone_responsavel }}</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Resumo
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h4 class="text-primary mb-0">{{ dossies|length }}</h4>
+                                <small class="text-muted">Dossiês</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h4 class="text-success mb-0">
+                                    {% set total_docs = 0 %}
+                                    {% for dossie in dossies %}
+                                        {% set total_docs = total_docs + dossie.documentos|length %}
+                                    {% endfor %}
+                                    {{ total_docs }}
+                                </h4>
+                                <small class="text-muted">Documentos</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if dossies %}
+                <h6 class="text-muted">Dossiês por Tipo:</h6>
+                {% set tipos = {} %}
+                {% for dossie in dossies %}
+                    {% if tipos.update({dossie.tipo: tipos.get(dossie.tipo, 0) + 1}) %}{% endif %}
+                {% endfor %}
+                
+                {% for tipo, count in tipos.items() %}
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-secondary">{{ tipo.title() }}</span>
+                    <span>{{ count }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dossiês do Aluno -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder me-2"></i>
+                    Dossiês ({{ dossies|length }})
+                </h5>
+                <button class="btn btn-success btn-sm">
+                    <i class="fas fa-plus me-2"></i>
+                    Novo Dossiê
+                </button>
+            </div>
+            <div class="card-body">
+                {% if dossies %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Prioridade</th>
+                                    <th>Data Criação</th>
+                                    <th>Documentos</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dossie in dossies %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ dossie.titulo }}</strong>
+                                        {% if dossie.descricao %}
+                                        <br><small class="text-muted">{{ dossie.descricao[:100] }}{% if dossie.descricao|length > 100 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ dossie.tipo.title() }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if dossie.status == 'resolvido' else 'warning' if dossie.status == 'em_andamento' else 'secondary' }}">
+                                            {{ dossie.status.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if dossie.prioridade == 'alta' else 'warning' if dossie.prioridade == 'media' else 'success' }}">
+                                            {{ dossie.prioridade.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{ dossie.data_criacao.strftime('%d/%m/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ dossie.documentos|length }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" title="Adicionar documento">
+                                                <i class="fas fa-file-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum dossiê encontrado</h5>
+                        <p class="text-muted">Este aluno ainda não possui dossiês cadastrados</p>
+                        <button class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>
+                            Criar Primeiro Dossiê
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

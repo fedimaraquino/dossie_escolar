@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cidade.nome }} - {{ cidade.uf }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('cidade.listar') }}">Cidades</a></li>
+                        <li class="breadcrumb-item active">{{ cidade.nome }}</li>
+                    </ol>
+                </nav>
+                <h1>
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    {{ cidade.nome }}
+                    <span class="badge bg-secondary ms-2">{{ cidade.uf }}</span>
+                </h1>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('cidade.editar', id=cidade.id_cidade) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+                <a href="{{ url_for('cidade.listar') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações da Cidade -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações da Cidade
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">ID da Cidade</h6>
+                        <p class="mb-3">
+                            <code>{{ cidade.id_cidade }}</code>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Nome</h6>
+                        <p class="mb-3">
+                            <strong>{{ cidade.nome }}</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Unidade Federativa (UF)</h6>
+                        <p class="mb-3">
+                            <span class="badge bg-info fs-6">{{ cidade.uf }}</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">País</h6>
+                        <p class="mb-3">
+                            {{ cidade.pais }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-school me-2"></i>
+                    Escolas Vinculadas
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if cidade.escolas %}
+                    <p class="mb-3">
+                        <span class="badge bg-success fs-6">{{ cidade.escolas | length }} escola(s)</span>
+                    </p>
+                    
+                    <div class="list-group">
+                        {% for escola in cidade.escolas[:5] %}
+                        <a href="{{ url_for('escola.ver', id=escola.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ escola.nome }}</h6>
+                                <small class="text-muted">{{ escola.situacao }}</small>
+                            </div>
+                            {% if escola.inep %}
+                            <small class="text-muted">INEP: {{ escola.inep }}</small>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                        
+                        {% if cidade.escolas | length > 5 %}
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                E mais {{ cidade.escolas | length - 5 }} escola(s)...
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid mt-3">
+                        <a href="{{ url_for('escola.listar') }}?cidade={{ cidade.id_cidade }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-list me-2"></i>Ver Todas as Escolas
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-school fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-3">Nenhuma escola vinculada</p>
+                        <a href="{{ url_for('escola.nova') }}?cidade={{ cidade.id_cidade }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Cadastrar Escola
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Estatísticas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-success">{{ cidade.escolas | selectattr('situacao', 'equalto', 'ativa') | list | length }}</h4>
+                        <small class="text-muted">Escolas Ativas</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ cidade.escolas | rejectattr('situacao', 'equalto', 'ativa') | list | length }}</h4>
+                        <small class="text-muted">Escolas Inativas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('escola.nova') }}?cidade={{ cidade.id_cidade }}" class="btn btn-outline-primary">
+                                <i class="fas fa-school me-2"></i>
+                                Nova Escola
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('escola.listar') }}?cidade={{ cidade.id_cidade }}" class="btn btn-outline-info">
+                                <i class="fas fa-list me-2"></i>
+                                Listar Escolas
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('cidade.editar', id=cidade.id_cidade) }}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit me-2"></i>
+                                Editar Cidade
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-outline-danger" onclick="confirmarExclusao()">
+                                <i class="fas fa-trash me-2"></i>
+                                Excluir Cidade
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações Técnicas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-code me-2"></i>
+                    Informações Técnicas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Identificador Único</h6>
+                        <p><code>{{ cidade.id_cidade }}</code></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Formato Completo</h6>
+                        <p>{{ cidade.nome }}/{{ cidade.uf }}, {{ cidade.pais }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Total de Vínculos</h6>
+                        <p>{{ cidade.escolas | length }} escola(s)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Tem certeza que deseja excluir a cidade <strong>{{ cidade.nome }} - {{ cidade.uf }}</strong>?</p>
+                {% if cidade.escolas %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-ban me-2"></i>
+                    <strong>Não é possível excluir!</strong><br>
+                    Esta cidade possui {{ cidade.escolas | length }} escola(s) vinculada(s). 
+                    Remova ou transfira as escolas antes de excluir a cidade.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                {% if not cidade.escolas %}
+                <form method="POST" action="{{ url_for('cidade.excluir', id=cidade.id_cidade) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Excluir Cidade</button>
+                </form>
+                {% else %}
+                <button type="button" class="btn btn-danger" disabled>Não é Possível Excluir</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmarExclusao() {
+        new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+    }
+</script>
+{% endblock %}

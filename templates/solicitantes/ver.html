@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}{{ solicitante.nome }} - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('solicitantes.listar') }}">Solicitantes</a></li>
+<li class="breadcrumb-item active">{{ solicitante.nome }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user me-2"></i>
+                {{ solicitante.nome }}
+                {% if solicitante.status == 'ativo' %}
+                    <span class="badge bg-success ms-2">Ativo</span>
+                {% else %}
+                    <span class="badge bg-secondary ms-2">Inativo</span>
+                {% endif %}
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('solicitantes.listar') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a href="{{ url_for('solicitantes.editar', id=solicitante.id_solicitante) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Dados Pessoais -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    Dados Pessoais
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Nome Completo:</strong><br>
+                        <span class="text-muted">{{ solicitante.nome }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>CPF:</strong><br>
+                        {% if solicitante.cpf %}
+                            <code>{{ solicitante.cpf }}</code>
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Data de Nascimento:</strong><br>
+                        {% if solicitante.data_nascimento %}
+                            <span class="text-muted">{{ solicitante.data_nascimento.strftime('%d/%m/%Y') }}</span>
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Email:</strong><br>
+                        {% if solicitante.email %}
+                            <a href="mailto:{{ solicitante.email }}">{{ solicitante.email }}</a>
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Celular:</strong><br>
+                        {% if solicitante.celular %}
+                            <a href="tel:{{ solicitante.celular }}">{{ solicitante.celular }}</a>
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Cidade:</strong><br>
+                        {% if solicitante.cidade %}
+                            <span class="text-muted">{{ solicitante.cidade }}</span>
+                        {% else %}
+                            <span class="text-muted">Não informado</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if solicitante.endereco %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <strong>Endereço:</strong><br>
+                        <span class="text-muted">{{ solicitante.endereco }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Histórico de Movimentações -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Histórico de Movimentações
+                    {% if solicitante.movimentacoes %}
+                        <span class="badge bg-primary ms-2">{{ solicitante.movimentacoes|length }}</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if solicitante.movimentacoes %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Dossiê</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movimentacao in solicitante.movimentacoes %}
+                            <tr>
+                                <td>
+                                    <small>{{ movimentacao.data_movimentacao.strftime('%d/%m/%Y %H:%M') if movimentacao.data_movimentacao else '-' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ movimentacao.tipo_movimentacao|title }}</span>
+                                </td>
+                                <td>
+                                    {% if movimentacao.dossie %}
+                                        <a href="{{ url_for('dossies.ver', id=movimentacao.dossie.id) }}">
+                                            {{ movimentacao.dossie.nome }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if movimentacao.status == 'concluida' %}
+                                        <span class="badge bg-success">Concluída</span>
+                                    {% elif movimentacao.status == 'pendente' %}
+                                        <span class="badge bg-warning">Pendente</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ movimentacao.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('movimentacoes.ver', id=movimentacao.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">Nenhuma movimentação registrada para este solicitante.</p>
+                    <a href="{{ url_for('movimentacoes.nova') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nova Movimentação
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informações Adicionais -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações da Solicitação
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Parentesco:</strong><br>
+                    {% if solicitante.parentesco %}
+                        <span class="badge bg-info">{{ solicitante.parentesco|title }}</span>
+                    {% else %}
+                        <span class="text-muted">Não informado</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Tipo de Solicitação:</strong><br>
+                    {% if solicitante.tipo_solicitacao %}
+                        <span class="badge bg-secondary">{{ solicitante.tipo_solicitacao|title }}</span>
+                    {% else %}
+                        <span class="text-muted">Não informado</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Status:</strong><br>
+                    {% if solicitante.status == 'ativo' %}
+                        <span class="badge bg-success">Ativo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Data de Cadastro:</strong><br>
+                    <small class="text-muted">
+                        {{ solicitante.data_cadastro.strftime('%d/%m/%Y às %H:%M') if solicitante.data_cadastro else 'Não informado' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ações Rápidas -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('movimentacoes.nova') }}?solicitante={{ solicitante.id_solicitante }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nova Movimentação
+                    </a>
+                    <a href="{{ url_for('solicitantes.editar', id=solicitante.id_solicitante) }}" 
+                       class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Editar Dados
+                    </a>
+                    {% if solicitante.email %}
+                    <a href="mailto:{{ solicitante.email }}" class="btn btn-info">
+                        <i class="fas fa-envelope me-2"></i>Enviar Email
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Confirmar exclusão
+    $('.btn-delete').on('click', function(e) {
+        if (!confirm('Tem certeza que deseja excluir este solicitante?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

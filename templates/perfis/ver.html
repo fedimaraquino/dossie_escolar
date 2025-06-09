@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}{{ perfil.perfil }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('perfil.listar') }}">Perfis</a></li>
+                        <li class="breadcrumb-item active">{{ perfil.perfil }}</li>
+                    </ol>
+                </nav>
+                <h1>
+                    <i class="fas fa-user-shield me-2"></i>
+                    {{ perfil.perfil }}
+                    {% set perfis_sistema = ['Administrador Geral', 'Administrador da Escola', 'Operador', 'Consulta'] %}
+                    {% if perfil.perfil in perfis_sistema %}
+                        <span class="badge bg-warning ms-2">Sistema</span>
+                    {% else %}
+                        <span class="badge bg-secondary ms-2">Personalizado</span>
+                    {% endif %}
+                </h1>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('perfil.editar', id=perfil.id_perfil) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar
+                </a>
+                <a href="{{ url_for('perfil.listar') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Perfil -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações do Perfil
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">ID do Perfil</h6>
+                        <p class="mb-3">
+                            <code>{{ perfil.id_perfil }}</code>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Nome do Perfil</h6>
+                        <p class="mb-3">
+                            <strong>{{ perfil.perfil }}</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Tipo</h6>
+                        <p class="mb-3">
+                            {% if perfil.perfil in perfis_sistema %}
+                                <span class="badge bg-warning fs-6">Perfil do Sistema</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Perfil Personalizado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Descrição</h6>
+                        <p class="mb-3">
+                            {{ perfil.descricao }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Usuários Vinculados
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if usuarios_count > 0 %}
+                    <p class="mb-3">
+                        <span class="badge bg-info fs-6">{{ usuarios_count }} usuário(s)</span>
+                    </p>
+                    
+                    <div class="d-grid">
+                        <a href="{{ url_for('perfil.usuarios', id=perfil.id_perfil) }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-list me-2"></i>Ver Todos os Usuários
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-3">Nenhum usuário vinculado</p>
+                        <a href="{{ url_for('usuario.novo') }}?perfil={{ perfil.id_perfil }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Cadastrar Usuário
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Permissões
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if perfil.perfil == 'Administrador Geral' %}
+                    <div class="alert alert-danger alert-sm">
+                        <i class="fas fa-crown me-2"></i>
+                        <strong>Acesso Total</strong><br>
+                        <small>Controle completo do sistema</small>
+                    </div>
+                {% elif perfil.perfil == 'Administrador da Escola' %}
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-user-shield me-2"></i>
+                        <strong>Administrador</strong><br>
+                        <small>Gestão completa da escola</small>
+                    </div>
+                {% elif perfil.perfil == 'Operador' %}
+                    <div class="alert alert-info alert-sm">
+                        <i class="fas fa-cogs me-2"></i>
+                        <strong>Operacional</strong><br>
+                        <small>Operações básicas de dossiês</small>
+                    </div>
+                {% elif perfil.perfil == 'Consulta' %}
+                    <div class="alert alert-secondary alert-sm">
+                        <i class="fas fa-eye me-2"></i>
+                        <strong>Somente Leitura</strong><br>
+                        <small>Apenas consulta aos dados</small>
+                    </div>
+                {% else %}
+                    <div class="alert alert-light alert-sm">
+                        <i class="fas fa-user me-2"></i>
+                        <strong>Personalizado</strong><br>
+                        <small>Permissões definidas pelo administrador</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('usuario.novo') }}?perfil={{ perfil.id_perfil }}" class="btn btn-outline-primary">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Novo Usuário
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('perfil.usuarios', id=perfil.id_perfil) }}" class="btn btn-outline-info">
+                                <i class="fas fa-users me-2"></i>
+                                Listar Usuários
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('perfil.editar', id=perfil.id_perfil) }}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit me-2"></i>
+                                Editar Perfil
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            {% if perfil.perfil not in perfis_sistema %}
+                            <button type="button" class="btn btn-outline-danger" onclick="confirmarExclusao()">
+                                <i class="fas fa-trash me-2"></i>
+                                Excluir Perfil
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-outline-danger" disabled title="Perfis do sistema não podem ser excluídos">
+                                <i class="fas fa-ban me-2"></i>
+                                Protegido
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações Técnicas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-code me-2"></i>
+                    Informações Técnicas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Identificador Único</h6>
+                        <p><code>{{ perfil.id_perfil }}</code></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Nome Interno</h6>
+                        <p>{{ perfil.perfil }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Total de Vínculos</h6>
+                        <p>{{ usuarios_count }} usuário(s)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                <p>Tem certeza que deseja excluir o perfil <strong>{{ perfil.perfil }}</strong>?</p>
+                {% if usuarios_count > 0 %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-ban me-2"></i>
+                    <strong>Não é possível excluir!</strong><br>
+                    Este perfil possui {{ usuarios_count }} usuário(s) vinculado(s). 
+                    Remova ou altere o perfil dos usuários antes de excluir.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                {% if usuarios_count == 0 and perfil.perfil not in perfis_sistema %}
+                <form method="POST" action="{{ url_for('perfil.excluir', id=perfil.id_perfil) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Excluir Perfil</button>
+                </form>
+                {% else %}
+                <button type="button" class="btn btn-danger" disabled>Não é Possível Excluir</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmarExclusao() {
+        new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+    }
+</script>
+{% endblock %}

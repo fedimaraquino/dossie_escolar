@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ perfil.perfil }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-edit me-2"></i>
+                Editar Perfil
+            </h1>
+            <div>
+                <a href="{{ url_for('perfil.ver', id=perfil.id_perfil) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Editando: {{ perfil.perfil }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-12">
+                            <label for="perfil" class="form-label">Nome do Perfil *</label>
+                            <input type="text" class="form-control" id="perfil" name="perfil" value="{{ perfil.perfil }}" required
+                                   placeholder="Ex: Coordenador Pedagógico, Secretário, etc.">
+                            <div class="form-text">
+                                O nome deve ser único e descritivo das funções do perfil.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="3" maxlength="500"
+                                      placeholder="Descreva as responsabilidades e funções deste perfil...">{{ perfil.descricao or '' }}</textarea>
+                            <div class="form-text d-flex justify-content-between">
+                                <span>Descrição opcional das responsabilidades e funções do perfil.</span>
+                                <span id="contador-descricao" class="text-muted">{{ (perfil.descricao|length) if perfil.descricao else 0 }}/500</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Informações importantes:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>O nome do perfil deve ser único no sistema</li>
+                                    <li>Alterações afetarão todos os usuários vinculados</li>
+                                    <li>Perfis do sistema não podem ter o nome alterado</li>
+                                    <li>Verifique se o novo nome não conflita com perfis existentes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('perfil.ver', id=perfil.id_perfil) }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Atuais
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Dados Atuais</h6>
+                <ul class="list-unstyled">
+                    <li><strong>ID:</strong> {{ perfil.id_perfil }}</li>
+                    <li><strong>Nome:</strong> {{ perfil.perfil }}</li>
+                    <li><strong>Descrição:</strong> {{ perfil.descricao }}</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Usuários Vinculados</h6>
+                {% if perfil.usuarios %}
+                    <p class="text-warning">
+                        <i class="fas fa-users me-1"></i>
+                        {{ perfil.usuarios | length }} usuário(s)
+                    </p>
+                    <small class="text-muted">
+                        As alterações afetarão todos os usuários vinculados.
+                    </small>
+                {% else %}
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Nenhum usuário vinculado
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Validações
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Regras de Validação</h6>
+                <ul class="small">
+                    <li>Nome é obrigatório</li>
+                    <li>Deve ser único no sistema</li>
+                    <li>Mínimo de 3 caracteres</li>
+                    <li>Não pode usar nomes reservados</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Nomes Reservados</h6>
+                <ul class="small">
+                    <li>Administrador Geral</li>
+                    <li>Administrador da Escola</li>
+                    <li>Operador</li>
+                    <li>Consulta</li>
+                </ul>
+                <small class="text-muted">
+                    Estes nomes são protegidos pelo sistema.
+                </small>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Tipo do Perfil
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set perfis_sistema = ['Administrador Geral', 'Administrador da Escola', 'Operador', 'Consulta'] %}
+                {% if perfil.perfil in perfis_sistema %}
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-lock me-2"></i>
+                        <strong>Perfil do Sistema</strong><br>
+                        <small>Este perfil é protegido e tem funcionalidades especiais.</small>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info alert-sm">
+                        <i class="fas fa-user me-2"></i>
+                        <strong>Perfil Personalizado</strong><br>
+                        <small>Este perfil pode ser editado livremente.</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Converter nome para formato adequado
+    document.getElementById('perfil').addEventListener('blur', function() {
+        let perfil = this.value.trim();
+        if (perfil) {
+            // Capitalizar primeira letra de cada palavra
+            perfil = perfil.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+            this.value = perfil;
+        }
+    });
+
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const perfil = document.getElementById('perfil').value.trim();
+        const descricao = document.getElementById('descricao').value.trim();
+
+        if (!perfil) {
+            e.preventDefault();
+            alert('Por favor, preencha o nome do perfil');
+            return false;
+        }
+
+        if (perfil.length < 3) {
+            e.preventDefault();
+            alert('O nome do perfil deve ter pelo menos 3 caracteres');
+            return false;
+        }
+
+        // Validar descrição se preenchida
+        if (descricao && descricao.length > 500) {
+            e.preventDefault();
+            alert('A descrição deve ter no máximo 500 caracteres');
+            return false;
+        }
+        
+        // Verificar se não é um nome de perfil do sistema (exceto se for o atual)
+        const perfisReservados = [
+            'administrador geral',
+            'administrador da escola', 
+            'operador',
+            'consulta'
+        ];
+        
+        const perfilOriginal = '{{ perfil.perfil }}';
+        if (perfisReservados.includes(perfil.toLowerCase()) && perfil !== perfilOriginal) {
+            e.preventDefault();
+            alert('Este nome é reservado para perfis do sistema. Escolha outro nome.');
+            return false;
+        }
+        
+        // Confirmar alterações
+        if (!confirm(`Confirma as alterações no perfil "${perfil}"?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Destacar campo alterado
+    const perfilOriginal = '{{ perfil.perfil }}';
+
+    function verificarAlteracoes() {
+        const elemento = document.getElementById('perfil');
+        if (elemento.value !== perfilOriginal) {
+            elemento.classList.add('border-warning');
+        } else {
+            elemento.classList.remove('border-warning');
+        }
+    }
+
+    // Verificar alterações em tempo real
+    document.getElementById('perfil').addEventListener('input', verificarAlteracoes);
+    document.getElementById('perfil').addEventListener('change', verificarAlteracoes);
+
+    // Sugestões de nomes (apenas para perfis personalizados)
+    const perfisReservados = ['Administrador Geral', 'Administrador da Escola', 'Operador', 'Consulta'];
+    if (!perfisReservados.includes('{{ perfil.perfil }}')) {
+        const sugestoes = [
+            'Coordenador Pedagógico',
+            'Secretário Escolar',
+            'Auxiliar Administrativo',
+            'Diretor Adjunto',
+            'Supervisor Educacional',
+            'Orientador Educacional',
+            'Bibliotecário',
+            'Inspetor Escolar'
+        ];
+
+        // Adicionar datalist para sugestões
+        const input = document.getElementById('perfil');
+        const datalist = document.createElement('datalist');
+        datalist.id = 'sugestoes-perfil';
+        
+        sugestoes.forEach(sugestao => {
+            const option = document.createElement('option');
+            option.value = sugestao;
+            datalist.appendChild(option);
+        });
+        
+        input.setAttribute('list', 'sugestoes-perfil');
+        input.parentNode.appendChild(datalist);
+    }
+
+    // Contador de caracteres para descrição
+    const descricaoTextarea = document.getElementById('descricao');
+    const contadorDescricao = document.getElementById('contador-descricao');
+
+    function atualizarContador() {
+        const length = descricaoTextarea.value.length;
+        contadorDescricao.textContent = `${length}/500`;
+
+        if (length > 450) {
+            contadorDescricao.classList.add('text-warning');
+        } else if (length > 480) {
+            contadorDescricao.classList.remove('text-warning');
+            contadorDescricao.classList.add('text-danger');
+        } else {
+            contadorDescricao.classList.remove('text-warning', 'text-danger');
+        }
+    }
+
+    descricaoTextarea.addEventListener('input', atualizarContador);
+    descricaoTextarea.addEventListener('keyup', atualizarContador);
+
+    // Inicializar contador
+    atualizarContador();
+</script>
+{% endblock %}

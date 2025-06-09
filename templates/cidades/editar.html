@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ cidade.nome }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-edit me-2"></i>
+                Editar Cidade
+            </h1>
+            <div>
+                <a href="{{ url_for('cidade.ver', id=cidade.id_cidade) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Editando: {{ cidade.nome }} - {{ cidade.uf }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label for="nome" class="form-label">Nome da Cidade *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" value="{{ cidade.nome }}" required
+                                   placeholder="Nome da cidade">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="uf" class="form-label">UF *</label>
+                            <select class="form-select" id="uf" name="uf" required>
+                                <option value="">Selecione...</option>
+                                <option value="AC" {{ 'selected' if cidade.uf == 'AC' else '' }}>Acre</option>
+                                <option value="AL" {{ 'selected' if cidade.uf == 'AL' else '' }}>Alagoas</option>
+                                <option value="AP" {{ 'selected' if cidade.uf == 'AP' else '' }}>Amapá</option>
+                                <option value="AM" {{ 'selected' if cidade.uf == 'AM' else '' }}>Amazonas</option>
+                                <option value="BA" {{ 'selected' if cidade.uf == 'BA' else '' }}>Bahia</option>
+                                <option value="CE" {{ 'selected' if cidade.uf == 'CE' else '' }}>Ceará</option>
+                                <option value="DF" {{ 'selected' if cidade.uf == 'DF' else '' }}>Distrito Federal</option>
+                                <option value="ES" {{ 'selected' if cidade.uf == 'ES' else '' }}>Espírito Santo</option>
+                                <option value="GO" {{ 'selected' if cidade.uf == 'GO' else '' }}>Goiás</option>
+                                <option value="MA" {{ 'selected' if cidade.uf == 'MA' else '' }}>Maranhão</option>
+                                <option value="MT" {{ 'selected' if cidade.uf == 'MT' else '' }}>Mato Grosso</option>
+                                <option value="MS" {{ 'selected' if cidade.uf == 'MS' else '' }}>Mato Grosso do Sul</option>
+                                <option value="MG" {{ 'selected' if cidade.uf == 'MG' else '' }}>Minas Gerais</option>
+                                <option value="PA" {{ 'selected' if cidade.uf == 'PA' else '' }}>Pará</option>
+                                <option value="PB" {{ 'selected' if cidade.uf == 'PB' else '' }}>Paraíba</option>
+                                <option value="PR" {{ 'selected' if cidade.uf == 'PR' else '' }}>Paraná</option>
+                                <option value="PE" {{ 'selected' if cidade.uf == 'PE' else '' }}>Pernambuco</option>
+                                <option value="PI" {{ 'selected' if cidade.uf == 'PI' else '' }}>Piauí</option>
+                                <option value="RJ" {{ 'selected' if cidade.uf == 'RJ' else '' }}>Rio de Janeiro</option>
+                                <option value="RN" {{ 'selected' if cidade.uf == 'RN' else '' }}>Rio Grande do Norte</option>
+                                <option value="RS" {{ 'selected' if cidade.uf == 'RS' else '' }}>Rio Grande do Sul</option>
+                                <option value="RO" {{ 'selected' if cidade.uf == 'RO' else '' }}>Rondônia</option>
+                                <option value="RR" {{ 'selected' if cidade.uf == 'RR' else '' }}>Roraima</option>
+                                <option value="SC" {{ 'selected' if cidade.uf == 'SC' else '' }}>Santa Catarina</option>
+                                <option value="SP" {{ 'selected' if cidade.uf == 'SP' else '' }}>São Paulo</option>
+                                <option value="SE" {{ 'selected' if cidade.uf == 'SE' else '' }}>Sergipe</option>
+                                <option value="TO" {{ 'selected' if cidade.uf == 'TO' else '' }}>Tocantins</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="pais" class="form-label">País</label>
+                            <input type="text" class="form-control" id="pais" name="pais" value="{{ cidade.pais }}">
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Informações importantes:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>O nome da cidade deve ser único por UF</li>
+                                    <li>A UF será automaticamente convertida para maiúsculas</li>
+                                    <li>Alterações podem afetar escolas vinculadas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('cidade.ver', id=cidade.id_cidade) }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Informações Atuais
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Dados Atuais</h6>
+                <ul class="list-unstyled">
+                    <li><strong>ID:</strong> {{ cidade.id_cidade }}</li>
+                    <li><strong>Nome:</strong> {{ cidade.nome }}</li>
+                    <li><strong>UF:</strong> {{ cidade.uf }}</li>
+                    <li><strong>País:</strong> {{ cidade.pais }}</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Escolas Vinculadas</h6>
+                {% if cidade.escolas %}
+                    <p class="text-success">
+                        <i class="fas fa-school me-1"></i>
+                        {{ cidade.escolas | length }} escola(s)
+                    </p>
+                    <small class="text-muted">
+                        As alterações podem afetar as escolas vinculadas.
+                    </small>
+                {% else %}
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Nenhuma escola vinculada
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Validações
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Regras de Validação</h6>
+                <ul class="small">
+                    <li>Nome e UF são obrigatórios</li>
+                    <li>Não pode haver cidades duplicadas na mesma UF</li>
+                    <li>UF deve ser uma sigla válida</li>
+                    <li>Nome será formatado automaticamente</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Impacto das Alterações</h6>
+                <ul class="small">
+                    <li>Escolas vinculadas manterão a referência</li>
+                    <li>Relatórios serão atualizados automaticamente</li>
+                    <li>Histórico de alterações será mantido</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Converter nome para formato adequado
+    document.getElementById('nome').addEventListener('blur', function() {
+        let nome = this.value.trim();
+        if (nome) {
+            // Capitalizar primeira letra de cada palavra
+            nome = nome.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+            this.value = nome;
+        }
+    });
+
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const nome = document.getElementById('nome').value.trim();
+        const uf = document.getElementById('uf').value;
+        
+        if (!nome || !uf) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        // Confirmar alterações
+        if (!confirm(`Confirma as alterações na cidade "${nome}" - ${uf}?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Destacar campos alterados
+    const camposOriginais = {
+        nome: '{{ cidade.nome }}',
+        uf: '{{ cidade.uf }}',
+        pais: '{{ cidade.pais }}'
+    };
+
+    function verificarAlteracoes() {
+        Object.keys(camposOriginais).forEach(campo => {
+            const elemento = document.getElementById(campo);
+            if (elemento.value !== camposOriginais[campo]) {
+                elemento.classList.add('border-warning');
+            } else {
+                elemento.classList.remove('border-warning');
+            }
+        });
+    }
+
+    // Verificar alterações em tempo real
+    ['nome', 'uf', 'pais'].forEach(campo => {
+        document.getElementById(campo).addEventListener('input', verificarAlteracoes);
+        document.getElementById(campo).addEventListener('change', verificarAlteracoes);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Escolas - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Escolas</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-school me-2"></i>
+                Gestão de Escolas
+            </h1>
+            <a href="{{ url_for('escola.nova') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Nova Escola
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros e Busca -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search" class="form-label">Buscar por nome, CNPJ ou INEP</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ search }}" placeholder="Digite o nome, CNPJ ou INEP...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="situacao" class="form-label">Situação</label>
+                        <select class="form-select" id="situacao" name="situacao">
+                            <option value="">Todas</option>
+                            <option value="ativa">Ativa</option>
+                            <option value="inativa">Inativa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search me-2"></i>
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Escolas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if escolas.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Diretor</th>
+                                    <th>CNPJ</th>
+                                    <th>INEP</th>
+                                    <th>UF</th>
+                                    <th>Situação</th>
+                                    <th>Data Cadastro</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for escola in escolas.items %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ escola.nome }}</strong>
+                                            {% if escola.email %}
+                                                <br><small class="text-muted">{{ escola.email }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ escola.diretor or 'Não informado' }}</td>
+                                    <td>
+                                        <code>{{ escola.cnpj or 'Não informado' }}</code>
+                                    </td>
+                                    <td>
+                                        <code>{{ escola.inep or 'Não informado' }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ escola.uf or 'N/A' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if escola.situacao == 'ativa' else 'danger' }}">
+                                            {{ escola.situacao.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{ escola.data_cadastro.strftime('%d/%m/%Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('escola.ver', id=escola.id) }}" class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('escola.editar', id=escola.id) }}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('usuario.listar', escola=escola.id) }}" class="btn btn-sm btn-outline-success" title="Usuários">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                            <a href="{{ url_for('escola.configuracoes', id=escola.id) }}" class="btn btn-sm btn-outline-secondary" title="Configurações">
+                                                <i class="fas fa-cog"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                                    onclick="confirmarExclusao({{ escola.id }}, '{{ escola.nome }}', '{{ url_for('escola.excluir', id=escola.id) }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if escolas.pages > 1 %}
+                    <nav aria-label="Navegação de páginas">
+                        <ul class="pagination justify-content-center">
+                            {% if escolas.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('escola.listar', page=escolas.prev_num, search=search) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in escolas.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != escolas.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('escola.listar', page=page_num, search=search) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if escolas.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('escola.listar', page=escolas.next_num, search=search) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-school fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma escola encontrada</h5>
+                        {% if search %}
+                            <p class="text-muted">Tente ajustar os filtros de busca</p>
+                            <a href="{{ url_for('escola.listar') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-times me-2"></i>
+                                Limpar filtros
+                            </a>
+                        {% else %}
+                            <p class="text-muted">Comece cadastrando a primeira escola</p>
+                            <a href="{{ url_for('escola.nova') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Cadastrar Escola
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ escolas.total }}</h4>
+                <p class="mb-0">Total de Escolas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ escolas.items | selectattr('situacao', 'equalto', 'ativa') | list | length }}</h4>
+                <p class="mb-0">Escolas Ativas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h4>{{ escolas.items | selectattr('situacao', 'equalto', 'inativa') | list | length }}</h4>
+                <p class="mb-0">Escolas Inativas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>0</h4>
+                <p class="mb-0">Cadastradas (30 dias)</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmarExclusao(id, nome, url) {
+        if (confirm('Tem certeza que deseja excluir "' + nome + '"?\n\nEsta ação não pode ser desfeita!')) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function abrirConfiguracoes(id) {
+        alert('Configurações da escola ID: ' + id + '\nFuncionalidade será implementada.');
+    }
+</script>
+{% endblock %}

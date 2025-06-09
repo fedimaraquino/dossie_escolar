@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Movimentação{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-plus me-2"></i>Nova Movimentação</h2>
+            <p class="text-muted">Registrar nova movimentação de dossiê</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Dados da Movimentação
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST">
+                        <!-- Dossiê -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-folder me-2"></i>Dossiê
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Dossiê <span class="text-danger">*</span></label>
+                                <select name="dossie_id" class="form-select" required id="dossie_select">
+                                    <option value="">Selecione um dossiê...</option>
+                                    {% for dossie in dossies %}
+                                    <option value="{{ dossie.id }}" 
+                                            data-aluno="{{ dossie.nome_aluno }}"
+                                            data-numero="{{ dossie.numero_dossie }}"
+                                            data-escola="{{ dossie.escola.nome if dossie.escola else '' }}">
+                                        {{ dossie.numero_dossie }} - {{ dossie.nome_aluno }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Movimentação <span class="text-danger">*</span></label>
+                                <select name="tipo_movimentacao" class="form-select" required id="tipo_select">
+                                    <option value="">Selecione o tipo...</option>
+                                    <option value="consulta">Consulta</option>
+                                    <option value="emprestimo">Empréstimo</option>
+                                    <option value="devolucao">Devolução</option>
+                                    <option value="transferencia">Transferência</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Solicitante -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user me-2"></i>Solicitante
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Nome do Solicitante</label>
+                                <input type="text" name="solicitante_nome" class="form-control" 
+                                       placeholder="Nome completo">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Documento (RG/CPF)</label>
+                                <input type="text" name="solicitante_documento" class="form-control" 
+                                       placeholder="RG ou CPF">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Telefone</label>
+                                <input type="text" name="solicitante_telefone" class="form-control" 
+                                       placeholder="(11) 99999-9999" 
+                                       data-mask="(00) 00000-0000">
+                            </div>
+                        </div>
+
+                        <!-- Detalhes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Detalhes
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6" id="escola_destino_div" style="display: none;">
+                                <label class="form-label">Escola de Destino</label>
+                                <select name="escola_destino_id" class="form-select">
+                                    <option value="">Selecione a escola...</option>
+                                    {% for escola in escolas %}
+                                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Data Prevista de Devolução</label>
+                                <input type="date" name="data_prevista_devolucao" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Motivo</label>
+                                <textarea name="motivo" class="form-control" rows="3" 
+                                          placeholder="Motivo da movimentação..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Observações</label>
+                                <textarea name="observacoes" class="form-control" rows="3" 
+                                          placeholder="Observações adicionais..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Registrar Movimentação
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar com Informações -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Dicas:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Dossiê e tipo são obrigatórios</li>
+                            <li>Dados do solicitante são opcionais</li>
+                            <li>Para transferências, selecione escola destino</li>
+                            <li>Data de devolução é opcional</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tipos de Movimentação -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Tipos de Movimentação
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-2">
+                            <span class="badge bg-info me-2">Consulta</span>
+                            Visualização do dossiê
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-warning me-2">Empréstimo</span>
+                            Retirada temporária
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-success me-2">Devolução</span>
+                            Retorno do dossiê
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-primary me-2">Transferência</span>
+                            Mudança de escola
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dossiê Selecionado -->
+            <div class="card mt-3" id="dossie_info" style="display: none;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-folder me-2"></i>Dossiê Selecionado
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="dossie_details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Máscaras de Input -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Aplicar máscaras
+    $('[data-mask]').each(function() {
+        $(this).mask($(this).data('mask'));
+    });
+    
+    // Mostrar/ocultar escola destino baseado no tipo
+    $('#tipo_select').change(function() {
+        if ($(this).val() === 'transferencia') {
+            $('#escola_destino_div').show();
+        } else {
+            $('#escola_destino_div').hide();
+        }
+    });
+    
+    // Mostrar informações do dossiê selecionado
+    $('#dossie_select').change(function() {
+        var option = $(this).find('option:selected');
+        if (option.val()) {
+            var aluno = option.data('aluno');
+            var numero = option.data('numero');
+            var escola = option.data('escola');
+            
+            var html = '<div class="small">';
+            html += '<div class="mb-2"><strong>Número:</strong><br>' + numero + '</div>';
+            html += '<div class="mb-2"><strong>Aluno:</strong><br>' + aluno + '</div>';
+            if (escola) {
+                html += '<div class="mb-2"><strong>Escola:</strong><br>' + escola + '</div>';
+            }
+            html += '</div>';
+            
+            $('#dossie_details').html(html);
+            $('#dossie_info').show();
+        } else {
+            $('#dossie_info').hide();
+        }
+    });
+    
+    // Validação do formulário
+    $('form').submit(function(e) {
+        var dossie = $('#dossie_select').val();
+        var tipo = $('#tipo_select').val();
+        
+        if (!dossie) {
+            e.preventDefault();
+            alert('Por favor, selecione um dossiê');
+            return false;
+        }
+        
+        if (!tipo) {
+            e.preventDefault();
+            alert('Por favor, selecione o tipo de movimentação');
+            return false;
+        }
+        
+        if (tipo === 'transferencia') {
+            var escolaDestino = $('select[name="escola_destino_id"]').val();
+            if (!escolaDestino) {
+                e.preventDefault();
+                alert('Para transferências, é necessário selecionar a escola de destino');
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

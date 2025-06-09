@@ -1,0 +1,316 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Logs{% endblock %}
+{% block header %}Visualizar Logs do Sistema{% endblock %}
+
+{% block content %}
+<!-- Filtros e Controles -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-filter me-2"></i>Filtros</h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Nível:</label>
+                        <select name="level" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="ERROR">Erro</option>
+                            <option value="WARNING">Aviso</option>
+                            <option value="INFO">Informação</option>
+                            <option value="DEBUG">Debug</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Data:</label>
+                        <input type="date" name="date" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar:</label>
+                        <input type="text" name="search" class="form-control" placeholder="Buscar nos logs...">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Filtrar
+                        </button>
+                        <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Limpar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle me-2"></i>Informações</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <i class="fas fa-file-alt fa-2x text-primary mb-2"></i>
+                        <h6>Arquivos de Log</h6>
+                        <span class="badge bg-secondary">{{ log_files|length }}</span>
+                    </div>
+                    <div class="col-6">
+                        <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                        <h6>Última Atualização</h6>
+                        <small class="text-muted">Agora</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Arquivos de Log -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2"></i>Arquivos de Log
+                    <span class="badge bg-secondary ms-2">{{ log_files|length }}</span>
+                </h5>
+                <div>
+                    <button class="btn btn-outline-success btn-sm" onclick="refreshLogs()">
+                        <i class="fas fa-sync me-2"></i>Atualizar
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" onclick="clearLogs()">
+                        <i class="fas fa-broom me-2"></i>Limpar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                {% if log_files %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Arquivo</th>
+                                <th>Tamanho</th>
+                                <th>Última Modificação</th>
+                                <th>Tipo</th>
+                                <th width="150">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log_file in log_files %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-alt me-2 text-primary"></i>
+                                    <strong>{{ log_file.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {% if log_file.size > 1024*1024 %}
+                                            {{ "%.2f"|format(log_file.size / 1024 / 1024) }} MB
+                                        {% elif log_file.size > 1024 %}
+                                            {{ "%.2f"|format(log_file.size / 1024) }} KB
+                                        {% else %}
+                                            {{ log_file.size }} bytes
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ log_file.modified.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    {% if 'error' in log_file.name.lower() %}
+                                        <span class="badge bg-danger">Erro</span>
+                                    {% elif 'access' in log_file.name.lower() %}
+                                        <span class="badge bg-info">Acesso</span>
+                                    {% elif 'app' in log_file.name.lower() %}
+                                        <span class="badge bg-primary">Aplicação</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Sistema</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="viewLog('{{ log_file.name }}')" title="Visualizar">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="/admin/logs/download/{{ log_file.name }}" class="btn btn-outline-success" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <button class="btn btn-outline-danger" onclick="deleteLog('{{ log_file.name }}')" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum arquivo de log encontrado</h5>
+                    <p class="text-muted">Os logs aparecerão aqui conforme o sistema for usado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs em Tempo Real -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-stream me-2"></i>Logs em Tempo Real
+                </h5>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="startLiveLog()">
+                        <i class="fas fa-play me-2"></i>Iniciar
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="stopLiveLog()">
+                        <i class="fas fa-stop me-2"></i>Parar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div id="live-logs" class="bg-dark text-light p-3 rounded" style="height: 300px; overflow-y: auto; font-family: monospace;">
+                    <div class="text-muted">Clique em "Iniciar" para ver logs em tempo real...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Visualizar Log -->
+<div class="modal fade" id="logModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt me-2"></i>Visualizar Log
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="log-content" class="bg-dark text-light p-3 rounded" style="height: 500px; overflow-y: auto; font-family: monospace;">
+                    Carregando...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="downloadCurrentLog()">
+                    <i class="fas fa-download me-2"></i>Download
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let liveLogInterval;
+let currentLogFile;
+
+function viewLog(filename) {
+    currentLogFile = filename;
+    const modal = new bootstrap.Modal(document.getElementById('logModal'));
+    
+    fetch('/admin/logs/view/' + filename)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('log-content').innerHTML = data.replace(/\n/g, '<br>');
+            modal.show();
+        })
+        .catch(error => {
+            document.getElementById('log-content').innerHTML = 'Erro ao carregar log: ' + error;
+            modal.show();
+        });
+}
+
+function deleteLog(filename) {
+    if (confirm('Tem certeza que deseja excluir o log "' + filename + '"?')) {
+        fetch('/admin/logs/delete/' + filename, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao excluir log: ' + data.error);
+            }
+        });
+    }
+}
+
+function refreshLogs() {
+    location.reload();
+}
+
+function clearLogs() {
+    if (confirm('Tem certeza que deseja limpar todos os logs?')) {
+        fetch('/admin/logs/clear', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+}
+
+function startLiveLog() {
+    const liveLogsDiv = document.getElementById('live-logs');
+    liveLogsDiv.innerHTML = '<div class="text-success">Monitorando logs...</div>';
+    
+    liveLogInterval = setInterval(() => {
+        fetch('/admin/logs/live')
+            .then(response => response.json())
+            .then(data => {
+                if (data.logs && data.logs.length > 0) {
+                    const newLogs = data.logs.map(log => 
+                        `<div class="mb-1">
+                            <span class="text-muted">[${log.timestamp}]</span> 
+                            <span class="text-${getLogColor(log.level)}">${log.level}</span>: 
+                            ${log.message}
+                        </div>`
+                    ).join('');
+                    
+                    liveLogsDiv.innerHTML = newLogs;
+                    liveLogsDiv.scrollTop = liveLogsDiv.scrollHeight;
+                }
+            });
+    }, 2000);
+}
+
+function stopLiveLog() {
+    if (liveLogInterval) {
+        clearInterval(liveLogInterval);
+        document.getElementById('live-logs').innerHTML = '<div class="text-muted">Monitoramento parado.</div>';
+    }
+}
+
+function getLogColor(level) {
+    switch(level) {
+        case 'ERROR': return 'danger';
+        case 'WARNING': return 'warning';
+        case 'INFO': return 'info';
+        case 'DEBUG': return 'secondary';
+        default: return 'light';
+    }
+}
+
+function downloadCurrentLog() {
+    if (currentLogFile) {
+        window.open('/admin/logs/download/' + currentLogFile);
+    }
+}
+</script>
+{% endblock %}

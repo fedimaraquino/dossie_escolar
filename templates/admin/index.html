@@ -1,0 +1,138 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard Admin{% endblock %}
+{% block header %}Dashboard Administrativo{% endblock %}
+
+{% block content %}
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h3>{{ stats.usuarios }}</h3>
+                <p class="mb-0">Usuários</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-school fa-2x mb-2"></i>
+                <h3>{{ stats.escolas }}</h3>
+                <p class="mb-0">Escolas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x mb-2"></i>
+                <h3>{{ stats.dossies }}</h3>
+                <p class="mb-0">Dossiês</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-paperclip fa-2x mb-2"></i>
+                <h3>{{ stats.anexos }}</h3>
+                <p class="mb-0">Anexos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Atividades Recentes -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-users me-2"></i>Usuários Recentes</h5>
+            </div>
+            <div class="card-body">
+                {% if usuarios_recentes %}
+                    <div class="list-group list-group-flush">
+                        {% for usuario in usuarios_recentes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ usuario.nome }}</strong><br>
+                                <small class="text-muted">{{ usuario.email }}</small>
+                            </div>
+                            <small class="text-muted">
+                                {{ usuario.data_cadastro.strftime('%d/%m/%Y') if usuario.data_cadastro else 'N/A' }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Nenhum usuário encontrado</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-folder me-2"></i>Dossiês Recentes</h5>
+            </div>
+            <div class="card-body">
+                {% if dossies_recentes %}
+                    <div class="list-group list-group-flush">
+                        {% for dossie in dossies_recentes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ dossie.n_dossie }}</strong><br>
+                                <small class="text-muted">{{ dossie.nome }}</small>
+                            </div>
+                            <small class="text-muted">
+                                {{ dossie.dt_cadastro.strftime('%d/%m/%Y') if dossie.dt_cadastro else 'N/A' }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Nenhum dossiê encontrado</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt me-2"></i>Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.models') }}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-database me-2"></i>Gerenciar Dados
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.backup') }}" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-download me-2"></i>Fazer Backup
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.system_info') }}" class="btn btn-outline-info w-100 mb-2">
+                            <i class="fas fa-info-circle me-2"></i>Info Sistema
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-warning w-100 mb-2">
+                            <i class="fas fa-file-alt me-2"></i>Ver Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active">Usuários</li>
+{% if escola_filtro %}
+<li class="breadcrumb-item">Filtrado por: {{ escola_filtro.nome }}</li>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-users me-2"></i>
+                Gestão de Usuários
+            </h1>
+            <a href="{{ url_for('usuario.novo') }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Novo Usuário
+            </a>
+        </div>
+    </div>
+</div>
+
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="search" class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       value="{{ search }}" placeholder="Nome, email ou CPF...">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="perfil" class="form-label">Perfil</label>
+                                <select class="form-select" id="perfil" name="perfil">
+                                    <option value="">Todos</option>
+                                    <option value="1">Administrador Geral</option>
+                                    <option value="2">Administrador da Escola</option>
+                                    <option value="3">Usuário Operacional</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="">Todos</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                    <option value="bloqueado">Bloqueado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-outline-success">
+                                        <i class="fas fa-search me-2"></i>Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Usuários -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Lista de Usuários ({{ usuarios.total if usuarios.items else 0 }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if usuarios and usuarios.items %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Email</th>
+                                            <th>CPF</th>
+                                            <th>Perfil</th>
+                                            <th>Escola</th>
+                                            <th>Situação</th>
+                                            <th>Data Nascimento</th>
+                                            <th>Último Acesso</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for usuario in usuarios.items %}
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ usuario.nome }}</strong>
+                                                    {% if usuario.telefone %}
+                                                        <br><small class="text-muted"><i class="fas fa-phone me-1"></i>{{ usuario.telefone }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="mailto:{{ usuario.email }}">{{ usuario.email }}</a>
+                                            </td>
+                                            <td>
+                                                {% if usuario.cpf %}
+                                                    <code>{{ usuario.cpf }}</code>
+                                                {% else %}
+                                                    <span class="text-muted">Não informado</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'danger' if usuario.perfil_obj.nome == 'Administrador Geral' else 'warning' if 'Administrador' in usuario.perfil_obj.nome else 'info' }}">
+                                                    {{ usuario.perfil_obj.nome }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small>{{ usuario.escola.nome }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if usuario.situacao == 'ativo' else 'danger' if usuario.situacao == 'inativo' else 'warning' }}">
+                                                    {{ usuario.situacao.title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if usuario.data_nascimento %}
+                                                    <small>{{ usuario.data_nascimento.strftime('%d/%m/%Y') }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">Não informado</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if usuario.ultimo_acesso %}
+                                                    <small>{{ usuario.ultimo_acesso.strftime('%d/%m/%Y %H:%M') }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">Nunca</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ url_for('usuario.ver', id=usuario.id) }}"
+                                                       class="btn btn-sm btn-outline-info" title="Ver detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('usuario.editar', id=usuario.id) }}"
+                                                       class="btn btn-sm btn-outline-warning" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            title="Excluir" onclick="confirmarExclusao({{ usuario.id }}, '{{ usuario.nome }}')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Paginação -->
+                            {% if usuarios.pages > 1 %}
+                            <nav aria-label="Navegação de páginas">
+                                <ul class="pagination justify-content-center">
+                                    {% if usuarios.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('usuario.listar', page=usuarios.prev_num, search=search) }}">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in usuarios.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != usuarios.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('usuario.listar', page=page_num, search=search) }}">
+                                                        {{ page_num }}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if usuarios.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('usuario.listar', page=usuarios.next_num, search=search) }}">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhum usuário encontrado</h5>
+                                {% if search %}
+                                    <p class="text-muted">Tente ajustar os filtros de busca</p>
+                                    <a href="{{ url_for('usuario.listar') }}" class="btn btn-outline-success">
+                                        <i class="fas fa-times me-2"></i>Limpar filtros
+                                    </a>
+                                {% else %}
+                                    <p class="text-muted">Comece cadastrando o primeiro usuário</p>
+                                    <a href="{{ url_for('usuario.novo') }}" class="btn btn-success">
+                                        <i class="fas fa-plus me-2"></i>Cadastrar Usuário
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmarExclusao(id, nome) {
+    if (confirm('Tem certeza que deseja excluir o usuário "' + nome + '"?\n\nEsta ação não pode ser desfeita!')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/usuarios/excluir/' + id;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

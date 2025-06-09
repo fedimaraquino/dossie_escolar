@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Diretores{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-user-tie me-2"></i>Diretores</h2>
+            <p class="text-muted">Gerenciar diretores das escolas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('diretor.criar') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Novo Diretor
+            </a>
+            <a href="{{ url_for('diretor.relatorio') }}" class="btn btn-outline-info">
+                <i class="fas fa-chart-bar me-2"></i>Relatório
+            </a>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                    <h4>{{ stats.total }}</h4>
+                    <p class="text-muted mb-0">Total</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h4>{{ stats.ativos }}</h4>
+                    <p class="text-muted mb-0">Ativos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-times-circle fa-2x text-secondary mb-2"></i>
+                    <h4>{{ stats.inativos }}</h4>
+                    <p class="text-muted mb-0">Inativos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar:</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Nome, CPF, cidade..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status:</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="ativo" {% if status_filter == 'ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="inativo" {% if status_filter == 'inativo' %}selected{% endif %}>Inativo</option>
+                        <option value="licenca" {% if status_filter == 'licenca' %}selected{% endif %}>Em Licença</option>
+                        <option value="aposentado" {% if status_filter == 'aposentado' %}selected{% endif %}>Aposentado</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{{ url_for('diretor.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Diretores -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Lista de Diretores
+                <span class="badge bg-secondary ms-2">{{ diretores.total }}</span>
+            </h5>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if diretores.items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Cidade</th>
+                            <th>Tipo de Mandato</th>
+                            <th>Status</th>
+                            <th>Admissão</th>
+                            <th width="150">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for diretor in diretores.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ diretor.nome }}</strong>
+                                        {% if diretor.celular %}
+                                        <br><small class="text-muted">{{ diretor.format_celular() }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if diretor.cpf %}
+                                    <code>{{ diretor.format_cpf() }}</code>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ diretor.cidade or 'Não informado' }}</td>
+                            <td>
+                                {% if diretor.tipo_mandato %}
+                                    <span class="badge bg-info">{{ diretor.tipo_mandato }}</span>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ diretor.get_status_badge() }}">
+                                    {{ diretor.get_status_display() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if diretor.admissao %}
+                                    {{ diretor.admissao.strftime('%d/%m/%Y') }}
+                                    <br><small class="text-muted">{{ diretor.get_tempo_mandato() }}</small>
+                                {% else %}
+                                    <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('diretor.detalhes', id_diretor=diretor.id_diretor) }}" 
+                                       class="btn btn-outline-primary" title="Ver detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('diretor.editar', id_diretor=diretor.id_diretor) }}" 
+                                       class="btn btn-outline-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger" 
+                                            onclick="confirmarExclusao({{ diretor.id_diretor }}, '{{ diretor.nome }}')" 
+                                            title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum diretor encontrado</h5>
+                {% if search or status_filter %}
+                <p class="text-muted">Tente ajustar os filtros de busca</p>
+                <a href="{{ url_for('diretor.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-times me-2"></i>Limpar Filtros
+                </a>
+                {% else %}
+                <p class="text-muted">Comece cadastrando o primeiro diretor</p>
+                <a href="{{ url_for('diretor.criar') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Cadastrar Diretor
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Paginação -->
+        {% if diretores.pages > 1 %}
+        <div class="card-footer">
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if diretores.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('diretor.index', page=diretores.prev_num, search=search, status=status_filter) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in diretores.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != diretores.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('diretor.index', page=page_num, search=search, status=status_filter) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if diretores.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('diretor.index', page=diretores.next_num, search=search, status=status_filter) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o diretor <strong id="nomeDiretor"></strong>?</p>
+                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formExcluir" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarExclusao(id, nome) {
+    document.getElementById('nomeDiretor').textContent = nome;
+    document.getElementById('formExcluir').action = '/diretores/' + id + '/excluir';
+    new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+}
+</script>
+
+<style>
+.avatar-sm {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+}
+</style>
+{% endblock %}

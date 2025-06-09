@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página não encontrada - Sistema de Controle de Dossiê Escolar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-container {
+            text-align: center;
+            color: white;
+        }
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 0;
+        }
+        .error-message {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .btn-home {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-home:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="error-container">
+                    <div class="floating-icon mb-4">
+                        <i class="fas fa-search fa-4x"></i>
+                    </div>
+                    
+                    <h1 class="error-code">404</h1>
+                    
+                    <p class="error-message">
+                        Oops! A página que você está procurando não foi encontrada.
+                    </p>
+                    
+                    <p class="mb-4 opacity-75">
+                        A página pode ter sido movida, excluída ou você digitou o endereço incorretamente.
+                    </p>
+                    
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        {% if session.user_id %}
+                            <a href="{{ url_for('dashboard') }}" class="btn-home">
+                                <i class="fas fa-home me-2"></i>
+                                Voltar ao Dashboard
+                            </a>
+                            <a href="{{ url_for('usuario.listar') }}" class="btn-home">
+                                <i class="fas fa-users me-2"></i>
+                                Usuários
+                            </a>
+                            <a href="{{ url_for('dossie.listar') }}" class="btn-home">
+                                <i class="fas fa-folder me-2"></i>
+                                Dossiês
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn-home">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Fazer Login
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-5">
+                        <small class="opacity-75">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            Sistema de Controle de Dossiê Escolar
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

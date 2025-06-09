@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - {{ escola.nome }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="/escolas/">Escolas</a></li>
+<li class="breadcrumb-item"><a href="/escolas/ver/{{ escola.id }}">{{ escola.nome }}</a></li>
+<li class="breadcrumb-item active">Configurações</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-cog me-2"></i>
+                Configurações da Escola
+            </h1>
+            <a href="/escolas/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-school me-2"></i>
+                    Informações da Escola
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nome:</strong> {{ escola.nome }}</p>
+                <p><strong>UF:</strong> {{ escola.uf }}</p>
+                <p><strong>CNPJ:</strong> {{ escola.cnpj or 'Não informado' }}</p>
+                <p><strong>INEP:</strong> {{ escola.inep or 'Não informado' }}</p>
+                <p><strong>Situação:</strong> 
+                    <span class="badge bg-{{ 'success' if escola.situacao == 'ativa' else 'warning' }}">
+                        {{ escola.situacao.title() }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    Configurações Disponíveis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6>Usuários da Escola</h6>
+                                <p class="text-muted">Gerenciar usuários vinculados</p>
+                                <a href="/usuarios/?escola={{ escola.id }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-users me-1"></i>Gerenciar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <i class="fas fa-folder fa-2x text-info mb-2"></i>
+                                <h6>Dossiês da Escola</h6>
+                                <p class="text-muted">Visualizar dossiês</p>
+                                <a href="/dossies/?escola={{ escola.id }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-folder me-1"></i>Visualizar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exchange-alt fa-2x text-warning mb-2"></i>
+                                <h6>Movimentações</h6>
+                                <p class="text-muted">Histórico de movimentações</p>
+                                <a href="/movimentacoes/?escola={{ escola.id }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-exchange-alt me-1"></i>Visualizar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-bar fa-2x text-success mb-2"></i>
+                                <h6>Relatórios</h6>
+                                <p class="text-muted">Relatórios específicos</p>
+                                <a href="/relatorios/?escola={{ escola.id }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-chart-bar me-1"></i>Gerar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Ações Administrativas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Situação da Escola</h6>
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-success" 
+                                    onclick="alterarSituacao({{ escola.id }}, 'ativa')">
+                                <i class="fas fa-check me-1"></i>Ativar
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" 
+                                    onclick="alterarSituacao({{ escola.id }}, 'suspensa')">
+                                <i class="fas fa-pause me-1"></i>Suspender
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    onclick="alterarSituacao({{ escola.id }}, 'inativa')">
+                                <i class="fas fa-times me-1"></i>Inativar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Outras Ações</h6>
+                        <div class="d-grid gap-2">
+                            <a href="/escolas/editar/{{ escola.id }}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Editar Dados
+                            </a>
+                            <button type="button" class="btn btn-outline-info" onclick="gerarBackup({{ escola.id }})">
+                                <i class="fas fa-download me-1"></i>Backup de Dados
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function alterarSituacao(id, situacao) {
+    var mensagem = 'Confirma a alteração da situação da escola para "' + situacao + '"?';
+    if (confirm(mensagem)) {
+        // Implementar chamada AJAX para alterar situação
+        alert('Funcionalidade será implementada: Alterar situação para ' + situacao);
+    }
+}
+
+function gerarBackup(id) {
+    if (confirm('Gerar backup dos dados da escola?')) {
+        // Implementar geração de backup
+        alert('Funcionalidade será implementada: Gerar backup da escola ID ' + id);
+    }
+}
+</script>
+{% endblock %}

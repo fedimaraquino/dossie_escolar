@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if diretor %}Editar Diretor{% else %}Novo Diretor{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="fas fa-user-tie me-2"></i>
+                {% if diretor %}Editar Diretor{% else %}Novo Diretor{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if diretor %}
+                    Editar informações do diretor {{ diretor.nome }}
+                {% else %}
+                    Cadastrar novo diretor no sistema
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('diretor.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            {% if diretor %}
+            <a href="{{ url_for('diretor.detalhes', id_diretor=diretor.id_diretor) }}" class="btn btn-outline-info">
+                <i class="fas fa-eye me-2"></i>Ver Detalhes
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Informações do Diretor
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST">
+                        <!-- Dados Pessoais -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user me-2"></i>Dados Pessoais
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <label class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                                <input type="text" name="nome" class="form-control" 
+                                       value="{{ diretor.nome if diretor else '' }}" 
+                                       placeholder="Nome completo do diretor" required>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">CPF</label>
+                                <input type="text" name="cpf" class="form-control" 
+                                       value="{{ diretor.format_cpf() if diretor and diretor.cpf else '' }}" 
+                                       placeholder="000.000.000-00" 
+                                       data-mask="000.000.000-00">
+                            </div>
+                        </div>
+
+                        <!-- Contato -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-phone me-2"></i>Contato
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Celular</label>
+                                <input type="text" name="celular" class="form-control" 
+                                       value="{{ diretor.celular if diretor else '' }}" 
+                                       placeholder="(11) 99999-9999" 
+                                       data-mask="(00) 00000-0000">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" name="cidade" class="form-control" 
+                                       value="{{ diretor.cidade if diretor else '' }}" 
+                                       placeholder="Cidade onde reside">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    {% for value, label in status_options %}
+                                    <option value="{{ value }}" 
+                                            {% if diretor and diretor.status == value %}selected{% endif %}
+                                            {% if not diretor and value == 'ativo' %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Endereço -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Endereço
+                                </h6>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">Endereço Completo</label>
+                                <textarea name="endereco" class="form-control" rows="3" 
+                                          placeholder="Rua, número, bairro, CEP...">{{ diretor.endereco if diretor else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Informações Profissionais -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-briefcase me-2"></i>Informações Profissionais
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Mandato</label>
+                                <select name="tipo_mandato" class="form-select">
+                                    <option value="">Selecione...</option>
+                                    {% for tipo in tipos_mandato %}
+                                    <option value="{{ tipo }}" 
+                                            {% if diretor and diretor.tipo_mandato == tipo %}selected{% endif %}>
+                                        {{ tipo }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Data de Admissão</label>
+                                <input type="date" name="admissao" class="form-control" 
+                                       value="{{ diretor.admissao.strftime('%Y-%m-%d') if diretor and diretor.admissao else '' }}">
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('diretor.index') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if diretor %}Atualizar{% else %}Cadastrar{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar com Informações -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if diretor %}
+                    <div class="mb-3">
+                        <strong>Cadastrado em:</strong><br>
+                        <span class="text-muted">{{ diretor.data_cadastro.strftime('%d/%m/%Y às %H:%M') if diretor.data_cadastro else 'N/A' }}</span>
+                    </div>
+                    
+                    {% if diretor.admissao %}
+                    <div class="mb-3">
+                        <strong>Tempo de Mandato:</strong><br>
+                        <span class="text-muted">{{ diretor.get_tempo_mandato() }}</span>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Dicas:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Nome é obrigatório</li>
+                            <li>CPF deve ser válido se informado</li>
+                            <li>Use formato correto para celular</li>
+                            <li>Data de admissão é opcional</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tipos de Mandato -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Tipos de Mandato
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        {% for tipo in tipos_mandato %}
+                        <span class="badge bg-light text-dark me-1 mb-1">{{ tipo }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Máscaras de Input -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Aplicar máscaras
+    $('[data-mask]').each(function() {
+        $(this).mask($(this).data('mask'));
+    });
+    
+    // Validação de CPF em tempo real
+    $('input[name="cpf"]').on('blur', function() {
+        var cpf = $(this).val().replace(/[^\d]/g, '');
+        if (cpf && !validarCPF(cpf)) {
+            $(this).addClass('is-invalid');
+            if (!$(this).next('.invalid-feedback').length) {
+                $(this).after('<div class="invalid-feedback">CPF inválido</div>');
+            }
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+});
+
+function validarCPF(cpf) {
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    
+    var soma = 0;
+    for (var i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    var resto = 11 - (soma % 11);
+    var dv1 = resto < 2 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(9)) !== dv1) return false;
+    
+    soma = 0;
+    for (var i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    var dv2 = resto < 2 ? 0 : resto;
+    
+    return parseInt(cpf.charAt(10)) === dv2;
+}
+</script>
+{% endblock %}

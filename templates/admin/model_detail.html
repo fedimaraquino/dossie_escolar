@@ -1,0 +1,187 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ model.title() }} - Detalhes{% endblock %}
+{% block header %}Detalhes do {{ model.title() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informações Detalhadas
+                </h5>
+                <a href="{{ url_for('admin.model_list', model=model) }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+                </a>
+            </div>
+            
+            <div class="card-body">
+                <div class="row">
+                    {% if model == 'usuario' %}
+                        <div class="col-md-6">
+                            <strong>ID:</strong> {{ object.id }}<br>
+                            <strong>Nome:</strong> {{ object.nome }}<br>
+                            <strong>Email:</strong> {{ object.email }}<br>
+                            <strong>CPF:</strong> {{ object.cpf }}<br>
+                            <strong>Telefone:</strong> {{ object.telefone }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Perfil:</strong> 
+                            {% if object.perfil_obj %}
+                                <span class="badge bg-info">{{ object.perfil_obj.perfil }}</span>
+                            {% else %}
+                                <span class="text-muted">Sem perfil</span>
+                            {% endif %}<br>
+                            <strong>Escola:</strong> 
+                            {% if object.escola %}
+                                {{ object.escola.nome }}
+                            {% else %}
+                                <span class="text-muted">Sem escola</span>
+                            {% endif %}<br>
+                            <strong>Situação:</strong> 
+                            <span class="badge bg-{{ 'success' if object.situacao == 'ativo' else 'secondary' }}">
+                                {{ object.situacao }}
+                            </span><br>
+                            <strong>Data Nascimento:</strong> {{ object.data_nascimento.strftime('%d/%m/%Y') if object.data_nascimento else 'N/A' }}<br>
+                            <strong>Data Cadastro:</strong> {{ object.data_cadastro.strftime('%d/%m/%Y %H:%M') if object.data_cadastro else 'N/A' }}
+                        </div>
+                    
+                    {% elif model == 'escola' %}
+                        <div class="col-md-6">
+                            <strong>ID:</strong> {{ object.id }}<br>
+                            <strong>Nome:</strong> {{ object.nome }}<br>
+                            <strong>CNPJ:</strong> {{ object.cnpj }}<br>
+                            <strong>INEP:</strong> {{ object.inep }}<br>
+                            <strong>Email:</strong> {{ object.email }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Diretor:</strong> {{ object.diretor }}<br>
+                            <strong>Endereço:</strong> {{ object.endereco }}<br>
+                            <strong>UF:</strong> {{ object.uf }}<br>
+                            <strong>Cidade:</strong> 
+                            {% if object.cidade %}
+                                {{ object.cidade.nome }}
+                            {% else %}
+                                <span class="text-muted">Sem cidade</span>
+                            {% endif %}<br>
+                            <strong>Situação:</strong> 
+                            <span class="badge bg-{{ 'success' if object.situacao == 'ativa' else 'secondary' }}">
+                                {{ object.situacao }}
+                            </span>
+                        </div>
+                    
+                    {% elif model == 'dossie' %}
+                        <div class="col-md-6">
+                            <strong>ID:</strong> {{ object.id }}<br>
+                            <strong>Número:</strong> <span class="badge bg-primary">{{ object.n_dossie }}</span><br>
+                            <strong>Nome:</strong> {{ object.nome }}<br>
+                            <strong>CPF:</strong> {{ object.cpf }}<br>
+                            <strong>Ano:</strong> {{ object.ano }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{{ 'success' if object.status == 'ativo' else 'secondary' }}">
+                                {{ object.status }}
+                            </span><br>
+                            <strong>Escola:</strong> 
+                            {% if object.escola %}
+                                {{ object.escola.nome }}
+                            {% else %}
+                                <span class="text-muted">Sem escola</span>
+                            {% endif %}<br>
+                            <strong>Local:</strong> {{ object.local or 'N/A' }}<br>
+                            <strong>Pasta:</strong> {{ object.pasta or 'N/A' }}<br>
+                            <strong>Data Cadastro:</strong> {{ object.dt_cadastro.strftime('%d/%m/%Y %H:%M') if object.dt_cadastro else 'N/A' }}
+                        </div>
+                        
+                        {% if object.observacao %}
+                        <div class="col-12 mt-3">
+                            <strong>Observações:</strong><br>
+                            <div class="bg-light p-3 rounded">
+                                {{ object.observacao }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    
+                    {% elif model == 'perfil' %}
+                        <div class="col-md-6">
+                            <strong>ID:</strong> {{ object.id_perfil }}<br>
+                            <strong>Perfil:</strong> <span class="badge bg-info">{{ object.perfil }}</span><br>
+                            <strong>Descrição:</strong> {{ object.descricao or 'Sem descrição' }}<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Usuários com este perfil:</strong> {{ object.usuarios|length }}<br>
+                            <strong>Permissões:</strong> 
+                            {% set permissoes = object.get_permissoes() %}
+                            {% if permissoes %}
+                                {{ permissoes|length }} permissão(ões)
+                            {% else %}
+                                <span class="text-muted">Nenhuma permissão</span>
+                            {% endif %}
+                        </div>
+                    
+                    {% else %}
+                        <!-- Exibição genérica para outros modelos -->
+                        <div class="col-12">
+                            {% for key, value in object.to_dict().items() if key != 'senha_hash' %}
+                            <div class="row mb-2">
+                                <div class="col-md-3">
+                                    <strong>{{ key.replace('_', ' ').title() }}:</strong>
+                                </div>
+                                <div class="col-md-9">
+                                    {% if value is none %}
+                                        <span class="text-muted">N/A</span>
+                                    {% elif value is sameas true %}
+                                        <span class="badge bg-success">Sim</span>
+                                    {% elif value is sameas false %}
+                                        <span class="badge bg-secondary">Não</span>
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-tools me-2"></i>Ações</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin.model_list', model=model) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>Ver Todos
+                    </a>
+                    <a href="{{ url_for('admin.models') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-database me-2"></i>Outros Modelos
+                    </a>
+                    <a href="{{ url_for('admin.index') }}" class="btn btn-outline-info">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações Adicionais -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-info me-2"></i>Informações</h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    <strong>Modelo:</strong> {{ model.title() }}<br>
+                    <strong>Tabela:</strong> {{ Model.__tablename__ if Model.__tablename__ else 'N/A' }}<br>
+                    <strong>Visualizado em:</strong> {{ moment().format('DD/MM/YYYY HH:mm') if moment else 'N/A' }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

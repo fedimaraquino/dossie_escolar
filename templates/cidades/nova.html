@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Cidade{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-map-marker-alt me-2"></i>
+                Nova Cidade
+            </h1>
+            <a href="{{ url_for('cidade.listar') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Cadastrar Nova Cidade
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label for="nome" class="form-label">Nome da Cidade *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required
+                                   placeholder="Nome da cidade">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="uf" class="form-label">UF *</label>
+                            <select class="form-select" id="uf" name="uf" required>
+                                <option value="">Selecione...</option>
+                                <option value="AC">Acre</option>
+                                <option value="AL">Alagoas</option>
+                                <option value="AP">Amapá</option>
+                                <option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option>
+                                <option value="CE">Ceará</option>
+                                <option value="DF">Distrito Federal</option>
+                                <option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option>
+                                <option value="MA">Maranhão</option>
+                                <option value="MT">Mato Grosso</option>
+                                <option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option>
+                                <option value="PA">Pará</option>
+                                <option value="PB">Paraíba</option>
+                                <option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option>
+                                <option value="PI">Piauí</option>
+                                <option value="RJ">Rio de Janeiro</option>
+                                <option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option>
+                                <option value="RO">Rondônia</option>
+                                <option value="RR">Roraima</option>
+                                <option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option>
+                                <option value="SE">Sergipe</option>
+                                <option value="TO">Tocantins</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="pais" class="form-label">País</label>
+                            <input type="text" class="form-control" id="pais" name="pais" value="Brasil">
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Informações importantes:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>O nome da cidade deve ser único por UF</li>
+                                    <li>A UF será automaticamente convertida para maiúsculas</li>
+                                    <li>O país padrão é "Brasil"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('cidade.listar') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Salvar Cidade
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Dicas
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Cadastro de Cidades</h6>
+                <p class="small">As cidades são utilizadas para:</p>
+                <ul class="small">
+                    <li>Vincular escolas a suas localidades</li>
+                    <li>Organizar relatórios por região</li>
+                    <li>Facilitar buscas geográficas</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Validações</h6>
+                <ul class="small">
+                    <li>Nome e UF são obrigatórios</li>
+                    <li>Não pode haver cidades duplicadas na mesma UF</li>
+                    <li>UF deve ser uma sigla válida</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-map me-2"></i>
+                    Estados Brasileiros
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small">Selecione a UF correspondente ao estado onde a cidade está localizada.</p>
+                <p class="small">As siglas seguem o padrão oficial do IBGE.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Converter nome para formato adequado
+    document.getElementById('nome').addEventListener('blur', function() {
+        let nome = this.value.trim();
+        if (nome) {
+            // Capitalizar primeira letra de cada palavra
+            nome = nome.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+            this.value = nome;
+        }
+    });
+
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const nome = document.getElementById('nome').value.trim();
+        const uf = document.getElementById('uf').value;
+        
+        if (!nome || !uf) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        // Confirmar cadastro
+        if (!confirm(`Confirma o cadastro da cidade "${nome}" - ${uf}?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

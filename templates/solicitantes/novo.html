@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Solicitante - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{{ url_for('solicitantes.listar') }}">Solicitantes</a></li>
+<li class="breadcrumb-item active">Novo Solicitante</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-plus me-2"></i>
+                Novo Solicitante
+            </h1>
+            <a href="{{ url_for('solicitantes.listar') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Dados do Solicitante
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formSolicitante" class="needs-validation" novalidate>
+                    <div class="row">
+                        <!-- Dados Pessoais -->
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-user me-2"></i>Dados Pessoais
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                            <input type="text" name="nome" class="form-control" required 
+                                   placeholder="Nome completo do solicitante">
+                            <div class="invalid-feedback">
+                                Por favor, informe o nome completo.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">CPF <span class="text-danger">*</span></label>
+                            <input type="text" name="cpf" class="form-control cpf-mask" required 
+                                   placeholder="000.000.000-00" data-mask="000.000.000-00">
+                            <div class="invalid-feedback">
+                                Por favor, informe um CPF válido.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Data de Nascimento</label>
+                            <input type="date" name="data_nascimento" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" 
+                                   placeholder="email@exemplo.com">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Celular</label>
+                            <input type="text" name="celular" class="form-control phone-mask" 
+                                   placeholder="(11) 99999-9999" data-mask="(00) 00000-0000">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" name="cidade" class="form-control" 
+                                   placeholder="Nome da cidade">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Endereço</label>
+                            <textarea name="endereco" class="form-control" rows="2" 
+                                      placeholder="Endereço completo"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <!-- Dados da Solicitação -->
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-file-alt me-2"></i>Dados da Solicitação
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Parentesco</label>
+                            <select name="parentesco" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option value="pai">Pai</option>
+                                <option value="mae">Mãe</option>
+                                <option value="responsavel">Responsável</option>
+                                <option value="irmao">Irmão/Irmã</option>
+                                <option value="avo">Avô/Avó</option>
+                                <option value="tio">Tio/Tia</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de Solicitação</label>
+                            <select name="tipo_solicitacao" class="form-select">
+                                <option value="consulta">Consulta</option>
+                                <option value="copia_documento">Cópia de Documento</option>
+                                <option value="historico_escolar">Histórico Escolar</option>
+                                <option value="declaracao">Declaração</option>
+                                <option value="transferencia">Transferência</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="ativo" selected>Ativo</option>
+                                <option value="inativo">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ url_for('solicitantes.listar') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar Solicitante
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Aplicar máscaras
+    $('[data-mask]').each(function() {
+        $(this).mask($(this).data('mask'));
+    });
+    
+    // Validação de CPF em tempo real
+    $('input[name="cpf"]').on('blur', function() {
+        var cpf = $(this).val().replace(/[^\d]/g, '');
+        if (cpf && !validarCPF(cpf)) {
+            $(this).addClass('is-invalid');
+            if (!$(this).next('.invalid-feedback').length) {
+                $(this).after('<div class="invalid-feedback">CPF inválido</div>');
+            }
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+    
+    // Validação do formulário
+    $('#formSolicitante').on('submit', function(e) {
+        var nome = $('input[name="nome"]').val().trim();
+        var cpf = $('input[name="cpf"]').val().trim();
+        
+        if (!nome || !cpf) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios (*)');
+            return false;
+        }
+        
+        // Validar CPF
+        var cpfLimpo = cpf.replace(/[^\d]/g, '');
+        if (!validarCPF(cpfLimpo)) {
+            e.preventDefault();
+            alert('Por favor, informe um CPF válido');
+            $('input[name="cpf"]').focus();
+            return false;
+        }
+    });
+});
+
+function validarCPF(cpf) {
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    
+    var soma = 0;
+    for (var i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    var resto = 11 - (soma % 11);
+    var dv1 = resto < 2 ? 0 : resto;
+    
+    if (parseInt(cpf.charAt(9)) !== dv1) return false;
+    
+    soma = 0;
+    for (var i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    var dv2 = resto < 2 ? 0 : resto;
+    
+    return parseInt(cpf.charAt(10)) === dv2;
+}
+</script>
+{% endblock %}

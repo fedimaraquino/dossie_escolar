@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}{{ escola.nome }} - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="/escolas/">Escolas</a></li>
+<li class="breadcrumb-item active">{{ escola.nome }}</li>
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1>
+                            <i class="fas fa-school me-2"></i>
+                            {{ escola.nome }}
+                        </h1>
+
+                    </div>
+                    <div class="btn-group">
+                        <a href="/escolas/editar/{{ escola.id }}" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Editar
+                        </a>
+                        <a href="/escolas/" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Informações Básicas -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Informações da Escola
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Nome:</strong></td>
+                                        <td>{{ escola.nome }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>UF:</strong></td>
+                                        <td><span class="badge bg-secondary">{{ escola.uf }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Cidade:</strong></td>
+                                        <td>
+                                            {% if escola.cidade %}
+                                                {{ escola.cidade.nome }}/{{ escola.cidade.uf }}
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>CNPJ:</strong></td>
+                                        <td>
+                                            {% if escola.cnpj %}
+                                                <code>{{ escola.cnpj }}</code>
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>INEP:</strong></td>
+                                        <td>
+                                            {% if escola.inep %}
+                                                <code>{{ escola.inep }}</code>
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Situação:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if escola.situacao == 'ativa' else 'danger' if escola.situacao == 'inativa' else 'warning' }}">
+                                                {{ escola.situacao.title() }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>
+                                            {% if escola.email %}
+                                                <a href="mailto:{{ escola.email }}">{{ escola.email }}</a>
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Telefone:</strong></td>
+                                        <td>
+                                            {% if escola.telefone %}
+                                                {{ escola.telefone }}
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Diretor Responsável:</strong></td>
+                                        <td>
+                                            {% if escola.diretor_obj %}
+                                                <strong>{{ escola.diretor_obj.nome }}</strong>
+                                                <br><small class="text-muted">{{ escola.diretor_obj.email }}</small>
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Diretor (Texto):</strong></td>
+                                        <td>
+                                            {% if escola.diretor %}
+                                                {{ escola.diretor }}
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Vice-Diretor:</strong></td>
+                                        <td>
+                                            {% if escola.vice_diretor %}
+                                                {{ escola.vice_diretor }}
+                                            {% else %}
+                                                <span class="text-muted">Não informado</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Data Cadastro:</strong></td>
+                                        <td>{{ escola.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</td>
+                                    </tr>
+                                    {% if escola.data_saida %}
+                                    <tr>
+                                        <td><strong>Data Saída:</strong></td>
+                                        <td class="text-danger">{{ escola.data_saida.strftime('%d/%m/%Y às %H:%M') }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                        
+                        {% if escola.endereco %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6><strong>Endereço:</strong></h6>
+                                <p class="text-muted">{{ escola.endereco }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if escola.observacoes %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6><strong>Observações:</strong></h6>
+                                <p class="text-muted">{{ escola.observacoes }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Estatísticas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <h4>{{ escola.total_usuarios }}</h4>
+                                        <small>Usuários</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <h4>{{ escola.total_dossies }}</h4>
+                                        <small>Dossiês</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="card bg-warning text-dark">
+                                    <div class="card-body">
+                                        <h4>{{ escola.total_movimentacoes }}</h4>
+                                        <small>Movimentações</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body">
+                                        <h4>{{ escola.movimentacoes_pendentes }}</h4>
+                                        <small>Pendentes</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/usuarios/?escola={{ escola.id }}" class="btn btn-outline-success">
+                                <i class="fas fa-users me-2"></i>Ver Usuários
+                            </a>
+                            <a href="/dossies/?escola={{ escola.id }}" class="btn btn-outline-info">
+                                <i class="fas fa-folder me-2"></i>Ver Dossiês
+                            </a>
+                            <a href="/movimentacoes/?escola={{ escola.id }}" class="btn btn-outline-warning">
+                                <i class="fas fa-exchange-alt me-2"></i>Ver Movimentações
+                            </a>
+                            <a href="/escolas/configuracoes/{{ escola.id }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-cog me-2"></i>Configurações
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários - Sistema Modular</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="fas fa-graduation-cap me-2"></i>Sistema Modular
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Sair
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1>
+                    <i class="fas fa-users me-2"></i>
+                    Aplicação USUÁRIOS
+                </h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Usuários</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Lista de Usuários</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if usuarios %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Email</th>
+                                            <th>Perfil</th>
+                                            <th>Escola</th>
+                                            <th>Status</th>
+                                            <th>Último Acesso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for usuario in usuarios %}
+                                        <tr>
+                                            <td>{{ usuario.nome }}</td>
+                                            <td>{{ usuario.email }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'danger' if usuario.perfil_obj.nome == 'Administrador Geral' else 'warning' if 'Administrador' in usuario.perfil_obj.nome else 'info' }}">
+                                                    {{ usuario.perfil_obj.nome }}
+                                                </span>
+                                            </td>
+                                            <td>{{ usuario.escola.nome }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if usuario.status == 'ativo' else 'danger' }}">
+                                                    {{ usuario.status.title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if usuario.ultimo_acesso %}
+                                                    {{ usuario.ultimo_acesso.strftime('%d/%m/%Y %H:%M') }}
+                                                {% else %}
+                                                    <span class="text-muted">Nunca</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhum usuário cadastrado</h5>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-info-circle me-2"></i>Aplicação USUÁRIOS</h6>
+                    <p class="mb-0">
+                        Esta é a aplicação modular para gestão de usuários. 
+                        Controla perfis, permissões e acesso ao sistema conforme CLAUDE.md.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

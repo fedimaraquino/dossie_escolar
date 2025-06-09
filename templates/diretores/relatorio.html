@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório de Diretores{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-chart-bar me-2"></i>Relatório de Diretores</h2>
+            <p class="text-muted">Estatísticas e informações dos diretores cadastrados</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('diretor.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Imprimir
+            </button>
+        </div>
+    </div>
+
+    <!-- Estatísticas Gerais -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h3>{{ stats.total }}</h3>
+                    <p class="text-muted mb-0">Total de Diretores</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h3>{{ stats.ativos }}</h3>
+                    <p class="text-muted mb-0">Ativos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-times-circle fa-3x text-secondary mb-3"></i>
+                    <h3>{{ stats.inativos }}</h3>
+                    <p class="text-muted mb-0">Inativos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-percentage fa-3x text-info mb-3"></i>
+                    <h3>{{ "%.1f"|format((stats.ativos / stats.total * 100) if stats.total > 0 else 0) }}%</h3>
+                    <p class="text-muted mb-0">Taxa de Atividade</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <!-- Diretores por Tipo de Mandato -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Por Tipo de Mandato
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.por_tipo %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tipo de Mandato</th>
+                                    <th class="text-center">Quantidade</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tipo, count in stats.por_tipo.items() %}
+                                <tr>
+                                    <td>{{ tipo }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {{ "%.1f"|format((count / stats.total * 100) if stats.total > 0 else 0) }}%
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                        <p>Nenhum dado disponível</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status dos Diretores -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-donut me-2"></i>Status dos Diretores
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="p-3">
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {{ (stats.ativos / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                                </div>
+                                <strong>Ativos</strong><br>
+                                <span class="text-success">{{ stats.ativos }} diretores</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3">
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-secondary" 
+                                         style="width: {{ (stats.inativos / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                                </div>
+                                <strong>Inativos</strong><br>
+                                <span class="text-secondary">{{ stats.inativos }} diretores</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diretores Recentes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Diretores Cadastrados Recentemente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recentes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo de Mandato</th>
+                                    <th>Status</th>
+                                    <th>Data de Cadastro</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for diretor in recentes %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ diretor.nome }}</strong>
+                                                {% if diretor.cidade %}
+                                                <br><small class="text-muted">{{ diretor.cidade }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if diretor.tipo_mandato %}
+                                            <span class="badge bg-info">{{ diretor.tipo_mandato }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Não informado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ diretor.get_status_badge() }}">
+                                            {{ diretor.get_status_display() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ diretor.data_cadastro.strftime('%d/%m/%Y às %H:%M') if diretor.data_cadastro else 'N/A' }}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('diretor.detalhes', id_diretor=diretor.id_diretor) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-user-tie fa-3x mb-3"></i>
+                        <h5>Nenhum diretor cadastrado</h5>
+                        <p>Comece cadastrando o primeiro diretor</p>
+                        <a href="{{ url_for('diretor.criar') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Cadastrar Diretor
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-sm {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+}
+
+@media print {
+    .btn, .card-header, nav, .no-print { 
+        display: none !important; 
+    }
+    .card { 
+        border: none !important; 
+        box-shadow: none !important; 
+    }
+    .card-body { 
+        padding: 0 !important; 
+    }
+    body { 
+        font-size: 12px; 
+    }
+    h2 { 
+        font-size: 18px; 
+    }
+    h5 { 
+        font-size: 14px; 
+    }
+}
+</style>
+{% endblock %}
