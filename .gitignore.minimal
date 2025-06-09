@@ -1,0 +1,53 @@
+# .gitignore Minimal para Sistema de Dossiês Escolares
+# Versão enxuta com apenas o essencial
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.Python
+build/
+dist/
+venv/
+.venv/
+env/
+.env
+
+# Flask
+instance/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+uploads/
+static/uploads/
+
+# Configurações sensíveis
+config.py
+config_local.py
+.env
+.env.local
+*.key
+*.pem
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.tmp
+*.backup
+
+# Específico do projeto
+test_*.py
+create_*.py
+fix_*.py
+verificar_*.py
+anexos/
+logs/
+backup/

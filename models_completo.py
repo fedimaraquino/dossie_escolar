@@ -44,6 +44,7 @@ def create_complete_models(db):
         
         # Relacionamentos
         escolas = db.relationship('Escola', backref='cidade', lazy=True)
+        solicitantes = db.relationship('Solicitante', backref='cidade', lazy=True)
         
         def __repr__(self):
             return f'<Cidade {self.nome}/{self.uf}>'
@@ -132,18 +133,18 @@ def create_complete_models(db):
     class Solicitante(db.Model):
         __tablename__ = 'solicitantes'
 
-        id_solicitante = db.Column(db.Integer, primary_key=True)
+        id = db.Column(db.Integer, primary_key=True)
         nome = db.Column(db.String(100), nullable=False)
         endereco = db.Column(db.Text)
         celular = db.Column(db.String(20))
-        cidade = db.Column(db.String(100))  # Campo cidade como string conforme especificação
-        data_cadastro = db.Column(db.DateTime, default=datetime.now)
+        cidade_id = db.Column(db.Integer, db.ForeignKey('cidades.id'))
         cpf = db.Column(db.String(14), unique=True)
         email = db.Column(db.String(120))
-        status = db.Column(db.String(20), default='ativo')
         parentesco = db.Column(db.String(50))
         data_nascimento = db.Column(db.Date)
         tipo_solicitacao = db.Column(db.String(50))
+        status = db.Column(db.String(20), default='ativo')
+        data_cadastro = db.Column(db.DateTime, default=datetime.now)
         
         # Relacionamentos
         movimentacoes = db.relationship('Movimentacao', backref='solicitante', lazy=True)
@@ -156,7 +157,7 @@ def create_complete_models(db):
         
         id = db.Column(db.Integer, primary_key=True)
         escola_id = db.Column(db.Integer, db.ForeignKey('escolas.id'), nullable=False)
-        solicitante_id = db.Column(db.Integer, db.ForeignKey('solicitantes.id_solicitante'), nullable=False)
+        solicitante_id = db.Column(db.Integer, db.ForeignKey('solicitantes.id'), nullable=False)
         descricao = db.Column(db.Text, nullable=False)
         data_solicitacao = db.Column(db.DateTime, default=datetime.now)
         data_devolucao = db.Column(db.DateTime)

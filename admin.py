@@ -2,7 +2,7 @@
 # admin.py - Área de administração Flask (similar ao Django Admin)
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from models import db, Usuario, Escola, Dossie, Anexo, Perfil, Cidade, Movimentacao, Diretor, Permissao, PerfilPermissao
+from models import db, Usuario, Escola, Dossie, Anexo, Perfil, Cidade, Movimentacao, Diretor, Permissao, PerfilPermissao, Solicitante
 from controllers.auth_controller import login_required
 from datetime import datetime
 import os
@@ -38,7 +38,8 @@ def index():
         'anexos': Anexo.query.count(),
         'perfis': Perfil.query.count(),
         'cidades': Cidade.query.count(),
-        'movimentacoes': Movimentacao.query.count()
+        'movimentacoes': Movimentacao.query.count(),
+        'solicitantes': Solicitante.query.count()
     }
     
     # Atividades recentes
@@ -125,6 +126,13 @@ def models():
             'count': PerfilPermissao.query.count(),
             'url': url_for('admin.model_list', model='perfil_permissao'),
             'icon': 'fas fa-link'
+        },
+        {
+            'name': 'Solicitante',
+            'verbose_name': 'Solicitantes',
+            'count': Solicitante.query.count(),
+            'url': url_for('admin.model_list', model='solicitante'),
+            'icon': 'fas fa-user-friends'
         }
     ]
     
@@ -145,7 +153,8 @@ def model_list(model):
         'cidade': Cidade,
         'movimentacao': Movimentacao,
         'permissao': Permissao,
-        'perfil_permissao': PerfilPermissao
+        'perfil_permissao': PerfilPermissao,
+        'solicitante': Solicitante
     }
     
     if model not in model_map:
@@ -216,7 +225,8 @@ def model_detail(model, object_id):
         'cidade': Cidade,
         'movimentacao': Movimentacao,
         'permissao': Permissao,
-        'perfil_permissao': PerfilPermissao
+        'perfil_permissao': PerfilPermissao,
+        'solicitante': Solicitante
     }
     
     if model not in model_map:
@@ -288,18 +298,74 @@ def system_info():
 @admin_required
 def logs():
     """Visualizar logs do sistema"""
-    log_files = []
-    
-    # Procurar arquivos de log
-    for file in os.listdir('.'):
-        if file.endswith('.log'):
-            log_files.append({
-                'name': file,
-                'size': os.path.getsize(file),
-                'modified': datetime.fromtimestamp(os.path.getmtime(file))
-            })
-    
-    return render_template('admin/logs.html', log_files=log_files)
+    from models import LogAuditoria, LogSistema
+    from utils.logs import obter_logs_auditoria, obter_logs_sistema
+
+    # Obter logs recentes
+    logs_auditoria = obter_logs_auditoria(limite=50)
+    logs_sistema = obter_logs_sistema(limite=50)
+
+    # Estatísticas
+    total_auditoria = LogAuditoria.query.count()
+    total_sistema = LogSistema.query.count()
+
+    # Logs de hoje
+    hoje = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    logs_hoje_auditoria = LogAuditoria.query.filter(LogAuditoria.data_hora >= hoje).count()
+    logs_hoje_sistema = LogSistema.query.filter(LogSistema.data_hora >= hoje).count()
+
+    stats = {
+        'total_auditoria': total_auditoria,
+        'total_sistema': total_sistema,
+        'logs_hoje_auditoria': logs_hoje_auditoria,
+        'logs_hoje_sistema': logs_hoje_sistema
+    }
+
+    return render_template('admin/logs.html',
+                         logs_auditoria=logs_auditoria,
+                         logs_sistema=logs_sistema,
+                         stats=stats)
+
+@admin_bp.route('/configuracoes')
+@login_required
+@admin_required
+def configuracoes():
+    """Configurações do sistema"""
+    from models import Escola, Usuario, Dossie, Movimentacao
+    import platform
+    import psutil
+
+    # Informações do sistema
+    system_info = {
+        'python_version': platform.python_version(),
+        'sistema_operacional': platform.system(),
+        'arquitetura': platform.architecture()[0],
+        'processador': platform.processor(),
+        'hostname': platform.node()
+    }
+
+    # Estatísticas do banco
+    stats = {
+        'total_escolas': Escola.query.count(),
+        'total_usuarios': Usuario.query.count(),
+        'total_dossies': Dossie.query.count(),
+        'total_movimentacoes': Movimentacao.query.count()
+    }
+
+    # Informações de memória (se disponível)
+    try:
+        memory = psutil.virtual_memory()
+        system_info['memoria_total'] = f"{memory.total // (1024**3)} GB"
+        system_info['memoria_disponivel'] = f"{memory.available // (1024**3)} GB"
+        system_info['uso_memoria'] = f"{memory.percent}%"
+    except:
+        system_info['memoria_total'] = 'N/A'
+        system_info['memoria_disponivel'] = 'N/A'
+        system_info['uso_memoria'] = 'N/A'
+
+    return render_template('admin/configuracoes.html',
+                         system_info=system_info,
+                         stats=stats)
 
 @admin_bp.route('/backup')
 @login_required

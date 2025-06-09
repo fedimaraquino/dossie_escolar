@@ -2,12 +2,12 @@
 Aplicação CORE - Utilitários e Funções Auxiliares
 """
 
-from main import db
-from .models import Cidade, Perfil, ConfiguracaoEscola, CONFIGURACOES_PADRAO
+from models import Cidade, Perfil, ConfiguracaoEscola, CONFIGURACOES_PADRAO
 from datetime import datetime
 
 def criar_dados_iniciais():
     """Criar dados iniciais do sistema"""
+    from models import db
     
     # Criar perfis padrão conforme CLAUDE.md
     perfis_padrao = [
@@ -98,6 +98,7 @@ def criar_dados_iniciais():
 
 def aplicar_configuracoes_padrao(escola_id):
     """Aplicar configurações padrão para uma escola"""
+    from models import db
     
     for chave, config in CONFIGURACOES_PADRAO.items():
         # Verificar se a configuração já existe
@@ -135,6 +136,7 @@ def obter_configuracao(escola_id, chave, valor_padrao=None):
 
 def atualizar_configuracao(escola_id, chave, valor, tipo='string', descricao=None):
     """Atualizar ou criar uma configuração da escola"""
+    from models import db
     
     config = ConfiguracaoEscola.query.filter_by(
         escola_id=escola_id,
@@ -196,20 +198,14 @@ def verificar_permissao(usuario_id, recurso, acao):
 
 def log_acao(usuario_id, acao, item_alterado=None, detalhes=None, ip_address=None):
     """Registrar log de auditoria"""
-    
-    from apps.logs.models import LogAuditoria
-    
-    log = LogAuditoria(
-        usuario_id=usuario_id,
-        acao=acao,
-        item_alterado=item_alterado,
-        detalhes=detalhes,
-        ip_address=ip_address
-    )
-    db.session.add(log)
-    db.session.commit()
-    
-    return log
+    try:
+        # Importar função de log do sistema principal
+        from utils.logs import log_acao as log_principal
+        return log_principal(acao, item_alterado, detalhes, usuario_id)
+    except Exception as e:
+        # Se falhar, não deve quebrar a aplicação
+        print(f"Erro ao registrar log: {e}")
+        return None
 
 def obter_estatisticas_gerais():
     """Obter estatísticas gerais do sistema"""

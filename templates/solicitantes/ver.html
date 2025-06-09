@@ -24,7 +24,7 @@
                 <a href="{{ url_for('solicitantes.listar') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Voltar
                 </a>
-                <a href="{{ url_for('solicitantes.editar', id=solicitante.id_solicitante) }}" class="btn btn-warning">
+                <a href="{{ url_for('solicitantes.editar', id=solicitante.id) }}" class="btn btn-warning">
                     <i class="fas fa-edit me-2"></i>Editar
                 </a>
             </div>
@@ -88,7 +88,7 @@
                     <div class="col-md-3">
                         <strong>Cidade:</strong><br>
                         {% if solicitante.cidade %}
-                            <span class="text-muted">{{ solicitante.cidade }}</span>
+                            <span class="text-muted">{{ solicitante.cidade.nome }}/{{ solicitante.cidade.uf }}</span>
                         {% else %}
                             <span class="text-muted">Não informado</span>
                         {% endif %}
@@ -142,8 +142,9 @@
                                 </td>
                                 <td>
                                     {% if movimentacao.dossie %}
-                                        <a href="{{ url_for('dossies.ver', id=movimentacao.dossie.id) }}">
-                                            {{ movimentacao.dossie.nome }}
+                                        <a href="{{ url_for('dossie.ver', id=movimentacao.dossie.id) }}" class="text-decoration-none">
+                                            <strong>{{ movimentacao.dossie.numero_dossie }}</strong><br>
+                                            <small class="text-muted">{{ movimentacao.dossie.nome_aluno }}</small>
                                         </a>
                                     {% else %}
                                         <span class="text-muted">-</span>
@@ -159,7 +160,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{{ url_for('movimentacoes.ver', id=movimentacao.id) }}" 
+                                    <a href="{{ url_for('movimentacao.ver', id=movimentacao.id) }}"
                                        class="btn btn-sm btn-outline-primary" title="Ver detalhes">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -173,7 +174,7 @@
                 <div class="text-center py-4">
                     <i class="fas fa-history fa-2x text-muted mb-3"></i>
                     <p class="text-muted">Nenhuma movimentação registrada para este solicitante.</p>
-                    <a href="{{ url_for('movimentacoes.nova') }}" class="btn btn-primary">
+                    <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Nova Movimentação
                     </a>
                 </div>
@@ -238,11 +239,11 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{{ url_for('movimentacoes.nova') }}?solicitante={{ solicitante.id_solicitante }}" 
+                    <a href="{{ url_for('movimentacao.nova') }}?solicitante={{ solicitante.id }}"
                        class="btn btn-primary">
                         <i class="fas fa-plus me-2"></i>Nova Movimentação
                     </a>
-                    <a href="{{ url_for('solicitantes.editar', id=solicitante.id_solicitante) }}" 
+                    <a href="{{ url_for('solicitantes.editar', id=solicitante.id) }}"
                        class="btn btn-warning">
                         <i class="fas fa-edit me-2"></i>Editar Dados
                     </a>
@@ -251,6 +252,36 @@
                         <i class="fas fa-envelope me-2"></i>Enviar Email
                     </a>
                     {% endif %}
+
+                    <hr class="my-3">
+
+                    <!-- Ações Administrativas -->
+                    {% if solicitante.status == 'ativo' %}
+                    <form method="POST" action="{{ url_for('solicitantes.desativar', id=solicitante.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-secondary w-100 btn-status"
+                                data-action="desativar" data-nome="{{ solicitante.nome }}">
+                            <i class="fas fa-pause me-2"></i>Desativar Solicitante
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('solicitantes.ativar', id=solicitante.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-success w-100 btn-status"
+                                data-action="ativar" data-nome="{{ solicitante.nome }}">
+                            <i class="fas fa-play me-2"></i>Ativar Solicitante
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('solicitantes.excluir', id=solicitante.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger w-100 btn-delete"
+                                data-nome="{{ solicitante.nome }}"
+                                {% if solicitante.movimentacoes %}disabled title="Não é possível excluir solicitante com movimentações"{% endif %}>
+                            <i class="fas fa-trash me-2"></i>Excluir Solicitante
+                            {% if solicitante.movimentacoes %}
+                            <small class="d-block">{{ solicitante.movimentacoes|length }} movimentação(ões)</small>
+                            {% endif %}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -263,7 +294,25 @@
 $(document).ready(function() {
     // Confirmar exclusão
     $('.btn-delete').on('click', function(e) {
-        if (!confirm('Tem certeza que deseja excluir este solicitante?')) {
+        var nome = $(this).data('nome');
+        if (!confirm('Tem certeza que deseja EXCLUIR o solicitante "' + nome + '"?\n\nEsta ação não pode ser desfeita!')) {
+            e.preventDefault();
+        }
+    });
+
+    // Confirmar ativação/desativação
+    $('.btn-status').on('click', function(e) {
+        var nome = $(this).data('nome');
+        var acao = $(this).data('action');
+        var mensagem = '';
+
+        if (acao === 'ativar') {
+            mensagem = 'Tem certeza que deseja ATIVAR o solicitante "' + nome + '"?';
+        } else if (acao === 'desativar') {
+            mensagem = 'Tem certeza que deseja DESATIVAR o solicitante "' + nome + '"?\n\nSolicitantes inativos não aparecerão nas listas de seleção.';
+        }
+
+        if (!confirm(mensagem)) {
             e.preventDefault();
         }
     });

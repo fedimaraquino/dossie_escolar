@@ -3,7 +3,7 @@ Aplicação CORE - Modelos das Entidades Auxiliares
 Conforme especificação CLAUDE.md - Item 8
 """
 
-from main import db
+from models import db
 from datetime import datetime
 
 class Cidade(db.Model):
@@ -22,6 +22,7 @@ class Cidade(db.Model):
     
     # Relacionamentos
     escolas = db.relationship('Escola', backref='cidade', lazy=True)
+    solicitantes = db.relationship('Solicitante', backref='cidade', lazy=True)
     
     def __repr__(self):
         return f'<Cidade {self.nome}/{self.uf}>'

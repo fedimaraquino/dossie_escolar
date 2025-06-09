@@ -6,7 +6,7 @@
 {% block content %}
 <!-- Estatísticas -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="card-body text-center">
                 <i class="fas fa-users fa-2x mb-2"></i>
@@ -15,7 +15,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="card-body text-center">
                 <i class="fas fa-school fa-2x mb-2"></i>
@@ -24,7 +24,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="card-body text-center">
                 <i class="fas fa-folder fa-2x mb-2"></i>
@@ -33,7 +33,25 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                <h3>{{ stats.movimentacoes }}</h3>
+                <p class="mb-0">Movimentações</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-user-friends fa-2x mb-2"></i>
+                <h3>{{ stats.solicitantes }}</h3>
+                <p class="mb-0">Solicitantes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
         <div class="card stat-card">
             <div class="card-body text-center">
                 <i class="fas fa-paperclip fa-2x mb-2"></i>

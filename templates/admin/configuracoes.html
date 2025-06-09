@@ -1,0 +1,145 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Configurações do Sistema{% endblock %}
+{% block header %}Configurações do Sistema{% endblock %}
+
+{% block content %}
+<!-- Estatísticas do Sistema -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-school fa-2x mb-2 text-white"></i>
+                <h3>{{ stats.total_escolas }}</h3>
+                <p class="mb-0">Escolas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2 text-white"></i>
+                <h3>{{ stats.total_usuarios }}</h3>
+                <p class="mb-0">Usuários</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x mb-2 text-white"></i>
+                <h3>{{ stats.total_dossies }}</h3>
+                <p class="mb-0">Dossiês</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <i class="fas fa-exchange-alt fa-2x mb-2 text-white"></i>
+                <h3>{{ stats.total_movimentacoes }}</h3>
+                <p class="mb-0">Movimentações</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações do Sistema -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-server me-2"></i>Informações do Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-desktop me-2"></i>Sistema Operacional</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>SO:</strong> {{ system_info.sistema_operacional }}</li>
+                            <li><strong>Arquitetura:</strong> {{ system_info.arquitetura }}</li>
+                            <li><strong>Hostname:</strong> {{ system_info.hostname }}</li>
+                            <li><strong>Python:</strong> {{ system_info.python_version }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-memory me-2"></i>Recursos</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Memória Total:</strong> {{ system_info.memoria_total }}</li>
+                            <li><strong>Memória Disponível:</strong> {{ system_info.memoria_disponivel }}</li>
+                            <li><strong>Uso de Memória:</strong> {{ system_info.uso_memoria }}</li>
+                            <li><strong>Processador:</strong> {{ system_info.processador[:50] }}...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configurações do Sistema -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-cogs me-2"></i>Configurações do Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-database me-2"></i>Banco de Dados</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Tipo:</strong> PostgreSQL</li>
+                            <li><strong>Nome:</strong> dossie_escola</li>
+                            <li><strong>Usuário:</strong> dossie</li>
+                            <li><strong>Status:</strong> <span class="badge bg-success">Conectado</span></li>
+                        </ul>
+
+                        <h6 class="mt-4"><i class="fas fa-shield-alt me-2"></i>Segurança</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Logs de Auditoria:</strong> <span class="badge bg-success">Ativo</span></li>
+                            <li><strong>Autenticação:</strong> <span class="badge bg-success">Ativo</span></li>
+                            <li><strong>Controle de Acesso:</strong> <span class="badge bg-success">Ativo</span></li>
+                            <li><strong>Backup Automático:</strong> <span class="badge bg-warning">Configurar</span></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-code me-2"></i>Aplicação</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Framework:</strong> Flask</li>
+                            <li><strong>Versão:</strong> 1.0.0</li>
+                            <li><strong>Ambiente:</strong> Desenvolvimento</li>
+                            <li><strong>Debug:</strong> <span class="badge bg-warning">Ativo</span></li>
+                        </ul>
+
+                        <h6 class="mt-4"><i class="fas fa-chart-line me-2"></i>Performance</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Cache:</strong> <span class="badge bg-secondary">Desabilitado</span></li>
+                            <li><strong>Compressão:</strong> <span class="badge bg-secondary">Desabilitado</span></li>
+                            <li><strong>SSL:</strong> <span class="badge bg-warning">Configurar</span></li>
+                            <li><strong>CDN:</strong> <span class="badge bg-secondary">Não configurado</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6><i class="fas fa-tools me-2"></i>Ações Administrativas</h6>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('admin.system_info') }}" class="btn btn-outline-info">
+                            <i class="fas fa-info-circle me-2"></i>Informações Detalhadas
+                        </a>
+                        <a href="{{ url_for('admin.backup') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-download me-2"></i>Backup do Sistema
+                        </a>
+                        <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-history me-2"></i>Logs de Auditoria
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

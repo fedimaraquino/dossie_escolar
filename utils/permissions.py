@@ -151,6 +151,7 @@ class Modulos:
     PERFIL = 'perfil'
     PERMISSAO = 'permissao'
     MENU = 'menu'
+    SOLICITANTE = 'solicitante'
 
 class Acoes:
     CRIAR = 'criar'

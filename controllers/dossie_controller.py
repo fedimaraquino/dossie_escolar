@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
 from models import db, Dossie, Escola, Usuario
+from utils.logs import log_acao, AcoesAuditoria
 from .auth_controller import login_required
 
 dossie_bp = Blueprint('dossie', __name__, url_prefix='/dossies')
@@ -39,7 +40,7 @@ def listar():
         query = query.filter(Dossie.escola_id == escola_id)
     
     if situacao:
-        query = query.filter(Dossie.situacao == situacao)
+        query = query.filter(Dossie.status == situacao)
     
     if ano:
         query = query.filter(
@@ -177,7 +178,10 @@ def ver(id):
     if not usuario.can_access_escola(dossie.escola_id):
         flash('Acesso negado a este dossiê.', 'error')
         return redirect(url_for('dossie.listar'))
-    
+
+    # Registrar log de visualização
+    log_acao(AcoesAuditoria.DOSSIE_VISUALIZADO, 'Dossie', f'Dossiê visualizado: {dossie.numero_dossie} - {dossie.nome_aluno}')
+
     return render_template('dossies/ver.html', dossie=dossie)
 
 @dossie_bp.route('/editar/<int:id>', methods=['GET', 'POST'])

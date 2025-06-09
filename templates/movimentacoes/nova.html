@@ -68,27 +68,71 @@
                         <div class="row mb-4">
                             <div class="col-12">
                                 <h6 class="text-primary border-bottom pb-2 mb-3">
-                                    <i class="fas fa-user me-2"></i>Solicitante
+                                    <i class="fas fa-user me-2"></i>Solicitante <span class="text-danger">*</span>
                                 </h6>
                             </div>
-                            
-                            <div class="col-md-4">
-                                <label class="form-label">Nome do Solicitante</label>
-                                <input type="text" name="solicitante_nome" class="form-control" 
-                                       placeholder="Nome completo">
+
+                            <div class="col-md-8">
+                                <label class="form-label">Selecionar Solicitante <span class="text-danger">*</span></label>
+                                <select name="solicitante_id" id="solicitante_select" class="form-select" required>
+                                    <option value="">Selecione um solicitante...</option>
+                                    {% for solicitante in solicitantes %}
+                                    <option value="{{ solicitante.id }}"
+                                            data-nome="{{ solicitante.nome }}"
+                                            data-cpf="{{ solicitante.cpf }}"
+                                            data-telefone="{{ solicitante.celular }}"
+                                            data-email="{{ solicitante.email }}"
+                                            data-parentesco="{{ solicitante.parentesco }}"
+                                            {% if solicitante_preselected and solicitante.id|string == solicitante_preselected %}selected{% endif %}>
+                                        {{ solicitante.nome }} - {{ solicitante.cpf }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Obrigatório selecionar um solicitante cadastrado
+                                </small>
                             </div>
-                            
+
                             <div class="col-md-4">
-                                <label class="form-label">Documento (RG/CPF)</label>
-                                <input type="text" name="solicitante_documento" class="form-control" 
-                                       placeholder="RG ou CPF">
+                                <label class="form-label">Ação Rápida</label>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('solicitantes.novo') }}" class="btn btn-outline-primary" target="_blank">
+                                        <i class="fas fa-plus me-2"></i>Cadastrar Novo Solicitante
+                                    </a>
+                                </div>
                             </div>
-                            
-                            <div class="col-md-4">
+                        </div>
+
+                        <!-- Dados do Solicitante Selecionado (Somente Leitura) -->
+                        <div class="row mb-4" id="dados_solicitante" style="display: none;">
+                            <div class="col-12">
+                                <h6 class="text-success border-bottom pb-2 mb-3">
+                                    <i class="fas fa-check-circle me-2"></i>Dados do Solicitante Selecionado
+                                </h6>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Nome</label>
+                                <input type="text" id="display_nome" class="form-control" readonly>
+                                <input type="hidden" name="solicitante_nome" id="solicitante_nome">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">CPF</label>
+                                <input type="text" id="display_cpf" class="form-control" readonly>
+                                <input type="hidden" name="solicitante_documento" id="solicitante_documento">
+                            </div>
+
+                            <div class="col-md-3">
                                 <label class="form-label">Telefone</label>
-                                <input type="text" name="solicitante_telefone" class="form-control" 
-                                       placeholder="(11) 99999-9999" 
-                                       data-mask="(00) 00000-0000">
+                                <input type="text" id="display_telefone" class="form-control" readonly>
+                                <input type="hidden" name="solicitante_telefone" id="solicitante_telefone">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Parentesco</label>
+                                <input type="text" id="display_parentesco" class="form-control" readonly>
                             </div>
                         </div>
 
@@ -163,8 +207,8 @@
                         <i class="fas fa-lightbulb me-2"></i>
                         <strong>Dicas:</strong>
                         <ul class="mb-0 mt-2">
-                            <li>Dossiê e tipo são obrigatórios</li>
-                            <li>Dados do solicitante são opcionais</li>
+                            <li>Dossiê, tipo e solicitante são <strong>obrigatórios</strong></li>
+                            <li>Solicitante deve estar previamente cadastrado</li>
                             <li>Para transferências, selecione escola destino</li>
                             <li>Data de devolução é opcional</li>
                         </ul>
@@ -224,6 +268,11 @@ $(document).ready(function() {
     $('[data-mask]').each(function() {
         $(this).mask($(this).data('mask'));
     });
+
+    // Disparar evento change se há solicitante pré-selecionado
+    if ($('#solicitante_select').val()) {
+        $('#solicitante_select').trigger('change');
+    }
     
     // Mostrar/ocultar escola destino baseado no tipo
     $('#tipo_select').change(function() {
@@ -234,6 +283,33 @@ $(document).ready(function() {
         }
     });
     
+    // Preencher dados do solicitante automaticamente
+    $('#solicitante_select').change(function() {
+        var option = $(this).find('option:selected');
+        if (option.val()) {
+            // Mostrar seção de dados do solicitante
+            $('#dados_solicitante').show();
+
+            // Preencher campos de exibição (readonly)
+            $('#display_nome').val(option.data('nome'));
+            $('#display_cpf').val(option.data('cpf'));
+            $('#display_telefone').val(option.data('telefone') || 'Não informado');
+            $('#display_parentesco').val(option.data('parentesco') || 'Não informado');
+
+            // Preencher campos hidden para envio
+            $('input[name="solicitante_nome"]').val(option.data('nome'));
+            $('input[name="solicitante_documento"]').val(option.data('cpf'));
+            $('input[name="solicitante_telefone"]').val(option.data('telefone'));
+        } else {
+            // Ocultar seção de dados do solicitante
+            $('#dados_solicitante').hide();
+
+            // Limpar todos os campos
+            $('#display_nome, #display_cpf, #display_telefone, #display_parentesco').val('');
+            $('input[name="solicitante_nome"], input[name="solicitante_documento"], input[name="solicitante_telefone"]').val('');
+        }
+    });
+
     // Mostrar informações do dossiê selecionado
     $('#dossie_select').change(function() {
         var option = $(this).find('option:selected');
@@ -241,7 +317,7 @@ $(document).ready(function() {
             var aluno = option.data('aluno');
             var numero = option.data('numero');
             var escola = option.data('escola');
-            
+
             var html = '<div class="small">';
             html += '<div class="mb-2"><strong>Número:</strong><br>' + numero + '</div>';
             html += '<div class="mb-2"><strong>Aluno:</strong><br>' + aluno + '</div>';
@@ -249,7 +325,7 @@ $(document).ready(function() {
                 html += '<div class="mb-2"><strong>Escola:</strong><br>' + escola + '</div>';
             }
             html += '</div>';
-            
+
             $('#dossie_details').html(html);
             $('#dossie_info').show();
         } else {
@@ -261,24 +337,35 @@ $(document).ready(function() {
     $('form').submit(function(e) {
         var dossie = $('#dossie_select').val();
         var tipo = $('#tipo_select').val();
-        
+        var solicitante = $('#solicitante_select').val();
+
         if (!dossie) {
             e.preventDefault();
             alert('Por favor, selecione um dossiê');
+            $('#dossie_select').focus();
             return false;
         }
-        
+
         if (!tipo) {
             e.preventDefault();
             alert('Por favor, selecione o tipo de movimentação');
+            $('#tipo_select').focus();
             return false;
         }
-        
+
+        if (!solicitante) {
+            e.preventDefault();
+            alert('Por favor, selecione um solicitante');
+            $('#solicitante_select').focus();
+            return false;
+        }
+
         if (tipo === 'transferencia') {
             var escolaDestino = $('select[name="escola_destino_id"]').val();
             if (!escolaDestino) {
                 e.preventDefault();
                 alert('Para transferências, é necessário selecionar a escola de destino');
+                $('select[name="escola_destino_id"]').focus();
                 return false;
             }
         }

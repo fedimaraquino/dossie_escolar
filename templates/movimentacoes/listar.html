@@ -132,7 +132,15 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if mov.solicitante_nome %}
+                                {% if mov.solicitante_id and mov.solicitante %}
+                                    <div>
+                                        <strong>{{ mov.solicitante.nome }}</strong><br>
+                                        <small class="text-muted">{{ mov.solicitante.cpf }}</small><br>
+                                        {% if mov.solicitante.celular %}
+                                        <small class="text-muted">{{ mov.solicitante.celular }}</small>
+                                        {% endif %}
+                                    </div>
+                                {% elif mov.solicitante_nome %}
                                     <div>
                                         <strong>{{ mov.solicitante_nome }}</strong><br>
                                         {% if mov.solicitante_documento %}

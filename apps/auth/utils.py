@@ -2,7 +2,7 @@
 Aplicação AUTH - Utilitários de Autenticação e Segurança
 """
 
-from main import db
+from models import db
 from .models import TentativaLogin, TokenRecuperacao, SessaoUsuario, CONFIGURACOES_SEGURANCA
 from datetime import datetime, timedelta
 from flask import request, session

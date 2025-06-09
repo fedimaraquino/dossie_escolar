@@ -3,7 +3,7 @@ Aplicação USUÁRIOS - Modelos
 Conforme especificação CLAUDE.md - Item 3
 """
 
-from main import db
+from models import db
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 

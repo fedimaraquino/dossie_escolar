@@ -16,7 +16,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configurações de segurança
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dossie-escolar-secret-key-2024'
 
     # Configuração do banco de dados com suporte a PostgreSQL
     database_url = os.environ.get('DATABASE_URL') or 'postgresql://dossie:fep09151@localhost/dossie_escola'
@@ -57,6 +57,7 @@ def create_app():
     from controllers import auth_bp, escola_bp, usuario_bp, dossie_bp, movimentacao_bp, cidade_bp, perfil_bp, anexo_bp
     from controllers.permissao_controller import permissao_bp
     from controllers.diretor_controller import diretor_bp
+    from controllers.solicitante_controller import solicitante_bp
     from admin import admin_bp
 
     app.register_blueprint(auth_bp)
@@ -69,6 +70,7 @@ def create_app():
     app.register_blueprint(anexo_bp)
     app.register_blueprint(diretor_bp)
     app.register_blueprint(permissao_bp)
+    app.register_blueprint(solicitante_bp)
     app.register_blueprint(admin_bp)
     
     # Rotas principais
@@ -102,8 +104,8 @@ def create_app():
                 'total_dossies': Dossie.query.count(),
                 'total_movimentacoes': Movimentacao.query.count(),
                 'escolas_ativas': Escola.query.filter_by(situacao='ativa').count(),
-                'usuarios_ativos': Usuario.query.filter_by(situacao='ativo').count(),
-                'dossies_ativos': Dossie.query.filter_by(situacao='ativo').count(),
+                'usuarios_ativos': Usuario.query.filter_by(status='ativo').count(),
+                'dossies_ativos': Dossie.query.filter_by(status='ativo').count(),
                 'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count()
             }
         else:

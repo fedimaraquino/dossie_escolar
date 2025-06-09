@@ -3,7 +3,7 @@ Aplicação DOSSIÊS - Modelos
 Conforme especificação CLAUDE.md - Item 4
 """
 
-from main import db
+from models import db
 from datetime import datetime
 
 class Dossie(db.Model):

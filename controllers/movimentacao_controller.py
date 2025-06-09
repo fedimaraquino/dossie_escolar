@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime, timedelta
 from models import db, Movimentacao, Dossie, Escola, Usuario
+from utils.logs import log_acao, AcoesAuditoria
 from .auth_controller import login_required
 
 
@@ -82,15 +83,22 @@ def nova():
             flash('Dossiê não encontrado ou acesso negado.', 'error')
             return redirect(url_for('movimentacao.listar'))
 
+        # Processar dados do solicitante
+        solicitante_id = request.form.get('solicitante_id')
+        solicitante_nome = request.form.get('solicitante_nome', '').strip()
+        solicitante_documento = request.form.get('solicitante_documento', '').strip()
+        solicitante_telefone = request.form.get('solicitante_telefone', '').strip()
+
         movimentacao = Movimentacao(
             dossie_id=dossie_id,
             tipo_movimentacao=tipo_movimentacao,
             usuario_id=usuario.id,
             escola_origem_id=dossie.escola_id,
             escola_destino_id=request.form.get('escola_destino_id') if request.form.get('escola_destino_id') else None,
-            solicitante_nome=request.form.get('solicitante_nome', '').strip(),
-            solicitante_documento=request.form.get('solicitante_documento', '').strip(),
-            solicitante_telefone=request.form.get('solicitante_telefone', '').strip(),
+            solicitante_id=int(solicitante_id) if solicitante_id else None,
+            solicitante_nome=solicitante_nome,
+            solicitante_documento=solicitante_documento,
+            solicitante_telefone=solicitante_telefone,
             motivo=request.form.get('motivo', '').strip(),
             observacoes=request.form.get('observacoes', '').strip(),
             data_prevista_devolucao=datetime.strptime(request.form.get('data_prevista_devolucao'), '%Y-%m-%d') if request.form.get('data_prevista_devolucao') else None,
@@ -104,6 +112,10 @@ def nova():
             dossie.data_ultima_movimentacao = datetime.now()
             
             db.session.commit()
+
+            # Registrar log
+            log_acao(AcoesAuditoria.MOVIMENTACAO_CRIADA, 'Movimentacao', f'Movimentação criada: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"}')
+
             flash('Movimentação registrada com sucesso!', 'success')
             return redirect(url_for('movimentacao.listar'))
         except Exception as e:
@@ -112,13 +124,24 @@ def nova():
 
     # Buscar dossiês disponíveis
     if usuario.perfil_obj and usuario.perfil_obj.perfil == 'Administrador Geral':
-        dossies = Dossie.query.filter_by(situacao='ativo').all()
+        dossies = Dossie.query.filter_by(status='ativo').all()
         escolas = Escola.query.all()
     else:
-        dossies = Dossie.query.filter_by(escola_id=usuario.escola_id, situacao='ativo').all()
+        dossies = Dossie.query.filter_by(escola_id=usuario.escola_id, status='ativo').all()
         escolas = [usuario.escola]
-    
-    return render_template('movimentacoes/nova.html', dossies=dossies, escolas=escolas)
+
+    # Buscar solicitantes ativos
+    from models import Solicitante
+    solicitantes = Solicitante.query.filter_by(status='ativo').order_by(Solicitante.nome).all()
+
+    # Verificar se há solicitante pré-selecionado na URL
+    solicitante_preselected = request.args.get('solicitante')
+
+    return render_template('movimentacoes/nova.html',
+                         dossies=dossies,
+                         escolas=escolas,
+                         solicitantes=solicitantes,
+                         solicitante_preselected=solicitante_preselected)
 
 @movimentacao_bp.route('/ver/<int:id>')
 @login_required

@@ -9,7 +9,7 @@ from apps.core.utils import log_acao
 from datetime import datetime
 
 # Criar blueprint
-solicitantes_bp = Blueprint('solicitantes', __name__)
+solicitantes_bp = Blueprint('solicitantes', __name__, url_prefix='/solicitantes')
 
 @solicitantes_bp.route('/')
 def listar():
@@ -28,7 +28,7 @@ def listar():
 
     # Aplicar filtros
     if search:
-        from main import db
+        from models import db
         query = query.filter(
             db.or_(
                 Solicitante.nome.contains(search),
@@ -63,8 +63,9 @@ def novo():
     if not verificar_login():
         return redirect(url_for('auth.login'))
 
-    from apps.usuarios.models import Usuario
+    from models import Usuario, Cidade
     usuario = Usuario.query.get(session['user_id'])
+    cidades = Cidade.query.order_by(Cidade.nome).all()
 
     if request.method == 'POST':
         # Validações
@@ -86,7 +87,7 @@ def novo():
             cpf=cpf,
             endereco=request.form.get('endereco', '').strip(),
             celular=request.form.get('celular', '').strip(),
-            cidade=request.form.get('cidade', '').strip(),
+            cidade_id=int(request.form.get('cidade_id')) if request.form.get('cidade_id') else None,
             email=request.form.get('email', '').strip(),
             parentesco=request.form.get('parentesco', '').strip(),
             tipo_solicitacao=request.form.get('tipo_solicitacao', 'consulta'),
@@ -96,22 +97,22 @@ def novo():
         # Validar CPF
         if not solicitante.validar_cpf():
             flash('CPF inválido!', 'error')
-            return render_template('solicitantes/novo.html')
+            return render_template('solicitantes/novo.html', cidades=cidades)
 
         try:
-            from main import db
+            from models import db
             db.session.add(solicitante)
             db.session.commit()
 
             log_acao(usuario.id, 'SOLICITANTE_CRIADO', 'Solicitante', f'Solicitante criado: {solicitante.nome}')
             flash('Solicitante cadastrado com sucesso!', 'success')
-            return redirect(url_for('solicitantes.ver', id=solicitante.id_solicitante))
+            return redirect(url_for('solicitantes.ver', id=solicitante.id))
         except Exception as e:
-            from main import db
+            from models import db
             db.session.rollback()
             flash(f'Erro ao cadastrar solicitante: {str(e)}', 'error')
 
-    return render_template('solicitantes/novo.html')
+    return render_template('solicitantes/novo.html', cidades=cidades)
 
 @solicitantes_bp.route('/<int:id>')
 def ver(id):
@@ -128,8 +129,9 @@ def editar(id):
     if not verificar_login():
         return redirect(url_for('auth.login'))
 
-    from apps.usuarios.models import Usuario
+    from models import Usuario, Cidade
     usuario = Usuario.query.get(session['user_id'])
+    cidades = Cidade.query.order_by(Cidade.nome).all()
 
     solicitante = Solicitante.query.get_or_404(id)
 
@@ -140,23 +142,23 @@ def editar(id):
 
         if not nome or not cpf:
             flash('Nome e CPF são obrigatórios!', 'error')
-            return render_template('solicitantes/editar.html', solicitante=solicitante)
+            return render_template('solicitantes/editar.html', solicitante=solicitante, cidades=cidades)
 
         # Verificar se CPF já existe em outro solicitante
         solicitante_existente = Solicitante.query.filter(
             Solicitante.cpf == cpf,
-            Solicitante.id_solicitante != id
+            Solicitante.id != id
         ).first()
         if solicitante_existente:
             flash('Já existe outro solicitante com este CPF!', 'error')
-            return render_template('solicitantes/editar.html', solicitante=solicitante)
+            return render_template('solicitantes/editar.html', solicitante=solicitante, cidades=cidades)
 
         # Atualizar dados
         solicitante.nome = nome
         solicitante.cpf = cpf
         solicitante.endereco = request.form.get('endereco', '').strip()
         solicitante.celular = request.form.get('celular', '').strip()
-        solicitante.cidade = request.form.get('cidade', '').strip()
+        solicitante.cidade_id = int(request.form.get('cidade_id')) if request.form.get('cidade_id') else None
         solicitante.email = request.form.get('email', '').strip()
         solicitante.parentesco = request.form.get('parentesco', '').strip()
         solicitante.tipo_solicitacao = request.form.get('tipo_solicitacao', 'consulta')
@@ -168,21 +170,21 @@ def editar(id):
         # Validar CPF
         if not solicitante.validar_cpf():
             flash('CPF inválido!', 'error')
-            return render_template('solicitantes/editar.html', solicitante=solicitante)
+            return render_template('solicitantes/editar.html', solicitante=solicitante, cidades=cidades)
 
         try:
-            from main import db
+            from models import db
             db.session.commit()
 
             log_acao(usuario.id, 'SOLICITANTE_EDITADO', 'Solicitante', f'Solicitante editado: {solicitante.nome}')
             flash('Solicitante atualizado com sucesso!', 'success')
             return redirect(url_for('solicitantes.ver', id=solicitante.id))
         except Exception as e:
-            from main import db
+            from models import db
             db.session.rollback()
             flash(f'Erro ao atualizar solicitante: {str(e)}', 'error')
 
-    return render_template('solicitantes/editar.html', solicitante=solicitante)
+    return render_template('solicitantes/editar.html', solicitante=solicitante, cidades=cidades)
 
 @solicitantes_bp.route('/excluir/<int:id>', methods=['POST'])
 def excluir(id):
@@ -190,7 +192,7 @@ def excluir(id):
     if not verificar_login():
         return redirect(url_for('auth.login'))
 
-    from apps.usuarios.models import Usuario
+    from models import Usuario
     usuario = Usuario.query.get(session['user_id'])
 
     # Apenas admins podem excluir
@@ -207,7 +209,7 @@ def excluir(id):
 
     try:
         nome_solicitante = solicitante.nome
-        from main import db
+        from models import db
         db.session.delete(solicitante)
         db.session.commit()
 
@@ -215,7 +217,67 @@ def excluir(id):
         flash('Solicitante excluído com sucesso!', 'success')
         return redirect(url_for('solicitantes.listar'))
     except Exception as e:
-        from main import db
+        from models import db
         db.session.rollback()
         flash(f'Erro ao excluir solicitante: {str(e)}', 'error')
         return redirect(url_for('solicitantes.ver', id=id))
+
+@solicitantes_bp.route('/ativar/<int:id>', methods=['POST'])
+def ativar(id):
+    """Ativar solicitante"""
+    if not verificar_login():
+        return redirect(url_for('auth.login'))
+
+    from models import Usuario
+    usuario = Usuario.query.get(session['user_id'])
+
+    # Apenas admins podem ativar/desativar
+    if usuario.perfil_obj.nome not in ['Administrador Geral', 'Administrador da Escola']:
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('solicitantes.listar'))
+
+    solicitante = Solicitante.query.get_or_404(id)
+
+    try:
+        solicitante.status = 'ativo'
+        from models import db
+        db.session.commit()
+
+        log_acao(usuario.id, 'SOLICITANTE_ATIVADO', 'Solicitante', f'Solicitante ativado: {solicitante.nome}')
+        flash('Solicitante ativado com sucesso!', 'success')
+    except Exception as e:
+        from models import db
+        db.session.rollback()
+        flash(f'Erro ao ativar solicitante: {str(e)}', 'error')
+
+    return redirect(url_for('solicitantes.ver', id=id))
+
+@solicitantes_bp.route('/desativar/<int:id>', methods=['POST'])
+def desativar(id):
+    """Desativar solicitante"""
+    if not verificar_login():
+        return redirect(url_for('auth.login'))
+
+    from models import Usuario
+    usuario = Usuario.query.get(session['user_id'])
+
+    # Apenas admins podem ativar/desativar
+    if usuario.perfil_obj.nome not in ['Administrador Geral', 'Administrador da Escola']:
+        flash('Acesso negado.', 'error')
+        return redirect(url_for('solicitantes.listar'))
+
+    solicitante = Solicitante.query.get_or_404(id)
+
+    try:
+        solicitante.status = 'inativo'
+        from models import db
+        db.session.commit()
+
+        log_acao(usuario.id, 'SOLICITANTE_DESATIVADO', 'Solicitante', f'Solicitante desativado: {solicitante.nome}')
+        flash('Solicitante desativado com sucesso!', 'success')
+    except Exception as e:
+        from models import db
+        db.session.rollback()
+        flash(f'Erro ao desativar solicitante: {str(e)}', 'error')
+
+    return redirect(url_for('solicitantes.ver', id=id))

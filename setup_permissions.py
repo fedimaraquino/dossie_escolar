@@ -82,10 +82,18 @@ def create_permissions():
                 {'nome': 'permissao_visualizar', 'descricao': 'Visualizar permissões', 'modulo': 'permissao', 'acao': 'visualizar'},
                 {'nome': 'permissao_editar', 'descricao': 'Editar permissões', 'modulo': 'permissao', 'acao': 'editar'},
 
+                # SOLICITANTES
+                {'nome': 'solicitante_criar', 'descricao': 'Criar solicitantes', 'modulo': 'solicitante', 'acao': 'criar'},
+                {'nome': 'solicitante_editar', 'descricao': 'Editar solicitantes', 'modulo': 'solicitante', 'acao': 'editar'},
+                {'nome': 'solicitante_excluir', 'descricao': 'Excluir solicitantes', 'modulo': 'solicitante', 'acao': 'excluir'},
+                {'nome': 'solicitante_visualizar', 'descricao': 'Visualizar solicitantes', 'modulo': 'solicitante', 'acao': 'visualizar'},
+                {'nome': 'solicitante_ativar', 'descricao': 'Ativar/Desativar solicitantes', 'modulo': 'solicitante', 'acao': 'ativar'},
+
                 # MENUS DE NAVEGAÇÃO
                 {'nome': 'menu_manutencao', 'descricao': 'Acessar menu Manutenção', 'modulo': 'menu', 'acao': 'manutencao'},
                 {'nome': 'menu_dossie', 'descricao': 'Acessar menu Dossiês', 'modulo': 'menu', 'acao': 'dossie'},
                 {'nome': 'menu_movimentacao', 'descricao': 'Acessar menu Movimentações', 'modulo': 'menu', 'acao': 'movimentacao'},
+                {'nome': 'menu_solicitante', 'descricao': 'Acessar menu Solicitantes', 'modulo': 'menu', 'acao': 'solicitante'},
                 {'nome': 'menu_relatorio', 'descricao': 'Acessar menu Relatórios', 'modulo': 'menu', 'acao': 'relatorio'},
                 {'nome': 'menu_admin', 'descricao': 'Acessar menu Administração', 'modulo': 'menu', 'acao': 'admin'},
             ]
@@ -140,6 +148,8 @@ def assign_permissions_to_profiles():
                     'anexo_criar', 'anexo_editar', 'anexo_excluir', 'anexo_visualizar',
                     # Movimentações
                     'movimentacao_criar', 'movimentacao_editar', 'movimentacao_visualizar',
+                    # Solicitantes
+                    'solicitante_criar', 'solicitante_editar', 'solicitante_excluir', 'solicitante_visualizar', 'solicitante_ativar',
                     # Relatórios da escola
                     'relatorio_escola',
                     # Visualizar escola e cidades
@@ -149,7 +159,7 @@ def assign_permissions_to_profiles():
                     # Permissões
                     'permissao_visualizar',
                     # Menus
-                    'menu_manutencao', 'menu_dossie', 'menu_movimentacao', 'menu_relatorio'
+                    'menu_manutencao', 'menu_dossie', 'menu_movimentacao', 'menu_solicitante', 'menu_relatorio'
                 ],
                 
                 'Operador': [
@@ -159,10 +169,12 @@ def assign_permissions_to_profiles():
                     'anexo_criar', 'anexo_editar', 'anexo_visualizar',
                     # Movimentações
                     'movimentacao_criar', 'movimentacao_visualizar',
+                    # Solicitantes
+                    'solicitante_criar', 'solicitante_editar', 'solicitante_visualizar',
                     # Visualizar usuários, diretores, escola e cidades
                     'usuario_visualizar', 'diretor_visualizar', 'escola_visualizar', 'cidade_visualizar',
                     # Menus básicos
-                    'menu_dossie', 'menu_movimentacao'
+                    'menu_dossie', 'menu_movimentacao', 'menu_solicitante'
                 ],
                 
                 'Consulta': [
@@ -170,12 +182,13 @@ def assign_permissions_to_profiles():
                     'dossie_visualizar',
                     'anexo_visualizar',
                     'movimentacao_visualizar',
+                    'solicitante_visualizar',
                     'usuario_visualizar',
                     'diretor_visualizar',
                     'escola_visualizar',
                     'cidade_visualizar',
                     # Menus básicos
-                    'menu_dossie', 'menu_movimentacao'
+                    'menu_dossie', 'menu_movimentacao', 'menu_solicitante'
                 ]
             }
             

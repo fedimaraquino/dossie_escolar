@@ -3,7 +3,7 @@ Aplicação MOVIMENTAÇÕES - Modelos
 Conforme especificação CLAUDE.md - Item 5
 """
 
-from main import db
+from models import db
 from datetime import datetime
 
 class Movimentacao(db.Model):
@@ -15,7 +15,7 @@ class Movimentacao(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     escola_id = db.Column(db.Integer, db.ForeignKey('escolas.id'), nullable=False)
-    solicitante_id = db.Column(db.Integer, db.ForeignKey('solicitantes.id_solicitante'), nullable=False)
+    solicitante_id = db.Column(db.Integer, db.ForeignKey('solicitantes.id'), nullable=False)
     descricao = db.Column(db.Text, nullable=False)
     data_solicitacao = db.Column(db.DateTime, default=datetime.now)
     data_devolucao = db.Column(db.DateTime)

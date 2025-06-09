@@ -41,13 +41,22 @@ def login():
             session['user_email'] = usuario.email
             session['user_perfil'] = usuario.perfil_obj.nome
             session['escola_id'] = usuario.escola_id
-            
+
+            # Registrar log de login
+            from utils.logs import log_acao, AcoesAuditoria
+            log_acao(AcoesAuditoria.LOGIN, 'Usuario', f'Login realizado: {usuario.nome}', usuario.id)
+
             flash('Login realizado com sucesso!', 'success')
             return redirect(url_for('dashboard'))
         else:
             # Senha incorreta
             usuario.incrementar_tentativas_login()
             db.session.commit()
+
+            # Registrar log de login falhado
+            from utils.logs import log_acao, AcoesAuditoria
+            log_acao(AcoesAuditoria.LOGIN_FALHOU, 'Usuario', f'Login falhou: {email}')
+
             flash('Email ou senha incorretos!', 'error')
     
     return render_template('auth/login_novo.html')
@@ -55,6 +64,11 @@ def login():
 @auth_bp.route('/logout')
 def logout():
     """Logout do sistema"""
+    # Registrar log de logout antes de limpar sessão
+    if 'user_id' in session:
+        from utils.logs import log_acao, AcoesAuditoria
+        log_acao(AcoesAuditoria.LOGOUT, 'Usuario', f'Logout realizado: {session.get("user_name", "Usuário")}')
+
     session.clear()
     flash('Logout realizado com sucesso!', 'success')
     return redirect(url_for('auth.login'))

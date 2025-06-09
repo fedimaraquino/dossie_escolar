@@ -125,10 +125,10 @@
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="/logs/auditoria">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.logs') }}">
                                 <i class="fas fa-history me-2"></i>Logs de Auditoria
                             </a></li>
-                            <li><a class="dropdown-item" href="/core/configuracoes">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.configuracoes') }}">
                                 <i class="fas fa-cog me-2"></i>Configurações
                             </a></li>
                         </ul>

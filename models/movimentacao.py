@@ -16,6 +16,7 @@ class Movimentacao(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     escola_origem_id = db.Column(db.Integer, db.ForeignKey('escolas.id'))
     escola_destino_id = db.Column(db.Integer, db.ForeignKey('escolas.id'))
+    solicitante_id = db.Column(db.Integer, db.ForeignKey('solicitantes.id'))
     solicitante_nome = db.Column(db.String(200))
     solicitante_documento = db.Column(db.String(20))
     solicitante_telefone = db.Column(db.String(20))
@@ -31,6 +32,8 @@ class Movimentacao(db.Model):
     usuario = db.relationship('Usuario', backref='movimentacoes_realizadas')
     escola_origem = db.relationship('Escola', foreign_keys=[escola_origem_id], backref='movimentacoes_origem')
     escola_destino = db.relationship('Escola', foreign_keys=[escola_destino_id], backref='movimentacoes_destino')
+    # Relacionamento com solicitante
+    solicitante = db.relationship('Solicitante')
     
     def __repr__(self):
         return f'<Movimentacao {self.tipo_movimentacao} - Dossiê {self.dossie_id}>'
@@ -44,6 +47,7 @@ class Movimentacao(db.Model):
             'usuario_id': self.usuario_id,
             'escola_origem_id': self.escola_origem_id,
             'escola_destino_id': self.escola_destino_id,
+            'solicitante_id': self.solicitante_id,
             'solicitante_nome': self.solicitante_nome,
             'solicitante_documento': self.solicitante_documento,
             'solicitante_telefone': self.solicitante_telefone,

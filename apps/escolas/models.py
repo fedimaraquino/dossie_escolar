@@ -3,7 +3,7 @@ Aplicação ESCOLAS - Modelos
 Conforme especificação CLAUDE.md - Item 2
 """
 
-from main import db
+from models import db
 from datetime import datetime
 
 class Escola(db.Model):

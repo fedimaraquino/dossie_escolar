@@ -17,7 +17,7 @@
                 Editar Solicitante
             </h1>
             <div class="btn-group">
-                <a href="{{ url_for('solicitantes.ver', id=solicitante.id_solicitante) }}" class="btn btn-secondary">
+                <a href="{{ url_for('solicitantes.ver', id=solicitante.id) }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Voltar
                 </a>
                 <a href="{{ url_for('solicitantes.listar') }}" class="btn btn-outline-secondary">
@@ -87,8 +87,14 @@
                         
                         <div class="col-md-3">
                             <label class="form-label">Cidade</label>
-                            <input type="text" name="cidade" class="form-control" 
-                                   value="{{ solicitante.cidade or '' }}" placeholder="Nome da cidade">
+                            <select name="cidade_id" class="form-select">
+                                <option value="">Selecione uma cidade...</option>
+                                {% for cidade in cidades %}
+                                <option value="{{ cidade.id }}" {% if solicitante.cidade_id == cidade.id %}selected{% endif %}>
+                                    {{ cidade.nome }}/{{ cidade.uf }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                     
@@ -162,7 +168,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ url_for('solicitantes.ver', id=solicitante.id_solicitante) }}" class="btn btn-secondary">
+                                    <a href="{{ url_for('solicitantes.ver', id=solicitante.id) }}" class="btn btn-secondary">
                                         <i class="fas fa-times me-2"></i>Cancelar
                                     </a>
                                     <button type="submit" class="btn btn-success">
@@ -203,7 +209,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 {% if not solicitante.movimentacoes %}
-                <form method="POST" action="{{ url_for('solicitantes.excluir', id=solicitante.id_solicitante) }}" class="d-inline">
+                <form method="POST" action="{{ url_for('solicitantes.excluir', id=solicitante.id) }}" class="d-inline">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash me-2"></i>Confirmar Exclusão
                     </button>

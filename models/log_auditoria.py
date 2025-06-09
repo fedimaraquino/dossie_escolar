@@ -1,18 +1,14 @@
-"""
-Aplicação LOGS - Modelos
-Conforme especificação CLAUDE.md - Item 7
-"""
-
-from models import db
+# models/log_auditoria.py
+from . import db
 from datetime import datetime
 
 class LogAuditoria(db.Model):
     """
-    Entidade: Log de Auditoria
-    Campos: Usuário, ação, data e hora, item alterado, IP, navegador, detalhes
+    Modelo para logs de auditoria do sistema
+    Registra todas as ações importantes dos usuários
     """
     __tablename__ = 'logs_auditoria'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     acao = db.Column(db.String(100), nullable=False)
@@ -21,6 +17,9 @@ class LogAuditoria(db.Model):
     ip_address = db.Column(db.String(45))
     navegador = db.Column(db.String(200))
     detalhes = db.Column(db.Text)
+    
+    # Relacionamentos
+    usuario = db.relationship('Usuario', backref='logs_auditoria')
     
     def __repr__(self):
         return f'<LogAuditoria {self.acao} - {self.data_hora}>'
@@ -40,11 +39,11 @@ class LogAuditoria(db.Model):
 
 class LogSistema(db.Model):
     """
-    Entidade: Log do Sistema
-    Campos: Mensagem de erro, usuário, nível de erro, data e hora
+    Modelo para logs do sistema
+    Registra erros e eventos importantes do sistema
     """
     __tablename__ = 'logs_sistema'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     mensagem_erro = db.Column(db.Text, nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
@@ -53,6 +52,9 @@ class LogSistema(db.Model):
     modulo = db.Column(db.String(50))
     funcao = db.Column(db.String(100))
     linha = db.Column(db.Integer)
+    
+    # Relacionamentos
+    usuario = db.relationship('Usuario', backref='logs_sistema')
     
     def __repr__(self):
         return f'<LogSistema {self.nivel_erro} - {self.data_hora}>'

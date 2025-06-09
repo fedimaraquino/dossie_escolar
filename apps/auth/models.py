@@ -3,7 +3,7 @@ Aplicação AUTH - Modelos de Autenticação e Segurança
 Conforme especificação CLAUDE.md - Item 1
 """
 
-from main import db
+from models import db
 from datetime import datetime, timedelta
 import uuid
 

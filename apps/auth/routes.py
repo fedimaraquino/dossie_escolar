@@ -5,8 +5,7 @@ Aplicação AUTH - Rotas de Autenticação e Segurança
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from datetime import datetime
 from .utils import (registrar_tentativa_login, verificar_bloqueio_ip, verificar_bloqueio_usuario,
-                   gerar_token_recuperacao, validar_token_recuperacao, validar_forca_senha,
-                   criar_sessao_usuario, verificar_sessao_ativa, encerrar_sessao_usuario)
+                   gerar_token_recuperacao, validar_token_recuperacao, validar_forca_senha)
 from apps.core.utils import log_acao
 
 # Criar blueprint
@@ -14,7 +13,17 @@ auth_bp = Blueprint('auth', __name__)
 
 def verificar_login():
     """Verificar se usuário está logado"""
-    return 'user_id' in session and verificar_sessao_ativa(session['user_id'])
+    # Verificação simples usando apenas sessão do Flask
+    if 'user_id' not in session:
+        return False
+
+    # Verificar se usuário ainda existe e está ativo
+    try:
+        from models import Usuario
+        usuario = Usuario.query.get(session['user_id'])
+        return usuario and usuario.status == 'ativo'
+    except:
+        return False
 
 def login_page():
     """Página de login"""
@@ -65,7 +74,7 @@ def login():
             bloquear_usuario(usuario.id)
             flash('Usuário bloqueado por tentativas excessivas.', 'error')
         
-        from main import db
+        from models import db
         db.session.commit()
         return render_template('auth/login.html')
     
@@ -80,7 +89,7 @@ def login():
     usuario.ultimo_acesso = datetime.now()
     usuario.bloqueado_ate = None
     
-    from main import db
+    from models import db
     db.session.commit()
     
     # Criar sessão
@@ -90,7 +99,7 @@ def login():
     session['user_perfil'] = usuario.perfil_obj.nome
     session['escola_id'] = usuario.escola_id
     
-    criar_sessao_usuario(usuario.id)
+    # Sessão criada automaticamente pelo Flask
     
     # Registrar tentativa bem-sucedida
     registrar_tentativa_login(email, True)
@@ -127,8 +136,7 @@ def logout():
             ip_address=request.remote_addr
         )
         
-        # Encerrar sessão no banco
-        encerrar_sessao_usuario(session['user_id'])
+        # Sessão será limpa automaticamente
     
     # Limpar sessão
     session.clear()
@@ -219,7 +227,7 @@ def redefinir_senha(token):
         usuario.tentativas_login = 0
         usuario.bloqueado_ate = None
         
-        from main import db
+        from models import db
         db.session.commit()
         
         # Marcar token como usado
@@ -278,7 +286,7 @@ def alterar_senha():
     # Atualizar senha
     usuario.set_password(nova_senha)
     
-    from main import db
+    from models import db
     db.session.commit()
     
     # Log da ação

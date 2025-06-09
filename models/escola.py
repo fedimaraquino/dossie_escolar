@@ -68,3 +68,59 @@ class Escola(db.Model):
     def is_ativa(self):
         """Verifica se a escola está ativa"""
         return self.situacao == 'ativa'
+
+
+class ConfiguracaoEscola(db.Model):
+    """
+    Entidade: Configurações da Escola
+    Campos: Escola, chave, valor, tipo, descrição
+    """
+    __tablename__ = 'configuracoes_escola'
+
+    id = db.Column(db.Integer, primary_key=True)
+    escola_id = db.Column(db.Integer, db.ForeignKey('escolas.id'), nullable=True)  # Permite configurações globais
+    chave = db.Column(db.String(100), nullable=False)
+    valor = db.Column(db.Text)
+    tipo = db.Column(db.String(20), default='string')  # string, boolean, integer, json
+    descricao = db.Column(db.Text)
+    ativo = db.Column(db.Boolean, default=True)
+    data_criacao = db.Column(db.DateTime, default=datetime.now)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    def __repr__(self):
+        return f'<ConfiguracaoEscola {self.chave}>'
+
+
+# Configurações padrão do sistema
+CONFIGURACOES_PADRAO = {
+    'permitir_download': {
+        'valor': 'true',
+        'tipo': 'boolean',
+        'descricao': 'Permitir download de documentos'
+    },
+    'retencao_documentos_dias': {
+        'valor': '2555',  # 7 anos
+        'tipo': 'integer',
+        'descricao': 'Período de retenção de documentos em dias'
+    },
+    'permitir_exportacao': {
+        'valor': 'true',
+        'tipo': 'boolean',
+        'descricao': 'Permitir exportação de dados'
+    },
+    'restringir_ip': {
+        'valor': 'false',
+        'tipo': 'boolean',
+        'descricao': 'Restringir acesso por IP'
+    },
+    'ips_permitidos': {
+        'valor': '[]',
+        'tipo': 'json',
+        'descricao': 'Lista de IPs permitidos'
+    },
+    'max_tentativas_login': {
+        'valor': '5',
+        'tipo': 'integer',
+        'descricao': 'Máximo de tentativas de login'
+    }
+}
