@@ -33,31 +33,100 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="POST" id="formUsuario">
-                    <!-- Dados Pessoais -->
+                <form method="POST" enctype="multipart/form-data" id="formUsuario">
+                    <!-- Foto do Usuário -->
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="text-primary border-bottom pb-2">
-                                <i class="fas fa-id-card me-2"></i>
-                                Dados Pessoais
+                                <i class="fas fa-camera me-2"></i>
+                                Foto do Usuário
                             </h6>
                         </div>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="nome" class="form-label">Nome Completo *</label>
-                            <input type="text" class="form-control" id="nome" name="nome" required
-                                   placeholder="Nome completo do usuário">
-                        </div>
+
+                    <div class="row mb-4">
                         <div class="col-md-3">
-                            <label for="cpf" class="form-label">CPF</label>
-                            <input type="text" class="form-control" id="cpf" name="cpf"
-                                   placeholder="000.000.000-00">
+                            <div class="text-center">
+                                <img id="previewFoto"
+                                     src="/static/img/default-avatar.svg"
+                                     alt="Preview da foto"
+                                     class="rounded-circle img-thumbnail mb-3"
+                                     style="width: 150px; height: 150px; object-fit: cover; cursor: pointer;"
+                                     onclick="document.getElementById('foto').click()">
+
+                                <div>
+                                    <input type="file"
+                                           id="foto"
+                                           name="foto"
+                                           accept="image/*"
+                                           style="display: none;"
+                                           onchange="previewImage(this)">
+
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm me-2"
+                                            onclick="document.getElementById('foto').click()">
+                                        <i class="fas fa-camera me-1"></i>Selecionar Foto
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            onclick="removePreview()"
+                                            id="btnRemoverFoto"
+                                            style="display: none;">
+                                        <i class="fas fa-trash me-1"></i>Remover
+                                    </button>
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    Formatos: PNG, JPG, JPEG, GIF<br>
+                                    Tamanho máximo: 5MB
+                                </small>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="data_nascimento" class="form-label">Data de Nascimento</label>
-                            <input type="date" class="form-control" id="data_nascimento" name="data_nascimento">
+                        <div class="col-md-9">
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Dica:</strong> A foto do usuário aparecerá na barra de navegação e facilitará a identificação no sistema.
+                            </div>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Importante:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>A foto será redimensionada automaticamente</li>
+                                    <li>Recomendado: foto tipo 3x4 ou similar</li>
+                                    <li>A foto pode ser alterada posteriormente</li>
+                                </ul>
+                            </div>
+
+                            <!-- Dados Pessoais -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <h6 class="text-primary border-bottom pb-2">
+                                        <i class="fas fa-id-card me-2"></i>
+                                        Dados Pessoais
+                                    </h6>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="nome" class="form-label">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="nome" name="nome" required
+                                           placeholder="Nome completo do usuário">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="cpf" class="form-label">CPF</label>
+                                    <input type="text" class="form-control" id="cpf" name="cpf"
+                                           placeholder="000.000.000-00">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                                    <input type="date" class="form-control" id="data_nascimento" name="data_nascimento">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -223,6 +292,41 @@ $(document).ready(function() {
         }
     });
 });
+
+// Funções para preview da foto
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        // Validar tamanho do arquivo (5MB)
+        if (input.files[0].size > 5 * 1024 * 1024) {
+            alert('Arquivo muito grande! O tamanho máximo é 5MB.');
+            input.value = '';
+            return;
+        }
+
+        // Validar tipo do arquivo
+        const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(input.files[0].type)) {
+            alert('Tipo de arquivo não permitido! Use PNG, JPG, JPEG, GIF ou WEBP.');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            document.getElementById('previewFoto').src = e.target.result;
+            document.getElementById('btnRemoverFoto').style.display = 'inline-block';
+        }
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removePreview() {
+    document.getElementById('previewFoto').src = '/static/img/default-avatar.svg';
+    document.getElementById('foto').value = '';
+    document.getElementById('btnRemoverFoto').style.display = 'none';
+}
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 {% endblock %}

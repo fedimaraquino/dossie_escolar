@@ -76,8 +76,26 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
+                        <!-- Foto do Usuário -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-center">
+                                <img src="{{ usuario.get_foto_url() }}"
+                                     alt="Foto de {{ usuario.nome }}"
+                                     class="rounded-circle img-thumbnail"
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        {% if usuario.has_foto() %}
+                                            Foto personalizada
+                                        {% else %}
+                                            Foto padrão
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row">
+                                    <div class="col-md-6">
                                 <table class="table table-borderless">
                                     <tr>
                                         <td><strong>Nome:</strong></td>
@@ -160,6 +178,8 @@
                                 </table>
                             </div>
                         </div>
+                        </div>
+                    </div>
                         
                         {% if usuario.endereco %}
                         <div class="row mt-3">

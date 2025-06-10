@@ -153,8 +153,14 @@
                 
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-1"></i>{{ session.user_nome }}
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <img src="{{ session.user_foto_url or '/static/img/default-avatar.svg' }}"
+                                 alt="Foto do usuário"
+                                 class="rounded-circle me-2"
+                                 width="32"
+                                 height="32"
+                                 style="object-fit: cover;">
+                            <span>{{ session.user_nome }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ url_for('usuario.perfil') }}"><i class="fas fa-user-cog me-2"></i>Meu Perfil</a></li>

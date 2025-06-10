@@ -184,11 +184,17 @@ def obter_logs_sistema(limite=100, nivel=None):
 
 # Constantes para ações de auditoria
 class AcoesAuditoria:
+    # Ações gerais
+    CRIACAO = 'CRIACAO'
+    ALTERACAO = 'ALTERACAO'
+    EXCLUSAO = 'EXCLUSAO'
+    VISUALIZACAO = 'VISUALIZACAO'
+
     # Autenticação
     LOGIN = 'LOGIN'
     LOGOUT = 'LOGOUT'
     LOGIN_FALHOU = 'LOGIN_FALHOU'
-    
+
     # Usuários
     USUARIO_CRIADO = 'USUARIO_CRIADO'
     USUARIO_EDITADO = 'USUARIO_EDITADO'

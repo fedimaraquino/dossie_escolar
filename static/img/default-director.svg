@@ -1,0 +1,25 @@
+<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="75" cy="75" r="75" fill="#f3e5f5"/>
+  
+  <!-- Director icon -->
+  <g fill="#7b1fa2">
+    <!-- Head -->
+    <circle cx="75" cy="45" r="16"/>
+    
+    <!-- Body -->
+    <path d="M75 75 C60 75, 50 82, 50 92 L50 110 C50 114, 52 116, 55 116 L95 116 C98 116, 100 114, 100 110 L100 92 C100 82, 90 75, 75 75 Z"/>
+    
+    <!-- Tie -->
+    <path d="M75 75 L70 85 L75 95 L80 85 Z" fill="#1565c0"/>
+    
+    <!-- Briefcase -->
+    <rect x="45" y="120" width="60" height="20" rx="3" fill="#424242"/>
+    <rect x="70" y="115" width="10" height="8" fill="#424242"/>
+    
+    <!-- Glasses -->
+    <circle cx="68" cy="42" r="6" fill="none" stroke="#424242" stroke-width="2"/>
+    <circle cx="82" cy="42" r="6" fill="none" stroke="#424242" stroke-width="2"/>
+    <line x1="74" y1="42" x2="76" y2="42" stroke="#424242" stroke-width="2"/>
+  </g>
+</svg>

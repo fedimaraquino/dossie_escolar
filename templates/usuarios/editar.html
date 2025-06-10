@@ -29,15 +29,75 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="POST">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <label for="nome" class="form-label">Nome Completo *</label>
-                            <input type="text" class="form-control" id="nome" name="nome" value="{{ usuario.nome }}" required>
+                <form method="POST" enctype="multipart/form-data">
+                    <!-- Foto do Usuário -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <img id="previewFoto"
+                                     src="{{ usuario.get_foto_url() }}"
+                                     alt="Foto do usuário"
+                                     class="rounded-circle img-thumbnail mb-3"
+                                     style="width: 150px; height: 150px; object-fit: cover; cursor: pointer;"
+                                     onclick="document.getElementById('foto').click()">
+
+                                <div>
+                                    <input type="file"
+                                           id="foto"
+                                           name="foto"
+                                           accept="image/*"
+                                           style="display: none;"
+                                           onchange="previewImage(this)">
+
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm me-2"
+                                            onclick="document.getElementById('foto').click()">
+                                        <i class="fas fa-camera me-1"></i>Alterar Foto
+                                    </button>
+
+                                    {% if usuario.has_foto() %}
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            onclick="removePreview()"
+                                            id="btnRemoverFoto">
+                                        <i class="fas fa-trash me-1"></i>Remover
+                                    </button>
+                                    {% endif %}
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    Formatos: PNG, JPG, JPEG, GIF<br>
+                                    Tamanho máximo: 5MB
+                                </small>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="cpf" class="form-label">CPF</label>
-                            <input type="text" class="form-control" id="cpf" name="cpf" value="{{ usuario.cpf or '' }}" placeholder="000.000.000-00">
+                        <div class="col-md-9">
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Dica:</strong> Clique na foto atual para alterá-la. A nova foto aparecerá em toda a aplicação.
+                            </div>
+                            {% if usuario.has_foto() %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Foto atual:</strong> O usuário possui uma foto personalizada.
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Sem foto:</strong> Este usuário está usando a foto padrão.
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="nome" class="form-label">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="nome" name="nome" value="{{ usuario.nome }}" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="cpf" class="form-label">CPF</label>
+                                    <input type="text" class="form-control" id="cpf" name="cpf" value="{{ usuario.cpf or '' }}" placeholder="000.000.000-00">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -234,5 +294,54 @@
             e.preventDefault();
         }
     });
+
+    // Funções para preview da foto
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            // Validar tamanho do arquivo (5MB)
+            if (input.files[0].size > 5 * 1024 * 1024) {
+                alert('Arquivo muito grande! O tamanho máximo é 5MB.');
+                input.value = '';
+                return;
+            }
+
+            // Validar tipo do arquivo
+            const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(input.files[0].type)) {
+                alert('Tipo de arquivo não permitido! Use PNG, JPG, JPEG, GIF ou WEBP.');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                document.getElementById('previewFoto').src = e.target.result;
+                // Mostrar botão de remover se não existir
+                let btnRemover = document.getElementById('btnRemoverFoto');
+                if (!btnRemover) {
+                    btnRemover = document.createElement('button');
+                    btnRemover.type = 'button';
+                    btnRemover.className = 'btn btn-outline-secondary btn-sm';
+                    btnRemover.id = 'btnRemoverFoto';
+                    btnRemover.onclick = removePreview;
+                    btnRemover.innerHTML = '<i class="fas fa-trash me-1"></i>Remover';
+                    document.querySelector('.btn-outline-primary').parentNode.appendChild(btnRemover);
+                }
+                btnRemover.style.display = 'inline-block';
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removePreview() {
+        document.getElementById('previewFoto').src = '{{ usuario.get_foto_url() }}';
+        document.getElementById('foto').value = '';
+        const btnRemover = document.getElementById('btnRemoverFoto');
+        if (btnRemover) {
+            btnRemover.style.display = 'none';
+        }
+    }
 </script>
 {% endblock %}

@@ -19,6 +19,7 @@ class Diretor(db.Model):
     status = db.Column(db.String(20), default='ativo')  # ativo/inativo
     admissao = db.Column(db.Date)
     tipo_mandato = db.Column(db.String(50))  # Cargo ou mandato
+    foto = db.Column(db.String(255))  # Nome do arquivo da foto
 
     def __repr__(self):
         return f'<Diretor {self.nome}>'
@@ -34,7 +35,9 @@ class Diretor(db.Model):
             'cpf': self.cpf,
             'status': self.status,
             'admissao': self.admissao.isoformat() if self.admissao else None,
-            'tipo_mandato': self.tipo_mandato
+            'tipo_mandato': self.tipo_mandato,
+            'foto': self.foto,
+            'foto_url': self.get_foto_url()
         }
 
     @property
@@ -53,6 +56,32 @@ class Diretor(db.Model):
     def is_ativo(self):
         """Verifica se o diretor está ativo"""
         return self.status == 'ativo'
+
+    def get_foto_url(self):
+        """Retorna a URL da foto do diretor ou uma foto padrão"""
+        if self.foto:
+            return f"/static/uploads/diretores/{self.foto}"
+        return "/static/img/default-director.svg"
+
+    def has_foto(self):
+        """Verifica se o diretor tem foto"""
+        return bool(self.foto)
+
+    def set_foto(self, filename):
+        """Define o nome do arquivo da foto"""
+        self.foto = filename
+
+    def remove_foto(self):
+        """Remove a foto do diretor"""
+        import os
+        if self.foto:
+            foto_path = f"static/uploads/diretores/{self.foto}"
+            if os.path.exists(foto_path):
+                try:
+                    os.remove(foto_path)
+                except:
+                    pass
+        self.foto = None
 
     def format_cpf(self):
         """Retorna CPF formatado"""

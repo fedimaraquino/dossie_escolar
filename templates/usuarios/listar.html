@@ -83,6 +83,7 @@
                                 <table class="table table-hover">
                                     <thead class="table-dark">
                                         <tr>
+                                            <th>Foto</th>
                                             <th>Nome</th>
                                             <th>Email</th>
                                             <th>CPF</th>
@@ -97,6 +98,12 @@
                                     <tbody>
                                         {% for usuario in usuarios.items %}
                                         <tr>
+                                            <td>
+                                                <img src="{{ usuario.get_foto_url() }}"
+                                                     alt="Foto de {{ usuario.nome }}"
+                                                     class="rounded-circle"
+                                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                            </td>
                                             <td>
                                                 <div>
                                                     <strong>{{ usuario.nome }}</strong>

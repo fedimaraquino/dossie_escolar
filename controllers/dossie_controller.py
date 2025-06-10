@@ -107,6 +107,35 @@ def novo():
 
         try:
             db.session.add(dossie)
+            db.session.flush()  # Para obter o ID do dossiê
+
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"dossie_{dossie.id_dossie}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join('static', 'uploads', 'dossies')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar dossiê com o nome da foto
+                        dossie.set_foto(filename)
+
             db.session.commit()
 
             # Processar anexos se houver (método simplificado)
@@ -219,6 +248,42 @@ def editar(id):
             return render_template('dossies/editar.html', dossie=dossie, escolas=escolas)
 
         try:
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Remover foto anterior se existir
+                        if dossie.foto:
+                            old_photo_path = os.path.join('static', 'uploads', 'dossies', dossie.foto)
+                            if os.path.exists(old_photo_path):
+                                try:
+                                    os.remove(old_photo_path)
+                                except:
+                                    pass
+
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"dossie_{dossie.id_dossie}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join('static', 'uploads', 'dossies')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar dossiê com o nome da foto
+                        dossie.set_foto(filename)
+
             db.session.commit()
             flash('Dossiê atualizado com sucesso!', 'success')
             return redirect(url_for('dossie.listar'))

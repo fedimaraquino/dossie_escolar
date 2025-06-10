@@ -44,7 +44,74 @@
                 </div>
                 
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Foto do Diretor -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-camera me-2"></i>Foto do Diretor
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-center">
+                                <img id="previewFotoDiretor"
+                                     src="{{ diretor.get_foto_url() if diretor else '/static/img/default-director.svg' }}"
+                                     alt="Foto do diretor"
+                                     class="rounded-circle img-thumbnail mb-3"
+                                     style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;"
+                                     onclick="document.getElementById('foto').click()">
+
+                                <div>
+                                    <input type="file"
+                                           id="foto"
+                                           name="foto"
+                                           accept="image/*"
+                                           style="display: none;"
+                                           onchange="previewImageDiretor(this)">
+
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm me-2"
+                                            onclick="document.getElementById('foto').click()">
+                                        <i class="fas fa-camera me-1"></i>
+                                        {% if diretor and diretor.has_foto() %}Alterar{% else %}Selecionar{% endif %}
+                                    </button>
+
+                                    {% if diretor and diretor.has_foto() %}
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            onclick="removePreviewDiretor()"
+                                            id="btnRemoverFotoDiretor">
+                                        <i class="fas fa-trash me-1"></i>Remover
+                                    </button>
+                                    {% endif %}
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    JPG, PNG, GIF<br>
+                                    Máx: 5MB
+                                </small>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Dica:</strong> A foto do diretor aparecerá nos relatórios e facilitará a identificação.
+                                </div>
+                                {% if diretor and diretor.has_foto() %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Foto atual:</strong> O diretor possui uma foto personalizada.
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Sem foto:</strong> Este diretor está usando a foto padrão.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         <!-- Dados Pessoais -->
                         <div class="row mb-4">
                             <div class="col-12">
@@ -268,6 +335,55 @@ function validarCPF(cpf) {
     var dv2 = resto < 2 ? 0 : resto;
     
     return parseInt(cpf.charAt(10)) === dv2;
+}
+
+// Funções para preview da foto do diretor
+function previewImageDiretor(input) {
+    if (input.files && input.files[0]) {
+        // Validar tamanho do arquivo (5MB)
+        if (input.files[0].size > 5 * 1024 * 1024) {
+            alert('Arquivo muito grande! O tamanho máximo é 5MB.');
+            input.value = '';
+            return;
+        }
+
+        // Validar tipo do arquivo
+        const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(input.files[0].type)) {
+            alert('Tipo de arquivo não permitido! Use PNG, JPG, JPEG, GIF ou WEBP.');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            document.getElementById('previewFotoDiretor').src = e.target.result;
+            // Mostrar botão de remover se não existir
+            let btnRemover = document.getElementById('btnRemoverFotoDiretor');
+            if (!btnRemover) {
+                btnRemover = document.createElement('button');
+                btnRemover.type = 'button';
+                btnRemover.className = 'btn btn-outline-secondary btn-sm';
+                btnRemover.id = 'btnRemoverFotoDiretor';
+                btnRemover.onclick = removePreviewDiretor;
+                btnRemover.innerHTML = '<i class="fas fa-trash me-1"></i>Remover';
+                document.querySelector('.btn-outline-primary').parentNode.appendChild(btnRemover);
+            }
+            btnRemover.style.display = 'inline-block';
+        }
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removePreviewDiretor() {
+    document.getElementById('previewFotoDiretor').src = '{{ diretor.get_foto_url() if diretor else "/static/img/default-director.svg" }}';
+    document.getElementById('foto').value = '';
+    const btnRemover = document.getElementById('btnRemoverFotoDiretor');
+    if (btnRemover) {
+        btnRemover.style.display = 'none';
+    }
 }
 </script>
 {% endblock %}

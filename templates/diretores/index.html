@@ -97,6 +97,7 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th>Foto</th>
                             <th>Nome</th>
                             <th>CPF</th>
                             <th>Cidade</th>
@@ -110,10 +111,13 @@
                         {% for diretor in diretores.items %}
                         <tr>
                             <td>
+                                <img src="{{ diretor.get_foto_url() }}"
+                                     alt="Foto de {{ diretor.nome }}"
+                                     class="rounded-circle"
+                                     style="width: 40px; height: 40px; object-fit: cover;">
+                            </td>
+                            <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-sm bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-user"></i>
-                                    </div>
                                     <div>
                                         <strong>{{ diretor.nome }}</strong>
                                         {% if diretor.celular %}

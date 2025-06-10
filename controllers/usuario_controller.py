@@ -1,5 +1,5 @@
 # controllers/usuario_controller.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from datetime import datetime
 from models import db, Usuario, Escola, Perfil
 from .auth_controller import login_required, admin_required
@@ -94,12 +94,42 @@ def novo():
             situacao=request.form.get('situacao', 'ativo'),
             data_nascimento=datetime.strptime(request.form.get('data_nascimento'), '%Y-%m-%d').date() if request.form.get('data_nascimento') else None
         )
-        
+
         senha_padrao = request.form.get('senha', '123456')
         usuario.set_password(senha_padrao)
 
         try:
             db.session.add(usuario)
+            db.session.flush()  # Para obter o ID do usuário
+
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    from werkzeug.utils import secure_filename
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar usuário com o nome da foto
+                        usuario.set_foto(filename)
+
             db.session.commit()
             flash('Usuário cadastrado com sucesso!', 'success')
             return redirect(url_for('usuario.listar'))
@@ -147,12 +177,55 @@ def editar(id):
 
         if not usuario.nome or not usuario.email:
             flash('Nome e email são obrigatórios!', 'error')
-            return render_template('usuarios/editar.html', 
-                                 usuario=usuario, 
-                                 escolas=Escola.query.all(), 
+            return render_template('usuarios/editar.html',
+                                 usuario=usuario,
+                                 escolas=Escola.query.all(),
                                  perfis=Perfil.query.all())
 
         try:
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Remover foto anterior se existir
+                        if usuario.foto:
+                            old_photo_path = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos', usuario.foto)
+                            if os.path.exists(old_photo_path):
+                                try:
+                                    os.remove(old_photo_path)
+                                except:
+                                    pass  # Não falhar se não conseguir remover
+
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar usuário com o nome da foto
+                        usuario.set_foto(filename)
+
+                        # Atualizar sessão se for o próprio usuário
+                        if session.get('user_id') == usuario.id:
+                            session['user_foto_url'] = usuario.get_foto_url()
+                    else:
+                        flash('Tipo de arquivo não permitido para foto!', 'error')
+
             db.session.commit()
             flash('Usuário atualizado com sucesso!', 'success')
             return redirect(url_for('usuario.listar'))
@@ -282,6 +355,48 @@ def editar_perfil():
             if email_existente:
                 flash('Este email já está sendo usado por outro usuário!', 'error')
                 return render_template('usuarios/editar_perfil.html', usuario=usuario)
+
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Remover foto anterior se existir
+                        if usuario.foto:
+                            old_photo_path = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos', usuario.foto)
+                            if os.path.exists(old_photo_path):
+                                try:
+                                    os.remove(old_photo_path)
+                                except:
+                                    pass
+
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar usuário com o nome da foto
+                        usuario.set_foto(filename)
+
+                        # Atualizar sessão
+                        session['user_foto_url'] = usuario.get_foto_url()
+                    else:
+                        flash('Tipo de arquivo não permitido para foto!', 'error')
 
             # Log da ação
             log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario', f'Perfil atualizado: {usuario.nome}')

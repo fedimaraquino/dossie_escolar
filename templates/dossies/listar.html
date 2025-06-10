@@ -73,6 +73,7 @@
                         <table class="table table-hover">
                             <thead class="table-dark">
                                 <tr>
+                                    <th>Foto</th>
                                     <th>Número</th>
                                     <th>Aluno</th>
                                     <th>Escola</th>
@@ -85,6 +86,12 @@
                             <tbody>
                                 {% for dossie in dossies.items %}
                                 <tr>
+                                    <td>
+                                        <img src="{{ dossie.get_foto_url() }}"
+                                             alt="Foto de {{ dossie.nome }}"
+                                             class="rounded-circle"
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                    </td>
                                     <td>
                                         <strong>{{ dossie.n_dossie }}</strong>
                                     </td>

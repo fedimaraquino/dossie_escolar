@@ -59,6 +59,7 @@ def create_app():
     from controllers.diretor_controller import diretor_bp
     from controllers.solicitante_controller import solicitante_bp
     from controllers.configuracao_controller import config_bp
+    from controllers.foto_controller import foto_bp
     from admin import admin_bp
 
     app.register_blueprint(auth_bp)
@@ -73,6 +74,7 @@ def create_app():
     app.register_blueprint(permissao_bp)
     app.register_blueprint(solicitante_bp)
     app.register_blueprint(config_bp)
+    app.register_blueprint(foto_bp)
     app.register_blueprint(admin_bp)
     
     # Rotas principais

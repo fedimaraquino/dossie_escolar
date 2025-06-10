@@ -40,12 +40,32 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <strong>Nome Completo:</strong><br>
-                                <span class="text-muted">{{ diretor.nome }}</span>
+                    <!-- Foto do Diretor -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            <img src="{{ diretor.get_foto_url() }}"
+                                 alt="Foto de {{ diretor.nome }}"
+                                 class="rounded-circle img-thumbnail"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    {% if diretor.has_foto() %}
+                                        <i class="fas fa-check-circle text-success me-1"></i>
+                                        Foto personalizada
+                                    {% else %}
+                                        <i class="fas fa-camera text-muted me-1"></i>
+                                        Foto padrão
+                                    {% endif %}
+                                </small>
                             </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <strong>Nome Completo:</strong><br>
+                                        <span class="text-muted">{{ diretor.nome }}</span>
+                                    </div>
                             
                             <div class="mb-3">
                                 <strong>CPF:</strong><br>
@@ -62,11 +82,12 @@
                                     {{ diretor.get_status_display() }}
                                 </span>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <strong>Celular:</strong><br>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <strong>Celular:</strong><br>
                                 {% if diretor.celular %}
                                     <a href="tel:{{ diretor.celular }}" class="text-decoration-none">
                                         <i class="fas fa-phone me-1"></i>{{ diretor.format_celular() }}

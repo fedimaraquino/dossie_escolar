@@ -73,8 +73,51 @@
             </div>
         </div>
 
-        <!-- Informações do Sistema -->
+        <!-- Foto do Usuário -->
         <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-camera me-2"></i>Foto do Perfil</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <img id="userPhoto"
+                             src="{{ usuario.get_foto_url() }}"
+                             alt="Foto do usuário"
+                             class="rounded-circle img-thumbnail"
+                             style="width: 150px; height: 150px; object-fit: cover;">
+                    </div>
+
+                    <div class="mb-3">
+                        <input type="file"
+                               id="photoInput"
+                               accept="image/*"
+                               style="display: none;"
+                               onchange="uploadPhoto()">
+
+                        <button type="button"
+                                class="btn btn-primary btn-sm me-2"
+                                onclick="document.getElementById('photoInput').click()">
+                            <i class="fas fa-upload me-1"></i>Alterar Foto
+                        </button>
+
+                        {% if usuario.has_foto() %}
+                        <button type="button"
+                                class="btn btn-outline-danger btn-sm"
+                                onclick="removePhoto()">
+                            <i class="fas fa-trash me-1"></i>Remover
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <small class="text-muted">
+                        Formatos aceitos: PNG, JPG, JPEG, GIF, WEBP<br>
+                        Tamanho máximo: 5MB
+                    </small>
+                </div>
+            </div>
+
+            <!-- Informações do Sistema -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Informações do Sistema</h6>
@@ -212,5 +255,161 @@
         padding-bottom: 1rem;
     }
 }
+
+/* Estilos para foto do usuário */
+.img-thumbnail {
+    border: 3px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.img-thumbnail:hover {
+    border-color: #007bff;
+    transform: scale(1.05);
+}
+
+#userPhoto {
+    cursor: pointer;
+}
 </style>
+
+<script>
+// Função para upload de foto
+function uploadPhoto() {
+    const fileInput = document.getElementById('photoInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    // Validar tamanho do arquivo (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Arquivo muito grande! O tamanho máximo é 5MB.');
+        return;
+    }
+
+    // Validar tipo do arquivo
+    const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Tipo de arquivo não permitido! Use PNG, JPG, JPEG, GIF ou WEBP.');
+        return;
+    }
+
+    // Criar FormData
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    // Mostrar loading
+    const userPhoto = document.getElementById('userPhoto');
+    const originalSrc = userPhoto.src;
+    userPhoto.style.opacity = '0.5';
+
+    // Fazer upload
+    fetch('/api/foto/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Atualizar foto
+            userPhoto.src = data.foto_url + '?t=' + new Date().getTime(); // Cache bust
+            userPhoto.style.opacity = '1';
+
+            // Atualizar foto na barra de navegação
+            const navPhoto = document.querySelector('#userDropdown img');
+            if (navPhoto) {
+                navPhoto.src = data.foto_url + '?t=' + new Date().getTime();
+            }
+
+            // Mostrar mensagem de sucesso
+            showAlert('success', data.message);
+
+            // Recarregar página após 2 segundos para atualizar botões
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            userPhoto.style.opacity = '1';
+            showAlert('error', data.error);
+        }
+    })
+    .catch(error => {
+        userPhoto.style.opacity = '1';
+        showAlert('error', 'Erro ao fazer upload da foto: ' + error.message);
+    });
+}
+
+// Função para remover foto
+function removePhoto() {
+    if (!confirm('Tem certeza que deseja remover sua foto?')) {
+        return;
+    }
+
+    const userPhoto = document.getElementById('userPhoto');
+    userPhoto.style.opacity = '0.5';
+
+    fetch('/api/foto/remove', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Atualizar foto
+            userPhoto.src = data.foto_url + '?t=' + new Date().getTime();
+            userPhoto.style.opacity = '1';
+
+            // Atualizar foto na barra de navegação
+            const navPhoto = document.querySelector('#userDropdown img');
+            if (navPhoto) {
+                navPhoto.src = data.foto_url + '?t=' + new Date().getTime();
+            }
+
+            // Mostrar mensagem de sucesso
+            showAlert('success', data.message);
+
+            // Recarregar página após 2 segundos para atualizar botões
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            userPhoto.style.opacity = '1';
+            showAlert('error', data.error);
+        }
+    })
+    .catch(error => {
+        userPhoto.style.opacity = '1';
+        showAlert('error', 'Erro ao remover foto: ' + error.message);
+    });
+}
+
+// Função para mostrar alertas
+function showAlert(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+
+    // Inserir alerta no topo da página
+    const container = document.querySelector('.container-fluid');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+
+    // Remover alerta após 5 segundos
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Permitir clique na foto para alterar
+document.getElementById('userPhoto').addEventListener('click', function() {
+    document.getElementById('photoInput').click();
+});
+</script>
 {% endblock %}

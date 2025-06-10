@@ -98,8 +98,16 @@
                             <label for="id_cidade" class="form-label">Cidade</label>
                             <select class="form-select" id="id_cidade" name="id_cidade">
                                 <option value="">Selecione a cidade...</option>
-                                <!-- As cidades serão carregadas dinamicamente -->
+                                {% for cidade in cidades %}
+                                    <option value="{{ cidade.id_cidade }}">{{ cidade.nome }} - {{ cidade.uf }}</option>
+                                {% endfor %}
                             </select>
+                            {% if not cidades %}
+                                <div class="form-text text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Nenhuma cidade cadastrada. <a href="{{ url_for('cidade.nova') }}" target="_blank">Cadastrar cidade</a>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     

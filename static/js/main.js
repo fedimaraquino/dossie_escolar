@@ -13,9 +13,9 @@ $(document).ready(function() {
         return new bootstrap.Popover(popoverTriggerEl);
     });
 
-    // Auto-hide alerts após 5 segundos
+    // Auto-hide apenas flash messages após 5 segundos (não alerts informativos)
     setTimeout(function() {
-        $('.alert').fadeOut('slow');
+        $('.alert.alert-dismissible').fadeOut('slow');
     }, 5000);
 
     // Adicionar classe fade-in aos cards

@@ -38,8 +38,10 @@ def login():
             # Criar sessão
             session['user_id'] = usuario.id
             session['user_name'] = usuario.nome
+            session['user_nome'] = usuario.nome  # Para compatibilidade
             session['user_email'] = usuario.email
             session['user_perfil'] = usuario.perfil_obj.nome
+            session['user_foto_url'] = usuario.get_foto_url()
             session['escola_id'] = usuario.escola_id
 
             # Registrar log de login

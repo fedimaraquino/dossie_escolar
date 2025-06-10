@@ -51,6 +51,7 @@ class Dossie(db.Model):
             'id_escola': self.id_escola,
             'status': self.status,
             'foto': self.foto,
+            'foto_url': self.get_foto_url(),
             'observacao': self.observacao,
             'dt_arquivo': self.dt_arquivo.isoformat() if self.dt_arquivo else None,
             'tipo_documento': self.tipo_documento,
@@ -96,3 +97,29 @@ class Dossie(db.Model):
     def is_ativo(self):
         """Verifica se o dossiê está ativo"""
         return self.status == 'ativo'
+
+    def get_foto_url(self):
+        """Retorna a URL da foto do aluno ou uma foto padrão"""
+        if self.foto:
+            return f"/static/uploads/dossies/{self.foto}"
+        return "/static/img/default-student.svg"
+
+    def has_foto(self):
+        """Verifica se o dossiê tem foto"""
+        return bool(self.foto)
+
+    def set_foto(self, filename):
+        """Define o nome do arquivo da foto"""
+        self.foto = filename
+
+    def remove_foto(self):
+        """Remove a foto do dossiê"""
+        import os
+        if self.foto:
+            foto_path = f"static/uploads/dossies/{self.foto}"
+            if os.path.exists(foto_path):
+                try:
+                    os.remove(foto_path)
+                except:
+                    pass
+        self.foto = None

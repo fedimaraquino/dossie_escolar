@@ -112,8 +112,37 @@ def criar():
                                      status_options=Diretor.get_status_options())
             
             db.session.add(diretor)
+            db.session.flush()  # Para obter o ID do diretor
+
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"diretor_{diretor.id_diretor}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join('static', 'uploads', 'diretores')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar diretor com o nome da foto
+                        diretor.set_foto(filename)
+
             db.session.commit()
-            
+
             flash(f'Diretor "{diretor.nome}" criado com sucesso!', 'success')
             return redirect(url_for('diretor.index'))
             
@@ -194,13 +223,49 @@ def editar(id_diretor):
             # Validar CPF
             if not diretor.validate_cpf():
                 flash('CPF inválido', 'error')
-                return render_template('diretores/form.html', 
+                return render_template('diretores/form.html',
                                      diretor=diretor,
                                      tipos_mandato=Diretor.get_tipos_mandato(),
                                      status_options=Diretor.get_status_options())
-            
+
+            # Processar upload da foto
+            if 'foto' in request.files:
+                foto = request.files['foto']
+                if foto and foto.filename:
+                    from controllers.foto_controller import allowed_file, resize_image
+                    import os
+                    import uuid
+
+                    if allowed_file(foto.filename):
+                        # Remover foto anterior se existir
+                        if diretor.foto:
+                            old_photo_path = os.path.join('static', 'uploads', 'diretores', diretor.foto)
+                            if os.path.exists(old_photo_path):
+                                try:
+                                    os.remove(old_photo_path)
+                                except:
+                                    pass
+
+                        # Gerar nome único para o arquivo
+                        file_extension = foto.filename.rsplit('.', 1)[1].lower()
+                        filename = f"diretor_{diretor.id_diretor}_{uuid.uuid4().hex[:8]}.{file_extension}"
+
+                        # Definir caminho para salvar
+                        upload_folder = os.path.join('static', 'uploads', 'diretores')
+                        os.makedirs(upload_folder, exist_ok=True)
+                        file_path = os.path.join(upload_folder, filename)
+
+                        # Salvar arquivo
+                        foto.save(file_path)
+
+                        # Redimensionar imagem
+                        resize_image(file_path)
+
+                        # Atualizar diretor com o nome da foto
+                        diretor.set_foto(filename)
+
             db.session.commit()
-            
+
             flash(f'Diretor "{diretor.nome}" atualizado com sucesso!', 'success')
             return redirect(url_for('diretor.detalhes', id_diretor=diretor.id_diretor))
             

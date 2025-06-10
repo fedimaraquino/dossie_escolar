@@ -16,6 +16,7 @@ class Usuario(db.Model):
     cpf = db.Column(db.String(14))
     email = db.Column(db.String(120), unique=True, nullable=False)
     telefone = db.Column(db.String(20))
+    foto = db.Column(db.String(255))  # Caminho para a foto do usuário
     escola_id = db.Column(db.Integer, db.ForeignKey('escolas.id'), nullable=False)
     perfil_id = db.Column(db.Integer, db.ForeignKey('perfil.id_perfil'), nullable=False)
     situacao = db.Column(db.String(20), default='ativo')  # ativo/inativo/bloqueado
@@ -85,6 +86,32 @@ class Usuario(db.Model):
     def is_ativo(self):
         """Verifica se o usuário está ativo"""
         return self.situacao == 'ativo' and not self.is_bloqueado
+
+    def get_foto_url(self):
+        """Retorna a URL da foto do usuário ou uma foto padrão"""
+        if self.foto:
+            return f"/static/uploads/fotos/{self.foto}"
+        return "/static/img/default-avatar.svg"
+
+    def has_foto(self):
+        """Verifica se o usuário tem foto"""
+        return bool(self.foto)
+
+    def set_foto(self, filename):
+        """Define o nome do arquivo da foto"""
+        self.foto = filename
+
+    def remove_foto(self):
+        """Remove a foto do usuário"""
+        import os
+        if self.foto:
+            foto_path = f"static/uploads/fotos/{self.foto}"
+            if os.path.exists(foto_path):
+                try:
+                    os.remove(foto_path)
+                except:
+                    pass  # Não falhar se não conseguir remover
+        self.foto = None
     
     def __repr__(self):
         return f'<Usuario {self.nome}>'
@@ -96,6 +123,8 @@ class Usuario(db.Model):
             'cpf': self.cpf,
             'email': self.email,
             'telefone': self.telefone,
+            'foto': self.foto,
+            'foto_url': self.get_foto_url(),
             'escola_id': self.escola_id,
             'perfil_id': self.perfil_id,
             'situacao': self.situacao,
