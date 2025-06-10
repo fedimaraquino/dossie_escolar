@@ -15,6 +15,8 @@ from .movimentacao import Movimentacao
 from .anexo import Anexo
 from .solicitante import Solicitante
 from .log_auditoria import LogAuditoria, LogSistema
+from .configuracao_avancada import ConfiguracaoSistema, HistoricoConfiguracao
 
 __all__ = ['db', 'Perfil', 'Permissao', 'PerfilPermissao', 'Cidade', 'Escola', 'ConfiguracaoEscola', 'CONFIGURACOES_PADRAO',
-           'Usuario', 'Diretor', 'Dossie', 'Movimentacao', 'Anexo', 'Solicitante', 'LogAuditoria', 'LogSistema']
+           'Usuario', 'Diretor', 'Dossie', 'Movimentacao', 'Anexo', 'Solicitante', 'LogAuditoria', 'LogSistema',
+           'ConfiguracaoSistema', 'HistoricoConfiguracao']

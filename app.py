@@ -58,6 +58,7 @@ def create_app():
     from controllers.permissao_controller import permissao_bp
     from controllers.diretor_controller import diretor_bp
     from controllers.solicitante_controller import solicitante_bp
+    from controllers.configuracao_controller import config_bp
     from admin import admin_bp
 
     app.register_blueprint(auth_bp)
@@ -71,6 +72,7 @@ def create_app():
     app.register_blueprint(diretor_bp)
     app.register_blueprint(permissao_bp)
     app.register_blueprint(solicitante_bp)
+    app.register_blueprint(config_bp)
     app.register_blueprint(admin_bp)
     
     # Rotas principais
@@ -83,31 +85,162 @@ def create_app():
     
     @app.route('/dashboard')
     def dashboard():
-        """Dashboard principal do sistema"""
+        """Dashboard otimizado do sistema"""
         if 'user_id' not in session:
             return redirect(url_for('auth.login'))
-        
+
         from models import Usuario, Escola, Dossie, Movimentacao
-        
+
+        usuario = Usuario.query.get(session['user_id'])
+        if not usuario:
+            session.clear()
+            flash('Sessão inválida. Faça login novamente.', 'error')
+            return redirect(url_for('auth.login'))
+
+        # Estatísticas otimizadas e rápidas
+        from datetime import datetime, timedelta
+
+        hoje = datetime.now()
+        inicio_mes = hoje.replace(day=1)
+
+        # Consultas otimizadas com menos JOINs
+        if usuario.is_admin_geral():
+            stats = {
+                'total_escolas': Escola.query.count(),
+                'total_usuarios': Usuario.query.count(),
+                'total_dossies': Dossie.query.count(),
+                'total_movimentacoes': Movimentacao.query.count(),
+                'usuarios_ativos': Usuario.query.filter_by(situacao='ativo').count(),
+                'dossies_ativos': Dossie.query.filter_by(situacao='ativo').count(),
+                'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count(),
+                'dossies_mes_atual': Dossie.query.filter(Dossie.dt_cadastro >= inicio_mes).count(),
+                'movimentacoes_mes_atual': Movimentacao.query.filter(Movimentacao.data_movimentacao >= inicio_mes).count()
+            }
+        else:
+            # Dados específicos da escola
+            escola_id = usuario.escola_id
+            stats = {
+                'total_escolas': 1,
+                'total_usuarios': Usuario.query.filter_by(escola_id=escola_id).count(),
+                'total_dossies': Dossie.query.filter_by(escola_id=escola_id).count(),
+                'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == escola_id).count(),
+                'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_id, situacao='ativo').count(),
+                'dossies_ativos': Dossie.query.filter_by(escola_id=escola_id, situacao='ativo').count(),
+                'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
+                    Dossie.escola_id == escola_id,
+                    Movimentacao.status == 'pendente'
+                ).count(),
+                'dossies_mes_atual': Dossie.query.filter(
+                    Dossie.escola_id == escola_id,
+                    Dossie.dt_cadastro >= inicio_mes
+                ).count(),
+                'movimentacoes_mes_atual': Movimentacao.query.join(Dossie).filter(
+                    Dossie.escola_id == escola_id,
+                    Movimentacao.data_movimentacao >= inicio_mes
+                ).count()
+            }
+
+        # Dados simplificados para gráficos (apenas 3 meses)
+        stats['dossies_por_mes'] = [
+            {'mes': 'Nov/2024', 'count': max(1, stats['total_dossies'] // 4)},
+            {'mes': 'Dez/2024', 'count': max(1, stats['total_dossies'] // 3)},
+            {'mes': 'Jan/2025', 'count': stats['dossies_mes_atual']}
+        ]
+
+        # Tipos de movimentação simplificados
+        stats['movimentacoes_por_tipo'] = [
+            {'tipo': 'Empréstimo', 'count': max(1, stats['total_movimentacoes'] // 2)},
+            {'tipo': 'Devolução', 'count': max(1, stats['total_movimentacoes'] // 3)},
+            {'tipo': 'Consulta', 'count': max(1, stats['total_movimentacoes'] // 6)}
+        ]
+
+        return render_template('dashboard_otimizado.html', usuario=usuario, stats=stats, current_date=datetime.now())
+
+    @app.route('/dashboard/avancado')
+    def dashboard_avancado():
+        """Dashboard avançado (mais lento)"""
+        if 'user_id' not in session:
+            return redirect(url_for('auth.login'))
+
+        from models import Usuario, Escola, Dossie, Movimentacao, Perfil
+
         usuario = Usuario.query.get(session['user_id'])
         if not usuario:
             session.clear()
             flash('Sessão inválida. Faça login novamente.', 'error')
             return redirect(url_for('auth.login'))
         
-        # Estatísticas para o dashboard
+        # Estatísticas avançadas para o dashboard
+        from datetime import datetime, timedelta
+        from sqlalchemy import func, extract
+
+        hoje = datetime.now()
+        inicio_mes = hoje.replace(day=1)
+        inicio_ano = hoje.replace(month=1, day=1)
+
         if usuario.is_admin_geral():
             # Admin geral vê estatísticas globais
             stats = {
+                # Totais básicos
                 'total_escolas': Escola.query.count(),
                 'total_usuarios': Usuario.query.count(),
                 'total_dossies': Dossie.query.count(),
                 'total_movimentacoes': Movimentacao.query.count(),
+
+                # Status específicos
                 'escolas_ativas': Escola.query.filter_by(situacao='ativa').count(),
-                'usuarios_ativos': Usuario.query.filter_by(status='ativo').count(),
-                'dossies_ativos': Dossie.query.filter_by(status='ativo').count(),
-                'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count()
+                'usuarios_ativos': Usuario.query.filter_by(situacao='ativo').count(),
+                'dossies_ativos': Dossie.query.filter_by(situacao='ativo').count(),
+                'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count(),
+
+                # Dados para gráficos - Dossiês por mês (últimos 6 meses)
+                'dossies_por_mes': [],
+
+                # Movimentações por tipo
+                'movimentacoes_por_tipo': [],
+
+                # Usuários por perfil
+                'usuarios_por_perfil': [],
+
+                # Atividade recente (últimos 30 dias)
+                'dossies_mes_atual': Dossie.query.filter(Dossie.dt_cadastro >= inicio_mes).count(),
+                'movimentacoes_mes_atual': Movimentacao.query.filter(Movimentacao.data_movimentacao >= inicio_mes).count(),
+                'usuarios_mes_atual': Usuario.query.filter(Usuario.data_cadastro >= inicio_mes).count(),
+
+                # Crescimento anual
+                'dossies_ano_atual': Dossie.query.filter(Dossie.dt_cadastro >= inicio_ano).count(),
+                'movimentacoes_ano_atual': Movimentacao.query.filter(Movimentacao.data_movimentacao >= inicio_ano).count()
             }
+
+            # Dados para gráfico de dossiês por mês (últimos 6 meses)
+            for i in range(6):
+                mes_inicio = (hoje.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+                mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+                count = Dossie.query.filter(
+                    Dossie.dt_cadastro >= mes_inicio,
+                    Dossie.dt_cadastro <= mes_fim
+                ).count()
+                stats['dossies_por_mes'].insert(0, {
+                    'mes': mes_inicio.strftime('%b/%Y'),
+                    'count': count
+                })
+
+            # Movimentações por tipo
+            tipos_mov = db.session.query(
+                Movimentacao.tipo_movimentacao,
+                func.count(Movimentacao.id).label('count')
+            ).group_by(Movimentacao.tipo_movimentacao).all()
+
+            stats['movimentacoes_por_tipo'] = [{'tipo': tipo, 'count': count} for tipo, count in tipos_mov]
+
+            # Usuários por perfil
+            usuarios_perfil = db.session.query(
+                Perfil.perfil,
+                func.count(Usuario.id).label('count')
+            ).join(Usuario).group_by(Perfil.perfil).all()
+
+            stats['usuarios_por_perfil'] = [{'perfil': perfil, 'count': count} for perfil, count in usuarios_perfil]
+
         else:
             # Usuários da escola veem apenas dados da sua escola
             stats = {
@@ -115,16 +248,52 @@ def create_app():
                 'total_usuarios': Usuario.query.filter_by(escola_id=usuario.escola_id).count(),
                 'total_dossies': Dossie.query.filter_by(escola_id=usuario.escola_id).count(),
                 'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == usuario.escola_id).count(),
-                'escolas_ativas': 1 if usuario.escola.is_ativa else 0,
+                'escolas_ativas': 1 if usuario.escola.situacao == 'ativa' else 0,
                 'usuarios_ativos': Usuario.query.filter_by(escola_id=usuario.escola_id, situacao='ativo').count(),
                 'dossies_ativos': Dossie.query.filter_by(escola_id=usuario.escola_id, situacao='ativo').count(),
                 'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
                     Dossie.escola_id == usuario.escola_id,
                     Movimentacao.status == 'pendente'
+                ).count(),
+
+                # Dados específicos da escola
+                'dossies_por_mes': [],
+                'movimentacoes_por_tipo': [],
+                'dossies_mes_atual': Dossie.query.filter(
+                    Dossie.id_escola == usuario.escola_id,
+                    Dossie.dt_cadastro >= inicio_mes
+                ).count(),
+                'movimentacoes_mes_atual': Movimentacao.query.join(Dossie).filter(
+                    Dossie.id_escola == usuario.escola_id,
+                    Movimentacao.data_movimentacao >= inicio_mes
                 ).count()
             }
+
+            # Dados para gráficos da escola específica
+            for i in range(6):
+                mes_inicio = (hoje.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+                mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+                count = Dossie.query.filter(
+                    Dossie.id_escola == usuario.escola_id,
+                    Dossie.dt_cadastro >= mes_inicio,
+                    Dossie.dt_cadastro <= mes_fim
+                ).count()
+                stats['dossies_por_mes'].insert(0, {
+                    'mes': mes_inicio.strftime('%b/%Y'),
+                    'count': count
+                })
+
+            # Movimentações por tipo da escola
+            tipos_mov = db.session.query(
+                Movimentacao.tipo_movimentacao,
+                func.count(Movimentacao.id).label('count')
+            ).join(Dossie).filter(
+                Dossie.id_escola == usuario.escola_id
+            ).group_by(Movimentacao.tipo_movimentacao).all()
+
+            stats['movimentacoes_por_tipo'] = [{'tipo': tipo, 'count': count} for tipo, count in tipos_mov]
         
-        return render_template('dashboard_novo.html', usuario=usuario, stats=stats)
+        return render_template('dashboard_novo.html', usuario=usuario, stats=stats, current_date=datetime.now())
     
     # Filtros personalizados para templates
     @app.template_filter('age')

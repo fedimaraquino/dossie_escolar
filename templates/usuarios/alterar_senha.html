@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Alterar Senha{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-key me-2"></i>Alterar Senha</h2>
+                    <p class="text-muted">Mantenha sua conta segura com uma senha forte</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('usuario.perfil') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar ao Perfil
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Segurança da Conta</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="alterarSenhaForm">
+                        <div class="mb-3">
+                            <label for="senha_atual" class="form-label">Senha Atual <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha_atual')">
+                                    <i class="fas fa-eye" id="senha_atual_icon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nova_senha" class="form-label">Nova Senha <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('nova_senha')">
+                                    <i class="fas fa-eye" id="nova_senha_icon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">A senha deve ter pelo menos 6 caracteres</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmar_senha" class="form-label">Confirmar Nova Senha <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmar_senha')">
+                                    <i class="fas fa-eye" id="confirmar_senha_icon"></i>
+                                </button>
+                            </div>
+                            <div id="senha_match_feedback" class="form-text"></div>
+                        </div>
+
+                        <!-- Indicador de Força da Senha -->
+                        <div class="mb-3">
+                            <label class="form-label">Força da Senha</label>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" id="senha_strength_bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="senha_strength_text" class="form-text"></small>
+                        </div>
+
+                        <!-- Dicas de Segurança -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-lightbulb me-2"></i>Dicas para uma senha segura:</h6>
+                            <ul class="mb-0 small">
+                                <li>Use pelo menos 8 caracteres</li>
+                                <li>Combine letras maiúsculas e minúsculas</li>
+                                <li>Inclua números e símbolos</li>
+                                <li>Evite informações pessoais óbvias</li>
+                                <li>Não reutilize senhas de outras contas</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('usuario.perfil') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                                <i class="fas fa-save me-2"></i>Alterar Senha
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informações de Segurança -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações de Segurança</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                            <h6>Última Alteração</h6>
+                            <small class="text-muted">
+                                {% if session.user_ultimo_login %}
+                                    {{ session.user_ultimo_login }}
+                                {% else %}
+                                    Não disponível
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                            <h6>Segurança</h6>
+                            <small class="text-muted">Conta Protegida</small>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-user-check fa-2x text-info mb-2"></i>
+                            <h6>Status</h6>
+                            <small class="text-muted">Usuário Ativo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função para mostrar/ocultar senha
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '_icon');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Verificar força da senha
+function checkPasswordStrength(password) {
+    let strength = 0;
+    let feedback = '';
+    
+    if (password.length >= 6) strength += 1;
+    if (password.length >= 8) strength += 1;
+    if (/[a-z]/.test(password)) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    const strengthBar = document.getElementById('senha_strength_bar');
+    const strengthText = document.getElementById('senha_strength_text');
+    
+    switch (strength) {
+        case 0:
+        case 1:
+            strengthBar.style.width = '20%';
+            strengthBar.className = 'progress-bar bg-danger';
+            feedback = 'Muito fraca';
+            break;
+        case 2:
+        case 3:
+            strengthBar.style.width = '40%';
+            strengthBar.className = 'progress-bar bg-warning';
+            feedback = 'Fraca';
+            break;
+        case 4:
+            strengthBar.style.width = '60%';
+            strengthBar.className = 'progress-bar bg-info';
+            feedback = 'Média';
+            break;
+        case 5:
+            strengthBar.style.width = '80%';
+            strengthBar.className = 'progress-bar bg-primary';
+            feedback = 'Forte';
+            break;
+        case 6:
+            strengthBar.style.width = '100%';
+            strengthBar.className = 'progress-bar bg-success';
+            feedback = 'Muito forte';
+            break;
+    }
+    
+    strengthText.textContent = feedback;
+    return strength;
+}
+
+// Verificar se as senhas coincidem
+function checkPasswordMatch() {
+    const novaSenha = document.getElementById('nova_senha').value;
+    const confirmarSenha = document.getElementById('confirmar_senha').value;
+    const feedback = document.getElementById('senha_match_feedback');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (confirmarSenha === '') {
+        feedback.textContent = '';
+        feedback.className = 'form-text';
+        submitBtn.disabled = true;
+        return false;
+    }
+    
+    if (novaSenha === confirmarSenha) {
+        feedback.textContent = '✓ As senhas coincidem';
+        feedback.className = 'form-text text-success';
+        
+        // Verificar se todos os campos estão preenchidos e senha é forte o suficiente
+        const senhaAtual = document.getElementById('senha_atual').value;
+        const strength = checkPasswordStrength(novaSenha);
+        
+        if (senhaAtual && novaSenha && strength >= 2) {
+            submitBtn.disabled = false;
+        }
+        return true;
+    } else {
+        feedback.textContent = '✗ As senhas não coincidem';
+        feedback.className = 'form-text text-danger';
+        submitBtn.disabled = true;
+        return false;
+    }
+}
+
+// Event listeners
+document.getElementById('nova_senha').addEventListener('input', function() {
+    checkPasswordStrength(this.value);
+    checkPasswordMatch();
+});
+
+document.getElementById('confirmar_senha').addEventListener('input', checkPasswordMatch);
+
+document.getElementById('senha_atual').addEventListener('input', function() {
+    checkPasswordMatch();
+});
+
+// Validação do formulário
+document.getElementById('alterarSenhaForm').addEventListener('submit', function(e) {
+    const senhaAtual = document.getElementById('senha_atual').value;
+    const novaSenha = document.getElementById('nova_senha').value;
+    const confirmarSenha = document.getElementById('confirmar_senha').value;
+    
+    if (!senhaAtual || !novaSenha || !confirmarSenha) {
+        e.preventDefault();
+        alert('Todos os campos são obrigatórios!');
+        return;
+    }
+    
+    if (novaSenha !== confirmarSenha) {
+        e.preventDefault();
+        alert('As senhas não coincidem!');
+        return;
+    }
+    
+    if (novaSenha.length < 6) {
+        e.preventDefault();
+        alert('A nova senha deve ter pelo menos 6 caracteres!');
+        return;
+    }
+    
+    if (senhaAtual === novaSenha) {
+        e.preventDefault();
+        alert('A nova senha deve ser diferente da senha atual!');
+        return;
+    }
+});
+</script>
+
+<style>
+.input-group .btn {
+    border-left: 0;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+</style>
+{% endblock %}

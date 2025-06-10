@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-user me-2"></i>Meu Perfil</h2>
+                    <p class="text-muted">Visualize e edite suas informações pessoais</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('usuario.editar_perfil') }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Editar Perfil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Pessoais -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Informações Pessoais</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Nome Completo</label>
+                            <div class="form-control-plaintext">{{ usuario.nome }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <div class="form-control-plaintext">{{ usuario.email }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">CPF</label>
+                            <div class="form-control-plaintext">{{ usuario.cpf|format_cpf }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Telefone</label>
+                            <div class="form-control-plaintext">{{ usuario.telefone or 'Não informado' }}</div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-muted">Endereço</label>
+                            <div class="form-control-plaintext">{{ usuario.endereco or 'Não informado' }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Data de Nascimento</label>
+                            <div class="form-control-plaintext">
+                                {% if usuario.data_nascimento %}
+                                    {{ usuario.data_nascimento.strftime('%d/%m/%Y') }}
+                                    <small class="text-muted">({{ usuario.data_nascimento|age }} anos)</small>
+                                {% else %}
+                                    Não informado
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Situação</label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-{{ 'success' if usuario.situacao == 'ativo' else 'danger' }}">
+                                    {{ usuario.situacao.title() }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Sistema -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Informações do Sistema</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Perfil</label>
+                        <div class="form-control-plaintext">
+                            <span class="badge bg-primary">{{ usuario.perfil_obj.perfil if usuario.perfil_obj else 'Não definido' }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Escola</label>
+                        <div class="form-control-plaintext">{{ usuario.escola.nome if usuario.escola else 'Não definido' }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Data de Cadastro</label>
+                        <div class="form-control-plaintext">
+                            {% if usuario.data_cadastro %}
+                                {{ usuario.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}
+                            {% else %}
+                                Não informado
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Último Login</label>
+                        <div class="form-control-plaintext">
+                            {% if usuario.ultimo_login %}
+                                {{ usuario.ultimo_login.strftime('%d/%m/%Y às %H:%M') }}
+                            {% else %}
+                                Nunca
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('usuario.editar_perfil') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-2"></i>Editar Informações
+                        </a>
+                        <a href="{{ url_for('usuario.alterar_senha') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-key me-2"></i>Alterar Senha
+                        </a>
+                        <a href="{{ url_for('configuracao.index') }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-cog me-2"></i>Configurações
+                        </a>
+                        <hr class="my-2">
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair do Sistema
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas de Atividade -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Atividade Recente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary">-</h4>
+                                <small class="text-muted">Dossiês Criados</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success">-</h4>
+                                <small class="text-muted">Movimentações</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-info">-</h4>
+                                <small class="text-muted">Ações Registradas</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning">
+                                {% if usuario.data_cadastro %}
+                                    {{ usuario.data_cadastro.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </h4>
+                            <small class="text-muted">Data de Cadastro</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control-plaintext {
+    padding: 0.375rem 0;
+    margin-bottom: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: transparent;
+    border: solid transparent;
+    border-width: 1px 0;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}

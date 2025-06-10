@@ -1,0 +1,172 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ categoria.value.replace('_', ' ').title() }} - Configurações{% endblock %}
+{% block header %}{{ categoria.value.replace('_', ' ').title() }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('configuracao.index') }}">Configurações</a></li>
+                        <li class="breadcrumb-item active">{{ categoria.value.replace('_', ' ').title() }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a href="{{ url_for('configuracao.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if categoria.value == 'security' %}
+                        <i class="fas fa-shield-alt me-2 text-danger"></i>Configurações de Segurança
+                    {% elif categoria.value == 'dossie' %}
+                        <i class="fas fa-folder me-2 text-primary"></i>Configurações de Dossiês
+                    {% elif categoria.value == 'escola' %}
+                        <i class="fas fa-school me-2 text-success"></i>Configurações da Escola
+                    {% elif categoria.value == 'system' %}
+                        <i class="fas fa-server me-2 text-info"></i>Configurações do Sistema
+                    {% elif categoria.value == 'integration' %}
+                        <i class="fas fa-plug me-2 text-warning"></i>Configurações de Integração
+                    {% elif categoria.value == 'notification' %}
+                        <i class="fas fa-bell me-2 text-secondary"></i>Configurações de Notificação
+                    {% else %}
+                        <i class="fas fa-cog me-2"></i>{{ categoria.value.replace('_', ' ').title() }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if configuracoes %}
+                    <div class="row">
+                        {% for chave, config_data in configuracoes.items() %}
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">{{ config_data.config.nome_exibicao }}</h6>
+                                            <p class="card-text text-muted small mb-2">
+                                                {{ config_data.config.descricao or 'Sem descrição disponível' }}
+                                            </p>
+                                            <code class="small">{{ chave }}</code>
+                                        </div>
+                                        <div class="text-end">
+                                            {% if config_data.config.obrigatoria %}
+                                                <span class="badge bg-danger mb-1">Obrigatória</span><br>
+                                            {% endif %}
+                                            {% if config_data.config.requer_reinicializacao %}
+                                                <span class="badge bg-warning mb-1">Requer Restart</span><br>
+                                            {% endif %}
+                                            {% if not config_data.config.editavel %}
+                                                <span class="badge bg-secondary mb-1">Somente Leitura</span><br>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">Valor Atual:</label>
+                                        <div class="p-2 bg-light rounded">
+                                            {% if config_data.config.tipo == 'boolean' %}
+                                                <span class="badge bg-{{ 'success' if config_data.valor else 'secondary' }} fs-6">
+                                                    <i class="fas fa-{{ 'check' if config_data.valor else 'times' }} me-1"></i>
+                                                    {{ 'Ativo' if config_data.valor else 'Inativo' }}
+                                                </span>
+                                            {% elif config_data.config.tipo == 'json' %}
+                                                <pre class="mb-0 small"><code>{{ config_data.valor|tojson(indent=2) }}</code></pre>
+                                            {% else %}
+                                                <code class="text-dark">{{ config_data.valor }}</code>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if config_data.config.valor_padrao %}
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">Valor Padrão:</label>
+                                        <div class="small text-muted">
+                                            <code>{{ config_data.config.valor_padrao }}</code>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">
+                                                Tipo: <span class="badge bg-info">{{ config_data.config.tipo }}</span>
+                                            </small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if config_data.config.editavel %}
+                                                <a href="{{ url_for('configuracao.editar', config_id=config_data.config.id) }}" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </a>
+                                            {% endif %}
+                                            <a href="{{ url_for('configuracao.historico', config_id=config_data.config.id) }}" 
+                                               class="btn btn-outline-info">
+                                                <i class="fas fa-history"></i> Histórico
+                                            </a>
+                                            {% if config_data.config.valor_padrao and config_data.config.editavel %}
+                                                <form method="post" action="{{ url_for('configuracao.resetar', config_id=config_data.config.id) }}" 
+                                                      class="d-inline" onsubmit="return confirm('Resetar para valor padrão?')">
+                                                    <button type="submit" class="btn btn-outline-warning">
+                                                        <i class="fas fa-undo"></i> Reset
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma configuração encontrada</h5>
+                        <p class="text-muted">Esta categoria não possui configurações disponíveis.</p>
+                        <a href="{{ url_for('configuracao.index') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar às Configurações
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if categoria.value == 'security' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Atenção:</strong> Alterações nas configurações de segurança podem afetar o acesso ao sistema. 
+            Certifique-se de entender o impacto antes de fazer mudanças.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if categoria.value == 'system' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Informação:</strong> Algumas configurações do sistema podem requerer reinicialização 
+            da aplicação para ter efeito completo.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

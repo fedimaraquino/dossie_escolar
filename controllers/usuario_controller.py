@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime
 from models import db, Usuario, Escola, Perfil
 from .auth_controller import login_required, admin_required
+from utils.logs import log_acao, AcoesAuditoria
 
 usuario_bp = Blueprint('usuario', __name__, url_prefix='/usuarios')
 
@@ -250,3 +251,90 @@ def desbloquear(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@usuario_bp.route('/perfil')
+@login_required
+def perfil():
+    """Visualizar perfil do usuário logado"""
+    usuario = Usuario.query.get_or_404(session['user_id'])
+    return render_template('usuarios/perfil.html', usuario=usuario)
+
+@usuario_bp.route('/perfil/editar', methods=['GET', 'POST'])
+@login_required
+def editar_perfil():
+    """Editar perfil do usuário logado"""
+    usuario = Usuario.query.get_or_404(session['user_id'])
+
+    if request.method == 'POST':
+        try:
+            # Campos que o usuário pode editar
+            usuario.nome = request.form.get('nome')
+            usuario.email = request.form.get('email')
+            usuario.telefone = request.form.get('telefone')
+            usuario.endereco = request.form.get('endereco')
+
+            # Validar email único
+            email_existente = Usuario.query.filter(
+                Usuario.email == usuario.email,
+                Usuario.id != usuario.id
+            ).first()
+
+            if email_existente:
+                flash('Este email já está sendo usado por outro usuário!', 'error')
+                return render_template('usuarios/editar_perfil.html', usuario=usuario)
+
+            # Log da ação
+            log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario', f'Perfil atualizado: {usuario.nome}')
+
+            db.session.commit()
+            flash('Perfil atualizado com sucesso!', 'success')
+            return redirect(url_for('usuario.perfil'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao atualizar perfil: {str(e)}', 'error')
+
+    return render_template('usuarios/editar_perfil.html', usuario=usuario)
+
+@usuario_bp.route('/perfil/senha', methods=['GET', 'POST'])
+@login_required
+def alterar_senha():
+    """Alterar senha do usuário logado"""
+    if request.method == 'POST':
+        usuario = Usuario.query.get_or_404(session['user_id'])
+
+        senha_atual = request.form.get('senha_atual')
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
+
+        # Verificar senha atual
+        if not usuario.check_password(senha_atual):
+            flash('Senha atual incorreta!', 'error')
+            return render_template('usuarios/alterar_senha.html')
+
+        # Verificar se as senhas coincidem
+        if nova_senha != confirmar_senha:
+            flash('As senhas não coincidem!', 'error')
+            return render_template('usuarios/alterar_senha.html')
+
+        # Validar tamanho da senha
+        if len(nova_senha) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres!', 'error')
+            return render_template('usuarios/alterar_senha.html')
+
+        try:
+            # Atualizar senha
+            usuario.set_password(nova_senha)
+
+            # Log da ação
+            log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario', f'Senha alterada: {usuario.nome}')
+
+            db.session.commit()
+            flash('Senha alterada com sucesso!', 'success')
+            return redirect(url_for('usuario.perfil'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao alterar senha: {str(e)}', 'error')
+
+    return render_template('usuarios/alterar_senha.html')

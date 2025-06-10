@@ -1,0 +1,227 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Editar {{ config.nome_exibicao }}{% endblock %}
+{% block header %}Editar Configuração{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('configuracao.index') }}">Configurações</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('configuracao.categoria', categoria=config.categoria.value) }}">{{ config.categoria.value.replace('_', ' ').title() }}</a></li>
+                <li class="breadcrumb-item active">{{ config.nome_exibicao }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>{{ config.nome_exibicao }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Chave da Configuração</label>
+                        <input type="text" class="form-control" value="{{ config.chave }}" readonly>
+                        <div class="form-text">Identificador único da configuração (não editável)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" rows="2" readonly>{{ config.descricao or 'Sem descrição disponível' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">
+                            Valor 
+                            {% if config.obrigatoria %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+                        
+                        {% if config.tipo.value == 'boolean' %}
+                            <select class="form-select" name="valor" id="valor" required="{{ config.obrigatoria }}">
+                                <option value="true" {{ 'selected' if config.valor_tipado else '' }}>Ativo (True)</option>
+                                <option value="false" {{ 'selected' if not config.valor_tipado else '' }}>Inativo (False)</option>
+                            </select>
+                        {% elif config.tipo.value == 'integer' %}
+                            <input type="number" class="form-control" name="valor" id="valor" 
+                                   value="{{ config.valor }}" 
+                                   {% if config.valor_minimo %}min="{{ config.valor_minimo }}"{% endif %}
+                                   {% if config.valor_maximo %}max="{{ config.valor_maximo }}"{% endif %}
+                                   required="{{ config.obrigatoria }}">
+                        {% elif config.tipo.value == 'float' %}
+                            <input type="number" step="0.01" class="form-control" name="valor" id="valor" 
+                                   value="{{ config.valor }}" 
+                                   {% if config.valor_minimo %}min="{{ config.valor_minimo }}"{% endif %}
+                                   {% if config.valor_maximo %}max="{{ config.valor_maximo }}"{% endif %}
+                                   required="{{ config.obrigatoria }}">
+                        {% elif config.tipo.value == 'email' %}
+                            <input type="email" class="form-control" name="valor" id="valor" 
+                                   value="{{ config.valor }}" required="{{ config.obrigatoria }}">
+                        {% elif config.tipo.value == 'url' %}
+                            <input type="url" class="form-control" name="valor" id="valor" 
+                                   value="{{ config.valor }}" required="{{ config.obrigatoria }}">
+                        {% elif config.tipo.value == 'color' %}
+                            <input type="color" class="form-control form-control-color" name="valor" id="valor" 
+                                   value="{{ config.valor }}" required="{{ config.obrigatoria }}">
+                        {% elif config.tipo.value == 'json' %}
+                            <textarea class="form-control font-monospace" name="valor" id="valor" rows="8" 
+                                      required="{{ config.obrigatoria }}">{{ config.valor }}</textarea>
+                            <div class="form-text">Formato JSON válido</div>
+                        {% elif config.opcoes_validas %}
+                            {% set opcoes = config.opcoes_validas|fromjson %}
+                            <select class="form-select" name="valor" id="valor" required="{{ config.obrigatoria }}">
+                                {% for opcao in opcoes %}
+                                    <option value="{{ opcao }}" {{ 'selected' if opcao == config.valor else '' }}>{{ opcao }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input type="text" class="form-control" name="valor" id="valor" 
+                                   value="{{ config.valor }}" required="{{ config.obrigatoria }}">
+                        {% endif %}
+                        
+                        {% if config.valor_minimo or config.valor_maximo %}
+                            <div class="form-text">
+                                {% if config.valor_minimo and config.valor_maximo %}
+                                    Valor deve estar entre {{ config.valor_minimo }} e {{ config.valor_maximo }}
+                                {% elif config.valor_minimo %}
+                                    Valor mínimo: {{ config.valor_minimo }}
+                                {% elif config.valor_maximo %}
+                                    Valor máximo: {{ config.valor_maximo }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if config.validacao_regex %}
+                            <div class="form-text">
+                                Padrão: <code>{{ config.validacao_regex }}</code>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo da Alteração</label>
+                        <textarea class="form-control" name="motivo" id="motivo" rows="2" 
+                                  placeholder="Descreva o motivo desta alteração..."></textarea>
+                        <div class="form-text">Opcional, mas recomendado para auditoria</div>
+                    </div>
+                    
+                    {% if config.requer_reinicializacao %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Esta configuração requer reinicialização do sistema para ter efeito completo.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('configuracao.categoria', categoria=config.categoria.value) }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                        </div>
+                        <div>
+                            {% if config.valor_padrao %}
+                                <button type="button" class="btn btn-outline-warning me-2" onclick="resetarValor()">
+                                    <i class="fas fa-undo me-2"></i>Valor Padrão
+                                </button>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Informações da Configuração -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tipo:</dt>
+                    <dd class="col-sm-8"><span class="badge bg-info">{{ config.tipo.value }}</span></dd>
+                    
+                    <dt class="col-sm-4">Escopo:</dt>
+                    <dd class="col-sm-8"><span class="badge bg-secondary">{{ config.escopo.value }}</span></dd>
+                    
+                    <dt class="col-sm-4">Categoria:</dt>
+                    <dd class="col-sm-8"><span class="badge bg-primary">{{ config.categoria.value }}</span></dd>
+                    
+                    {% if config.valor_padrao %}
+                    <dt class="col-sm-4">Padrão:</dt>
+                    <dd class="col-sm-8"><code>{{ config.valor_padrao }}</code></dd>
+                    {% endif %}
+                    
+                    <dt class="col-sm-4">Obrigatória:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ 'danger' if config.obrigatoria else 'success' }}">
+                            {{ 'Sim' if config.obrigatoria else 'Não' }}
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Editável:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ 'success' if config.editavel else 'secondary' }}">
+                            {{ 'Sim' if config.editavel else 'Não' }}
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- Histórico Recente -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Histórico Recente</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <a href="{{ url_for('configuracao.historico', config_id=config.id) }}" 
+                       class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-history me-2"></i>Ver Histórico Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetarValor() {
+    {% if config.valor_padrao %}
+        {% if config.tipo.value == 'json' %}
+            document.getElementById('valor').value = {{ config.valor_padrao|tojson }};
+        {% else %}
+            document.getElementById('valor').value = '{{ config.valor_padrao }}';
+        {% endif %}
+    {% endif %}
+}
+
+// Validação de JSON em tempo real
+{% if config.tipo.value == 'json' %}
+document.getElementById('valor').addEventListener('input', function() {
+    try {
+        JSON.parse(this.value);
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+    } catch (e) {
+        this.classList.remove('is-valid');
+        this.classList.add('is-invalid');
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

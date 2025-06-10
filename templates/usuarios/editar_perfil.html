@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-user-edit me-2"></i>Editar Perfil</h2>
+                    <p class="text-muted">Atualize suas informações pessoais</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('usuario.perfil') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar ao Perfil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Informações Pessoais</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="{{ usuario.nome }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ usuario.email }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cpf" class="form-label">CPF</label>
+                                <input type="text" class="form-control" id="cpf" name="cpf" 
+                                       value="{{ usuario.cpf }}" readonly>
+                                <div class="form-text">O CPF não pode ser alterado</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="telefone" class="form-label">Telefone</label>
+                                <input type="text" class="form-control" id="telefone" name="telefone" 
+                                       value="{{ usuario.telefone or '' }}" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="endereco" class="form-label">Endereço</label>
+                                <textarea class="form-control" id="endereco" name="endereco" rows="3" 
+                                          placeholder="Rua, número, bairro, cidade - UF">{{ usuario.endereco or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Informação:</strong> Alguns dados como CPF, perfil e escola não podem ser alterados. 
+                            Entre em contato com o administrador se precisar modificar essas informações.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('usuario.perfil') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Informações Não Editáveis -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lock me-2"></i>Informações do Sistema</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Perfil</label>
+                        <div class="form-control-plaintext">
+                            <span class="badge bg-primary">{{ usuario.perfil_obj.perfil if usuario.perfil_obj else 'Não definido' }}</span>
+                        </div>
+                        <small class="text-muted">Não editável</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Escola</label>
+                        <div class="form-control-plaintext">{{ usuario.escola.nome if usuario.escola else 'Não definido' }}</div>
+                        <small class="text-muted">Não editável</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Data de Nascimento</label>
+                        <div class="form-control-plaintext">
+                            {% if usuario.data_nascimento %}
+                                {{ usuario.data_nascimento.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                Não informado
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">Não editável</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Situação</label>
+                        <div class="form-control-plaintext">
+                            <span class="badge bg-{{ 'success' if usuario.situacao == 'ativo' else 'danger' }}">
+                                {{ usuario.situacao.title() }}
+                            </span>
+                        </div>
+                        <small class="text-muted">Não editável</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações Adicionais -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-tools me-2"></i>Outras Ações</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('usuario.alterar_senha') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-key me-2"></i>Alterar Senha
+                        </a>
+                        <a href="{{ url_for('configuracao.index') }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-cog me-2"></i>Configurações do Sistema
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Máscara para telefone
+document.getElementById('telefone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        if (value.length < 14) {
+            value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        }
+    }
+    e.target.value = value;
+});
+
+// Validação do formulário
+document.querySelector('form').addEventListener('submit', function(e) {
+    const nome = document.getElementById('nome').value.trim();
+    const email = document.getElementById('email').value.trim();
+    
+    if (!nome) {
+        e.preventDefault();
+        alert('O nome é obrigatório!');
+        document.getElementById('nome').focus();
+        return;
+    }
+    
+    if (!email) {
+        e.preventDefault();
+        alert('O email é obrigatório!');
+        document.getElementById('email').focus();
+        return;
+    }
+    
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Por favor, insira um email válido!');
+        document.getElementById('email').focus();
+        return;
+    }
+});
+</script>
+
+<style>
+.form-control-plaintext {
+    padding: 0.375rem 0;
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: transparent;
+    border: solid transparent;
+    border-width: 1px 0;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+</style>
+{% endblock %}
