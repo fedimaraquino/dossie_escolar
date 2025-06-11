@@ -22,9 +22,11 @@ class Solicitante(db.Model):
     status = db.Column(db.String(20), default='ativo')
     data_cadastro = db.Column(db.DateTime, default=datetime.now)
     observacoes = db.Column(db.Text)
-    
+    escola_id = db.Column(db.Integer, db.ForeignKey('escolas.id'), nullable=False)  # FK - Escola vinculada
+
     # Relacionamentos
     cidade = db.relationship('Cidade', backref='solicitantes')
+    escola = db.relationship('Escola', backref='solicitantes')
     
     def __repr__(self):
         return f'<Solicitante {self.nome}>'

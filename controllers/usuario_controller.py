@@ -29,11 +29,7 @@ def listar():
     if not usuario_atual.is_admin_geral():
         escola_atual_id = usuario_atual.get_escola_atual_id()
         query = query.filter(Usuario.escola_id == escola_atual_id)
-    else:
-        # Admin Geral pode ver usuários da escola atual selecionada
-        escola_atual_id = usuario_atual.get_escola_atual_id()
-        if escola_atual_id and not escola_id:
-            query = query.filter(Usuario.escola_id == escola_atual_id)
+    # Admin Geral vê todos os usuários por padrão (sem filtro automático)
 
     if search:
         query = query.filter(

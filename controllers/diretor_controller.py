@@ -2,24 +2,47 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from models import db, Diretor
 from controllers.auth_controller import login_required
-from utils.permissions import require_permission, Modulos, Acoes
+# Removido: from utils.permissions import require_permission, Modulos, Acoes
 from datetime import datetime
 import re
 
 diretor_bp = Blueprint('diretor', __name__, url_prefix='/diretores')
 
+def verificar_admin_geral():
+    """Verificar se o usuário é Administrador Geral"""
+    from models import Usuario
+    from flask import session
+    usuario_atual = Usuario.query.get(session['user_id'])
+
+    if not usuario_atual.is_admin_geral():
+        flash('Acesso negado. Apenas Administradores Gerais podem gerenciar diretores.', 'error')
+        return redirect(url_for('dashboard'))
+    return None
+
 @diretor_bp.route('/')
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.VISUALIZAR)
 def index():
-    """Lista todos os diretores"""
+    """Lista todos os diretores - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     status_filter = request.args.get('status', '')
-    
-    # Query base
+
+    # Admin Geral vê todos os diretores (pode filtrar por escola se quiser)
+    from models import Escola
+
+    escola_filtro = request.args.get('escola', '')
+
+    # Query base - Admin Geral vê todos os diretores
     query = Diretor.query
-    
+
+    # Aplicar filtro de escola se selecionado
+    if escola_filtro:
+        query = query.filter(Diretor.escola_id == escola_filtro)
+
     # Aplicar filtros
     if search:
         query = query.filter(
@@ -30,33 +53,45 @@ def index():
                 Diretor.tipo_mandato.contains(search)
             )
         )
-    
+
     if status_filter:
         query = query.filter(Diretor.status == status_filter)
-    
+
     # Ordenação e paginação
     diretores = query.order_by(Diretor.nome).paginate(
         page=page, per_page=10, error_out=False
     )
-    
-    # Estatísticas
+
+    # Estatísticas baseadas no filtro aplicado
+    stats_query = Diretor.query
+    if escola_filtro:
+        stats_query = stats_query.filter(Diretor.escola_id == escola_filtro)
+
     stats = {
-        'total': Diretor.query.count(),
-        'ativos': Diretor.query.filter_by(status='ativo').count(),
-        'inativos': Diretor.query.filter(Diretor.status != 'ativo').count()
+        'total': stats_query.count(),
+        'ativos': stats_query.filter_by(status='ativo').count(),
+        'inativos': stats_query.filter(Diretor.status != 'ativo').count()
     }
-    
-    return render_template('diretores/index.html', 
-                         diretores=diretores, 
+
+    # Buscar todas as escolas para o filtro
+    escolas = Escola.query.filter_by(situacao='ativa').order_by(Escola.nome).all()
+
+    return render_template('diretores/index.html',
+                         diretores=diretores,
                          search=search,
                          status_filter=status_filter,
+                         escola_filtro=escola_filtro,
+                         escolas=escolas,
                          stats=stats)
 
 @diretor_bp.route('/criar', methods=['GET', 'POST'])
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.CRIAR)
 def criar():
-    """Criar novo diretor"""
+    """Criar novo diretor - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
     if request.method == 'POST':
         try:
             # Validar dados
@@ -80,6 +115,18 @@ def criar():
                                          tipos_mandato=Diretor.get_tipos_mandato(),
                                          status_options=Diretor.get_status_options())
             
+            # Admin Geral deve escolher a escola
+            escola_id = request.form.get('escola_id')
+            if not escola_id:
+                flash('Escola é obrigatória', 'error')
+                from models import Escola
+                escolas = Escola.query.filter_by(situacao='ativa').order_by(Escola.nome).all()
+                return render_template('diretores/form.html',
+                                     diretor=None,
+                                     tipos_mandato=Diretor.get_tipos_mandato(),
+                                     status_options=Diretor.get_status_options(),
+                                     escolas=escolas)
+
             # Criar diretor
             diretor = Diretor(
                 nome=nome,
@@ -88,7 +135,8 @@ def criar():
                 cidade=request.form.get('cidade', '').strip(),
                 cpf=re.sub(r'[^\d]', '', cpf) if cpf else None,
                 status=request.form.get('status', 'ativo'),
-                tipo_mandato=request.form.get('tipo_mandato', '').strip()
+                tipo_mandato=request.form.get('tipo_mandato', '').strip(),
+                escola_id=int(escola_id)
             )
             
             # Data de admissão
@@ -150,24 +198,37 @@ def criar():
             db.session.rollback()
             flash(f'Erro ao criar diretor: {e}', 'error')
     
-    return render_template('diretores/form.html', 
+    # Buscar escolas para seleção
+    from models import Escola
+    escolas = Escola.query.filter_by(situacao='ativa').order_by(Escola.nome).all()
+
+    return render_template('diretores/form.html',
                          diretor=None,
                          tipos_mandato=Diretor.get_tipos_mandato(),
-                         status_options=Diretor.get_status_options())
+                         status_options=Diretor.get_status_options(),
+                         escolas=escolas)
 
 @diretor_bp.route('/<int:id_diretor>')
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.VISUALIZAR)
 def detalhes(id_diretor):
-    """Visualizar detalhes do diretor"""
+    """Visualizar detalhes do diretor - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
+
     diretor = Diretor.query.get_or_404(id_diretor)
     return render_template('diretores/detalhes.html', diretor=diretor)
 
 @diretor_bp.route('/<int:id_diretor>/editar', methods=['GET', 'POST'])
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.EDITAR)
 def editar(id_diretor):
-    """Editar diretor"""
+    """Editar diretor - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
+
     diretor = Diretor.query.get_or_404(id_diretor)
     
     if request.method == 'POST':
@@ -273,16 +334,24 @@ def editar(id_diretor):
             db.session.rollback()
             flash(f'Erro ao atualizar diretor: {e}', 'error')
     
-    return render_template('diretores/form.html', 
+    # Buscar escolas para seleção
+    from models import Escola
+    escolas = Escola.query.filter_by(situacao='ativa').order_by(Escola.nome).all()
+
+    return render_template('diretores/form.html',
                          diretor=diretor,
                          tipos_mandato=Diretor.get_tipos_mandato(),
-                         status_options=Diretor.get_status_options())
+                         status_options=Diretor.get_status_options(),
+                         escolas=escolas)
 
 @diretor_bp.route('/<int:id_diretor>/excluir', methods=['POST'])
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.EXCLUIR)
 def excluir(id_diretor):
-    """Excluir diretor"""
+    """Excluir diretor - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
     try:
         diretor = Diretor.query.get_or_404(id_diretor)
         nome = diretor.nome
@@ -300,9 +369,12 @@ def excluir(id_diretor):
 
 @diretor_bp.route('/api/buscar')
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.VISUALIZAR)
 def api_buscar():
-    """API para buscar diretores"""
+    """API para buscar diretores - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
     search = request.args.get('q', '')
     
     if len(search) < 2:
@@ -325,9 +397,12 @@ def api_buscar():
 
 @diretor_bp.route('/relatorio')
 @login_required
-@require_permission(Modulos.DIRETOR, Acoes.VISUALIZAR)
 def relatorio():
-    """Relatório de diretores"""
+    """Relatório de diretores - APENAS ADMIN GERAL"""
+    # Verificar se é Admin Geral
+    redirect_response = verificar_admin_geral()
+    if redirect_response:
+        return redirect_response
     # Estatísticas gerais
     stats = {
         'total': Diretor.query.count(),

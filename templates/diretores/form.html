@@ -195,23 +195,37 @@
                                     <i class="fas fa-briefcase me-2"></i>Informações Profissionais
                                 </h6>
                             </div>
-                            
-                            <div class="col-md-6">
+
+                            <div class="col-md-4">
+                                <label class="form-label">Escola <span class="text-danger">*</span></label>
+                                <select name="escola_id" class="form-select" required>
+                                    <option value="">Selecione a escola...</option>
+                                    {% for escola in escolas %}
+                                    <option value="{{ escola.id }}"
+                                            {% if diretor and diretor.escola_id == escola.id %}selected{% endif %}>
+                                        {{ escola.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Escola onde o diretor atua</small>
+                            </div>
+
+                            <div class="col-md-4">
                                 <label class="form-label">Tipo de Mandato</label>
                                 <select name="tipo_mandato" class="form-select">
                                     <option value="">Selecione...</option>
                                     {% for tipo in tipos_mandato %}
-                                    <option value="{{ tipo }}" 
+                                    <option value="{{ tipo }}"
                                             {% if diretor and diretor.tipo_mandato == tipo %}selected{% endif %}>
                                         {{ tipo }}
                                     </option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            
-                            <div class="col-md-6">
+
+                            <div class="col-md-4">
                                 <label class="form-label">Data de Admissão</label>
-                                <input type="date" name="admissao" class="form-control" 
+                                <input type="date" name="admissao" class="form-control"
                                        value="{{ diretor.admissao.strftime('%Y-%m-%d') if diretor and diretor.admissao else '' }}">
                             </div>
                         </div>

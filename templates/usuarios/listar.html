@@ -30,27 +30,42 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="GET" class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="search" class="form-label">Buscar</label>
-                                <input type="text" class="form-control" id="search" name="search" 
+                                <input type="text" class="form-control" id="search" name="search"
                                        value="{{ search }}" placeholder="Nome, email ou CPF...">
                             </div>
+                            {% if session.user_perfil == 'Administrador Geral' %}
                             <div class="col-md-3">
+                                <label for="escola" class="form-label">Escola</label>
+                                <select class="form-select" id="escola" name="escola">
+                                    <option value="">Todas as escolas</option>
+                                    {% for escola in escolas %}
+                                    <option value="{{ escola.id }}" {% if escola_filtro and escola_filtro.id == escola.id %}selected{% endif %}>
+                                        {{ escola.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+                            <div class="col-md-2">
                                 <label for="perfil" class="form-label">Perfil</label>
                                 <select class="form-select" id="perfil" name="perfil">
                                     <option value="">Todos</option>
-                                    <option value="1">Administrador Geral</option>
-                                    <option value="2">Administrador da Escola</option>
-                                    <option value="3">Usuário Operacional</option>
+                                    {% for perfil in perfis %}
+                                    <option value="{{ perfil.id }}" {% if perfil_filtro and perfil_filtro.id == perfil.id %}selected{% endif %}>
+                                        {{ perfil.perfil }}
+                                    </option>
+                                    {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
+                            <div class="col-md-2">
+                                <label for="situacao" class="form-label">Status</label>
+                                <select class="form-select" id="situacao" name="situacao">
                                     <option value="">Todos</option>
-                                    <option value="ativo">Ativo</option>
-                                    <option value="inativo">Inativo</option>
-                                    <option value="bloqueado">Bloqueado</option>
+                                    <option value="ativo" {% if situacao == 'ativo' %}selected{% endif %}>Ativo</option>
+                                    <option value="inativo" {% if situacao == 'inativo' %}selected{% endif %}>Inativo</option>
+                                    <option value="bloqueado" {% if situacao == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -177,7 +192,7 @@
                                 <ul class="pagination justify-content-center">
                                     {% if usuarios.has_prev %}
                                         <li class="page-item">
-                                            <a class="page-link" href="{{ url_for('usuario.listar', page=usuarios.prev_num, search=search) }}">
+                                            <a class="page-link" href="{{ url_for('usuario.listar', page=usuarios.prev_num, search=search, escola=request.args.get('escola'), perfil=request.args.get('perfil'), situacao=situacao) }}">
                                                 <i class="fas fa-chevron-left"></i>
                                             </a>
                                         </li>
@@ -187,7 +202,7 @@
                                         {% if page_num %}
                                             {% if page_num != usuarios.page %}
                                                 <li class="page-item">
-                                                    <a class="page-link" href="{{ url_for('usuario.listar', page=page_num, search=search) }}">
+                                                    <a class="page-link" href="{{ url_for('usuario.listar', page=page_num, search=search, escola=request.args.get('escola'), perfil=request.args.get('perfil'), situacao=situacao) }}">
                                                         {{ page_num }}
                                                     </a>
                                                 </li>
@@ -205,7 +220,7 @@
                                     
                                     {% if usuarios.has_next %}
                                         <li class="page-item">
-                                            <a class="page-link" href="{{ url_for('usuario.listar', page=usuarios.next_num, search=search) }}">
+                                            <a class="page-link" href="{{ url_for('usuario.listar', page=usuarios.next_num, search=search, escola=request.args.get('escola'), perfil=request.args.get('perfil'), situacao=situacao) }}">
                                                 <i class="fas fa-chevron-right"></i>
                                             </a>
                                         </li>

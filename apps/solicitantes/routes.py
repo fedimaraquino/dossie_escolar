@@ -23,8 +23,15 @@ def listar():
     status = request.args.get('status', '')
     page = request.args.get('page', 1, type=int)
 
-    # Query base
+    # Obter usuário atual e aplicar filtro de escola
+    from models import Usuario
+    usuario_atual = Usuario.query.get(session['user_id'])
+
+    # Query base com filtro de escola
     query = Solicitante.query
+    escola_atual_id = usuario_atual.get_escola_atual_id()
+    if escola_atual_id:
+        query = query.filter(Solicitante.escola_id == escola_atual_id)
 
     # Aplicar filtros
     if search:
@@ -82,6 +89,9 @@ def novo():
             flash('Já existe um solicitante com este CPF!', 'error')
             return render_template('solicitantes/novo.html')
 
+        # Obter escola atual do usuário
+        escola_atual_id = usuario.get_escola_atual_id()
+
         solicitante = Solicitante(
             nome=nome,
             cpf=cpf,
@@ -91,7 +101,8 @@ def novo():
             email=request.form.get('email', '').strip(),
             parentesco=request.form.get('parentesco', '').strip(),
             tipo_solicitacao=request.form.get('tipo_solicitacao', 'consulta'),
-            data_nascimento=datetime.strptime(request.form.get('data_nascimento'), '%Y-%m-%d') if request.form.get('data_nascimento') else None
+            data_nascimento=datetime.strptime(request.form.get('data_nascimento'), '%Y-%m-%d') if request.form.get('data_nascimento') else None,
+            escola_id=escola_atual_id
         )
 
         # Validar CPF
@@ -120,7 +131,17 @@ def ver(id):
     if not verificar_login():
         return redirect(url_for('auth.login'))
 
+    # Verificar acesso à escola do solicitante
+    from models import Usuario
+    usuario_atual = Usuario.query.get(session['user_id'])
+
     solicitante = Solicitante.query.get_or_404(id)
+
+    # Verificar se o usuário pode acessar este solicitante
+    if not usuario_atual.can_access_escola(solicitante.escola_id):
+        flash('Acesso negado a este solicitante.', 'error')
+        return redirect(url_for('solicitantes.listar'))
+
     return render_template('solicitantes/ver.html', solicitante=solicitante)
 
 @solicitantes_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
@@ -134,6 +155,11 @@ def editar(id):
     cidades = Cidade.query.order_by(Cidade.nome).all()
 
     solicitante = Solicitante.query.get_or_404(id)
+
+    # Verificar se o usuário pode acessar este solicitante
+    if not usuario.can_access_escola(solicitante.escola_id):
+        flash('Acesso negado a este solicitante.', 'error')
+        return redirect(url_for('solicitantes.listar'))
 
     if request.method == 'POST':
         # Validações

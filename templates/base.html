@@ -57,9 +57,11 @@
                             <li><a class="dropdown-item" href="{{ url_for('usuario.listar') }}">
                                 <i class="fas fa-users me-2"></i>Usuários
                             </a></li>
+                            {% if session.user_perfil == 'Administrador Geral' %}
                             <li><a class="dropdown-item" href="{{ url_for('diretor.index') }}">
                                 <i class="fas fa-user-tie me-2"></i>Diretores
                             </a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{{ url_for('dossie.listar') }}">
                                 <i class="fas fa-folder me-2"></i>Dossiês
                             </a></li>

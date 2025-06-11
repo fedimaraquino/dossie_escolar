@@ -29,9 +29,9 @@ def create_app():
             with engine.connect():
                 pass  # Teste de conexão
             app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-            print("✅ Conectado ao PostgreSQL")
+            print("Conectado ao PostgreSQL")
         except Exception as e:
-            print(f"⚠️  PostgreSQL indisponível, usando SQLite: {e}")
+            print(f"PostgreSQL indisponivel, usando SQLite: {e}")
             app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dossie_escolar.db'
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
@@ -105,39 +105,64 @@ def create_app():
         hoje = datetime.now()
         inicio_mes = hoje.replace(day=1)
 
-        # Consultas otimizadas com menos JOINs
+        # Consultas otimizadas baseadas na escola atual
+        escola_atual_id = usuario.get_escola_atual_id()
+
         if usuario.is_admin_geral():
-            stats = {
-                'total_escolas': Escola.query.count(),
-                'total_usuarios': Usuario.query.count(),
-                'total_dossies': Dossie.query.count(),
-                'total_movimentacoes': Movimentacao.query.count(),
-                'usuarios_ativos': Usuario.query.filter_by(situacao='ativo').count(),
-                'dossies_ativos': Dossie.query.filter_by(situacao='ativo').count(),
-                'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count(),
-                'dossies_mes_atual': Dossie.query.filter(Dossie.dt_cadastro >= inicio_mes).count(),
-                'movimentacoes_mes_atual': Movimentacao.query.filter(Movimentacao.data_movimentacao >= inicio_mes).count()
-            }
+            # Admin Geral vê dados da escola atual selecionada
+            if escola_atual_id:
+                stats = {
+                    'total_escolas': Escola.query.count(),
+                    'total_usuarios': Usuario.query.filter_by(escola_id=escola_atual_id).count(),
+                    'total_dossies': Dossie.query.filter_by(escola_id=escola_atual_id).count(),
+                    'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == escola_atual_id).count(),
+                    'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
+                    'dossies_ativos': Dossie.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
+                    'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
+                        Dossie.escola_id == escola_atual_id,
+                        Movimentacao.status == 'pendente'
+                    ).count(),
+                    'dossies_mes_atual': Dossie.query.filter(
+                        Dossie.escola_id == escola_atual_id,
+                        Dossie.dt_cadastro >= inicio_mes
+                    ).count(),
+                    'movimentacoes_mes_atual': Movimentacao.query.join(Dossie).filter(
+                        Dossie.escola_id == escola_atual_id,
+                        Movimentacao.data_movimentacao >= inicio_mes
+                    ).count()
+                }
+            else:
+                # Fallback para dados globais se não houver escola selecionada
+                stats = {
+                    'total_escolas': Escola.query.count(),
+                    'total_usuarios': Usuario.query.count(),
+                    'total_dossies': Dossie.query.count(),
+                    'total_movimentacoes': Movimentacao.query.count(),
+                    'usuarios_ativos': Usuario.query.filter_by(situacao='ativo').count(),
+                    'dossies_ativos': Dossie.query.filter_by(situacao='ativo').count(),
+                    'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count(),
+                    'dossies_mes_atual': Dossie.query.filter(Dossie.dt_cadastro >= inicio_mes).count(),
+                    'movimentacoes_mes_atual': Movimentacao.query.filter(Movimentacao.data_movimentacao >= inicio_mes).count()
+                }
         else:
-            # Dados específicos da escola
-            escola_id = usuario.escola_id
+            # Dados específicos da escola do usuário
             stats = {
                 'total_escolas': 1,
-                'total_usuarios': Usuario.query.filter_by(escola_id=escola_id).count(),
-                'total_dossies': Dossie.query.filter_by(escola_id=escola_id).count(),
-                'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == escola_id).count(),
-                'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_id, situacao='ativo').count(),
-                'dossies_ativos': Dossie.query.filter_by(escola_id=escola_id, situacao='ativo').count(),
+                'total_usuarios': Usuario.query.filter_by(escola_id=escola_atual_id).count(),
+                'total_dossies': Dossie.query.filter_by(escola_id=escola_atual_id).count(),
+                'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == escola_atual_id).count(),
+                'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
+                'dossies_ativos': Dossie.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
                 'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
-                    Dossie.escola_id == escola_id,
+                    Dossie.escola_id == escola_atual_id,
                     Movimentacao.status == 'pendente'
                 ).count(),
                 'dossies_mes_atual': Dossie.query.filter(
-                    Dossie.escola_id == escola_id,
+                    Dossie.escola_id == escola_atual_id,
                     Dossie.dt_cadastro >= inicio_mes
                 ).count(),
                 'movimentacoes_mes_atual': Movimentacao.query.join(Dossie).filter(
-                    Dossie.escola_id == escola_id,
+                    Dossie.escola_id == escola_atual_id,
                     Movimentacao.data_movimentacao >= inicio_mes
                 ).count()
             }
@@ -180,8 +205,11 @@ def create_app():
         inicio_mes = hoje.replace(day=1)
         inicio_ano = hoje.replace(month=1, day=1)
 
+        # Obter escola atual
+        escola_atual_id = usuario.get_escola_atual_id()
+
         if usuario.is_admin_geral():
-            # Admin geral vê estatísticas globais
+            # Admin geral vê estatísticas da escola atual selecionada
             stats = {
                 # Totais básicos
                 'total_escolas': Escola.query.count(),
@@ -471,10 +499,10 @@ if __name__ == '__main__':
     # Inicializar banco de dados
     init_database(app)
     
-    print("🚀 Sistema de Controle de Dossiê Escolar Iniciado")
-    print("🌐 Acesse: http://localhost:5000")
-    print("👤 Login: admin@sistema.com / admin123")
-    print("📁 Aplicação organizada por entidades")
+    print("Sistema de Controle de Dossie Escolar Iniciado")
+    print("Acesse: http://localhost:5000")
+    print("Login: admin@sistema.com / admin123")
+    print("Aplicacao organizada por entidades")
     print("-" * 50)
     
     app.run(debug=True, host='0.0.0.0', port=5000)

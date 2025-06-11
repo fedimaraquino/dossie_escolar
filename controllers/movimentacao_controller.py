@@ -37,7 +37,7 @@ def listar():
             )
         )
     
-    if escola_id and usuario.perfil_obj and usuario.perfil_obj.perfil == 'Administrador Geral':
+    if escola_id and usuario.is_admin_geral():
         query = query.filter(Dossie.escola_id == escola_id)
     
     if tipo:
@@ -54,7 +54,8 @@ def listar():
     if escola_id:
         escola_filtro = Escola.query.get(escola_id)
 
-    escolas = Escola.query.all() if usuario.perfil_obj and usuario.perfil_obj.perfil == 'Administrador Geral' else [usuario.escola]
+    from utils.escola_utils import get_escolas_para_filtro
+    escolas = get_escolas_para_filtro(usuario)
 
     return render_template('movimentacoes/listar.html', 
                          movimentacoes=movimentacoes, 
@@ -123,13 +124,15 @@ def nova():
             db.session.rollback()
             flash(f'Erro ao registrar movimentação: {str(e)}', 'error')
 
-    # Buscar dossiês disponíveis
-    if usuario.perfil_obj and usuario.perfil_obj.perfil == 'Administrador Geral':
-        dossies = Dossie.query.filter_by(status='ativo').all()
-        escolas = Escola.query.all()
+    # Buscar dossiês disponíveis baseado na escola atual
+    escola_atual_id = usuario.get_escola_atual_id()
+    if escola_atual_id:
+        dossies = Dossie.query.filter_by(escola_id=escola_atual_id, status='ativo').all()
     else:
-        dossies = Dossie.query.filter_by(escola_id=usuario.escola_id, status='ativo').all()
-        escolas = [usuario.escola]
+        dossies = []
+
+    from utils.escola_utils import get_escolas_para_filtro
+    escolas = get_escolas_para_filtro(usuario)
 
     # Buscar solicitantes ativos
     from models import Solicitante
@@ -255,9 +258,10 @@ def pendentes():
     # Query base para movimentações pendentes
     query = Movimentacao.query.join(Dossie).filter(Movimentacao.status == 'pendente')
 
-    # Se não for admin geral, filtrar apenas movimentações da escola do usuário
-    if usuario.perfil_obj and usuario.perfil_obj.perfil != 'Administrador Geral':
-        query = query.filter(Dossie.escola_id == usuario.escola_id)
+    # Aplicar filtro de escola baseado no usuário atual
+    escola_atual_id = usuario.get_escola_atual_id()
+    if escola_atual_id:
+        query = query.filter(Dossie.escola_id == escola_atual_id)
 
     # Aplicar filtro de busca
     if search:
@@ -277,10 +281,9 @@ def pendentes():
         page=page, per_page=10, error_out=False
     )
 
-    # Buscar escolas para filtro (apenas admin geral)
-    escolas = []
-    if usuario.perfil_obj and usuario.perfil_obj.perfil == 'Administrador Geral':
-        escolas = Escola.query.all()
+    # Buscar escolas para filtro
+    from utils.escola_utils import get_escolas_para_filtro
+    escolas = get_escolas_para_filtro(usuario)
 
     return render_template('movimentacoes/listar.html',
                          movimentacoes=movimentacoes,
@@ -306,9 +309,10 @@ def emprestados():
         Movimentacao.status == 'pendente'
     )
 
-    # Se não for admin geral, filtrar apenas movimentações da escola do usuário
-    if usuario.perfil_obj and usuario.perfil_obj.perfil != 'Administrador Geral':
-        query = query.filter(Dossie.escola_id == usuario.escola_id)
+    # Aplicar filtro de escola baseado no usuário atual
+    escola_atual_id = usuario.get_escola_atual_id()
+    if escola_atual_id:
+        query = query.filter(Dossie.escola_id == escola_atual_id)
 
     # Aplicar filtro de busca
     if search:
@@ -331,10 +335,9 @@ def emprestados():
         page=page, per_page=10, error_out=False
     )
 
-    # Buscar escolas para filtro (apenas admin geral)
-    escolas = []
-    if usuario.perfil_obj and usuario.perfil_obj.perfil == 'Administrador Geral':
-        escolas = Escola.query.all()
+    # Buscar escolas para filtro
+    from utils.escola_utils import get_escolas_para_filtro
+    escolas = get_escolas_para_filtro(usuario)
 
     return render_template('movimentacoes/listar.html',
                          movimentacoes=movimentacoes,

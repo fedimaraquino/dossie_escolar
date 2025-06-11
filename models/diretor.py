@@ -20,6 +20,10 @@ class Diretor(db.Model):
     admissao = db.Column(db.Date)
     tipo_mandato = db.Column(db.String(50))  # Cargo ou mandato
     foto = db.Column(db.String(255))  # Nome do arquivo da foto
+    escola_id = db.Column(db.Integer, db.ForeignKey('escolas.id'), nullable=False)  # FK - Escola vinculada
+
+    # Relacionamentos
+    escola = db.relationship('Escola', backref='diretores')
 
     def __repr__(self):
         return f'<Diretor {self.nome}>'

@@ -55,10 +55,21 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Buscar:</label>
-                    <input type="text" name="search" class="form-control" 
+                    <input type="text" name="search" class="form-control"
                            placeholder="Nome, CPF, cidade..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Escola:</label>
+                    <select name="escola" class="form-select">
+                        <option value="">Todas as escolas</option>
+                        {% for escola in escolas %}
+                        <option value="{{ escola.id }}" {% if escola_filtro == escola.id|string %}selected{% endif %}>
+                            {{ escola.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Status:</label>
@@ -99,6 +110,7 @@
                         <tr>
                             <th>Foto</th>
                             <th>Nome</th>
+                            <th>Escola</th>
                             <th>CPF</th>
                             <th>Cidade</th>
                             <th>Tipo de Mandato</th>
@@ -125,6 +137,9 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ diretor.escola.nome if diretor.escola else 'Não definido' }}</span>
                             </td>
                             <td>
                                 {% if diretor.cpf %}
