@@ -21,10 +21,11 @@ def listar():
     # Verificar permissões
     usuario = Usuario.query.get(session['user_id'])
     query = Movimentacao.query.join(Dossie)
-    
-    # Se não for admin geral, filtrar apenas movimentações da escola do usuário
-    if usuario.perfil_obj and usuario.perfil_obj.perfil != 'Administrador Geral':
-        query = query.filter(Dossie.escola_id == usuario.escola_id)
+
+    # Aplicar filtro de escola baseado no usuário atual
+    escola_atual_id = usuario.get_escola_atual_id()
+    if escola_atual_id:
+        query = query.filter(Dossie.escola_id == escola_atual_id)
     
     if search:
         query = query.filter(

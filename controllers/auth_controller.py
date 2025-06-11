@@ -44,6 +44,16 @@ def login():
             session['user_foto_url'] = usuario.get_foto_url()
             session['escola_id'] = usuario.escola_id
 
+            # Para Administradores Gerais, definir escola atual de trabalho
+            if usuario.is_admin_geral():
+                session['escola_atual_id'] = usuario.escola_id
+                session['escola_atual_nome'] = usuario.escola.nome
+                session['can_switch_escola'] = usuario.can_switch_escola()
+            else:
+                session['escola_atual_id'] = usuario.escola_id
+                session['escola_atual_nome'] = usuario.escola.nome
+                session['can_switch_escola'] = False
+
             # Registrar log de login
             from utils.logs import log_acao, AcoesAuditoria
             log_acao(AcoesAuditoria.LOGIN, 'Usuario', f'Login realizado: {usuario.nome}', usuario.id)
@@ -62,6 +72,7 @@ def login():
             flash('Email ou senha incorretos!', 'error')
     
     return render_template('auth/login_novo.html')
+
 
 @auth_bp.route('/logout')
 def logout():

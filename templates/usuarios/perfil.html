@@ -131,7 +131,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted small">Escola</label>
-                        <div class="form-control-plaintext">{{ usuario.escola.nome if usuario.escola else 'Não definido' }}</div>
+                        <div class="form-control-plaintext">
+                            {{ usuario.escola.nome if usuario.escola else 'Não definido' }}
+                            {% if session.can_switch_escola %}
+                            <br><small class="text-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Escola atual de trabalho: {{ session.escola_atual_nome or usuario.escola.nome }}
+                            </small>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted small">Data de Cadastro</label>
@@ -169,6 +177,11 @@
                         <a href="{{ url_for('usuario.alterar_senha') }}" class="btn btn-outline-warning btn-sm">
                             <i class="fas fa-key me-2"></i>Alterar Senha
                         </a>
+                        {% if session.can_switch_escola %}
+                        <a href="{{ url_for('usuario.trocar_escola') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-exchange-alt me-2"></i>Trocar Escola
+                        </a>
+                        {% endif %}
                         <a href="{{ url_for('configuracao.index') }}" class="btn btn-outline-info btn-sm">
                             <i class="fas fa-cog me-2"></i>Configurações
                         </a>

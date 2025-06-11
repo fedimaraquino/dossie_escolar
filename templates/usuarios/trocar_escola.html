@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Trocar Escola{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="fas fa-exchange-alt me-2"></i>
+                Trocar Escola de Trabalho
+            </h2>
+            <p class="text-muted">
+                Como Administrador Geral, você pode alternar entre as escolas do sistema
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Escola Atual -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-school me-2"></i>Escola Atual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for escola in escolas %}
+                        {% if escola.id == escola_atual_id %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-building fa-2x text-info"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ escola.nome }}</h5>
+                                <p class="text-muted mb-1">
+                                    {% if escola.endereco %}
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ escola.endereco }}
+                                    {% endif %}
+                                </p>
+                                <span class="badge bg-success">Escola Ativa</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Formulário de Troca -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Selecionar Nova Escola
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if escolas|length > 1 %}
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label for="escola_id" class="form-label">Escolha a escola para trabalhar:</label>
+                            <select class="form-select form-select-lg" id="escola_id" name="escola_id" required>
+                                <option value="">Selecione uma escola...</option>
+                                {% for escola in escolas %}
+                                    {% if escola.id != escola_atual_id %}
+                                    <option value="{{ escola.id }}">
+                                        {{ escola.nome }}
+                                        {% if escola.endereco %} - {{ escola.endereco }}{% endif %}
+                                    </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Importante:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Ao trocar de escola, você verá apenas os dados da escola selecionada</li>
+                                <li>Você pode trocar de escola a qualquer momento</li>
+                                <li>Esta alteração afeta apenas sua sessão atual</li>
+                                <li>Seus dados de usuário permanecem vinculados à escola original</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-exchange-alt me-2"></i>Trocar Escola
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Apenas uma escola disponível</strong>
+                        <p class="mb-0 mt-2">
+                            Você tem acesso apenas à escola atual. Para trocar de escola, 
+                            é necessário ter acesso a múltiplas escolas no sistema.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Lista de Escolas Disponíveis -->
+            {% if escolas|length > 1 %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Escolas Disponíveis ({{ escolas|length }})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for escola in escolas %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 {% if escola.id == escola_atual_id %}border-info{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            <i class="fas fa-school fa-lg {% if escola.id == escola_atual_id %}text-info{% else %}text-muted{% endif %}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">{{ escola.nome }}</h6>
+                                            {% if escola.endereco %}
+                                            <p class="card-text text-muted small mb-2">
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ escola.endereco }}
+                                            </p>
+                                            {% endif %}
+                                            {% if escola.id == escola_atual_id %}
+                                            <span class="badge bg-info">Atual</span>
+                                            {% else %}
+                                            <span class="badge bg-light text-dark">Disponível</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmação antes de trocar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const select = document.getElementById('escola_id');
+        const escolaNome = select.options[select.selectedIndex].text;
+        
+        if (!confirm(`Confirma a troca para a escola "${escolaNome}"?\n\nVocê verá apenas os dados desta escola até trocar novamente.`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

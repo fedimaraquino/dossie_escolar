@@ -163,8 +163,24 @@
                             <span>{{ session.user_nome }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- Informações da Escola Atual -->
+                            <li class="dropdown-header">
+                                <i class="fas fa-school me-2"></i>{{ session.escola_atual_nome or session.get('escola_nome', 'Escola não definida') }}
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+
+                            <!-- Opções do Perfil -->
                             <li><a class="dropdown-item" href="{{ url_for('usuario.perfil') }}"><i class="fas fa-user-cog me-2"></i>Meu Perfil</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('usuario.alterar_senha') }}"><i class="fas fa-key me-2"></i>Alterar Senha</a></li>
+
+                            <!-- Trocar Escola (apenas para Admin Geral) -->
+                            {% if session.can_switch_escola %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('usuario.trocar_escola') }}">
+                                <i class="fas fa-exchange-alt me-2"></i>Trocar Escola
+                            </a></li>
+                            {% endif %}
+
                             <li><a class="dropdown-item" href="{{ url_for('configuracao.index') }}"><i class="fas fa-cog me-2"></i>Configurações</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>

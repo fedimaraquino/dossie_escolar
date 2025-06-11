@@ -112,6 +112,31 @@ class Usuario(db.Model):
                 except:
                     pass  # Não falhar se não conseguir remover
         self.foto = None
+
+    def get_escolas_acessiveis(self):
+        """Retorna lista de escolas que o usuário pode acessar"""
+        from .escola import Escola
+
+        if self.is_admin_geral():
+            # Admin Geral pode acessar todas as escolas ativas
+            return Escola.query.filter_by(situacao='ativa').all()
+        else:
+            # Outros perfis só acessam sua escola
+            return [self.escola] if self.escola else []
+
+    def can_switch_escola(self):
+        """Verifica se o usuário pode trocar de escola"""
+        return self.is_admin_geral() and len(self.get_escolas_acessiveis()) > 1
+
+    def get_escola_atual_id(self):
+        """Retorna o ID da escola atual de trabalho"""
+        from flask import session
+        if self.is_admin_geral():
+            # Para Admin Geral, usar escola atual da sessão ou escola padrão
+            return session.get('escola_atual_id', self.escola_id)
+        else:
+            # Para outros perfis, sempre usar a escola do usuário
+            return self.escola_id
     
     def __repr__(self):
         return f'<Usuario {self.nome}>'

@@ -20,10 +20,17 @@ def listar():
     # Verificar permissões
     usuario = Usuario.query.get(session['user_id'])
     query = Dossie.query
-    
+
+    # Usar escola atual da sessão (para Admin Geral) ou escola do usuário
+    escola_atual_id = session.get('escola_atual_id', usuario.escola_id)
+
     # Se não for admin geral, filtrar apenas dossiês da escola do usuário
     if not usuario.is_admin_geral():
         query = query.filter(Dossie.escola_id == usuario.escola_id)
+    else:
+        # Admin Geral vê dossiês da escola atual selecionada
+        if escola_atual_id:
+            query = query.filter(Dossie.escola_id == escola_atual_id)
     
     if search:
         query = query.filter(
@@ -87,7 +94,11 @@ def novo():
             escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
             return render_template('dossies/novo.html', escolas=escolas)
 
-        id_escola = request.form.get('id_escola') if usuario.is_admin_geral() else usuario.escola_id
+        # Para Admin Geral, usar escola atual da sessão ou permitir seleção
+        if usuario.is_admin_geral():
+            id_escola = request.form.get('id_escola') or session.get('escola_atual_id', usuario.escola_id)
+        else:
+            id_escola = usuario.escola_id
 
         dossie = Dossie(
             n_dossie=n_dossie,

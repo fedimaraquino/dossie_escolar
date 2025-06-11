@@ -17,7 +17,24 @@ def listar():
     situacao = request.args.get('situacao', '')
     page = request.args.get('page', 1, type=int)
 
+    # Obter usuário atual
+    usuario_atual = Usuario.query.get(session['user_id'])
+
+    # Aplicar filtro de escola baseado no usuário
+    from utils.escola_utils import get_escolas_para_filtro
+
     query = Usuario.query
+
+    # Se não for admin geral, filtrar apenas usuários da escola atual
+    if not usuario_atual.is_admin_geral():
+        escola_atual_id = usuario_atual.get_escola_atual_id()
+        query = query.filter(Usuario.escola_id == escola_atual_id)
+    else:
+        # Admin Geral pode ver usuários da escola atual selecionada
+        escola_atual_id = usuario_atual.get_escola_atual_id()
+        if escola_atual_id and not escola_id:
+            query = query.filter(Usuario.escola_id == escola_atual_id)
+
     if search:
         query = query.filter(
             db.or_(
@@ -26,13 +43,13 @@ def listar():
                 Usuario.cpf.contains(search)
             )
         )
-    
-    if escola_id:
+
+    if escola_id and usuario_atual.is_admin_geral():
         query = query.filter(Usuario.escola_id == escola_id)
-    
+
     if perfil_id:
         query = query.filter(Usuario.perfil_id == perfil_id)
-    
+
     if situacao:
         query = query.filter(Usuario.situacao == situacao)
 
@@ -41,17 +58,18 @@ def listar():
     escola_filtro = None
     if escola_id:
         escola_filtro = Escola.query.get(escola_id)
-    
+
     perfil_filtro = None
     if perfil_id:
         perfil_filtro = Perfil.query.get(perfil_id)
 
-    escolas = Escola.query.all()
+    # Escolas disponíveis baseadas no perfil
+    escolas = get_escolas_para_filtro(usuario_atual)
     perfis = Perfil.query.all()
 
-    return render_template('usuarios/listar.html', 
-                         usuarios=usuarios, 
-                         search=search, 
+    return render_template('usuarios/listar.html',
+                         usuarios=usuarios,
+                         search=search,
                          escola_filtro=escola_filtro,
                          perfil_filtro=perfil_filtro,
                          escolas=escolas,
@@ -410,6 +428,64 @@ def editar_perfil():
             flash(f'Erro ao atualizar perfil: {str(e)}', 'error')
 
     return render_template('usuarios/editar_perfil.html', usuario=usuario)
+
+@usuario_bp.route('/trocar-escola', methods=['GET', 'POST'])
+@login_required
+def trocar_escola():
+    """Permite ao Administrador Geral trocar de escola de trabalho"""
+    from models import Escola
+
+    # Verificar se o usuário pode trocar de escola
+    usuario_atual = Usuario.query.get(session['user_id'])
+
+    if not usuario_atual.can_switch_escola():
+        flash('Você não tem permissão para trocar de escola!', 'error')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        nova_escola_id = request.form.get('escola_id')
+
+        if not nova_escola_id:
+            flash('Selecione uma escola!', 'error')
+            return redirect(url_for('usuario.trocar_escola'))
+
+        try:
+            nova_escola_id = int(nova_escola_id)
+            nova_escola = Escola.query.get(nova_escola_id)
+
+            if not nova_escola:
+                flash('Escola não encontrada!', 'error')
+                return redirect(url_for('usuario.trocar_escola'))
+
+            if not usuario_atual.can_access_escola(nova_escola_id):
+                flash('Você não tem acesso a esta escola!', 'error')
+                return redirect(url_for('usuario.trocar_escola'))
+
+            # Atualizar escola atual na sessão
+            session['escola_atual_id'] = nova_escola_id
+            session['escola_atual_nome'] = nova_escola.nome
+
+            # Log da ação
+            from utils.logs import log_acao, AcoesAuditoria
+            log_acao(AcoesAuditoria.ALTERACAO, 'Usuario',
+                    f'Trocou escola de trabalho para: {nova_escola.nome}')
+
+            flash(f'Escola alterada para: {nova_escola.nome}', 'success')
+            return redirect(url_for('dashboard'))
+
+        except ValueError:
+            flash('ID de escola inválido!', 'error')
+        except Exception as e:
+            flash(f'Erro ao trocar escola: {str(e)}', 'error')
+
+    # Buscar escolas acessíveis
+    escolas = usuario_atual.get_escolas_acessiveis()
+    escola_atual_id = session.get('escola_atual_id', usuario_atual.escola_id)
+
+    return render_template('usuarios/trocar_escola.html',
+                         escolas=escolas,
+                         escola_atual_id=escola_atual_id,
+                         usuario=usuario_atual)
 
 @usuario_bp.route('/perfil/senha', methods=['GET', 'POST'])
 @login_required
