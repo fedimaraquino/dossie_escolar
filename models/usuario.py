@@ -28,6 +28,8 @@ class Usuario(db.Model):
     senha_hash = db.Column(db.String(255), nullable=False)
     tentativas_login = db.Column(db.Integer, default=0)
     bloqueado_ate = db.Column(db.DateTime)
+    data_alteracao_senha = db.Column(db.DateTime, default=datetime.now)
+    senha_expira_em = db.Column(db.DateTime)
     
     # Campos extras para compatibilidade
     status = db.Column(db.String(20), default='ativo')
@@ -39,12 +41,53 @@ class Usuario(db.Model):
                            backref='usuarios', post_update=True)
     
     def set_password(self, password):
-        """Define a senha do usuário com hash"""
-        self.senha_hash = generate_password_hash(password)
+        """Define a senha do usuário com hash e validação"""
+        from utils.validators import validar_senha, ValidationError
+
+        try:
+            # Validar força da senha
+            senha_validada = validar_senha(password)
+            self.senha_hash = generate_password_hash(senha_validada)
+
+            # Atualizar data de alteração da senha
+            from datetime import datetime, timedelta
+            self.data_alteracao_senha = datetime.now()
+
+            # Definir expiração da senha (90 dias)
+            self.senha_expira_em = datetime.now() + timedelta(days=90)
+
+        except ValidationError as e:
+            raise ValueError(f"Senha inválida: {e}")
     
     def check_password(self, password):
         """Verifica se a senha está correta"""
         return check_password_hash(self.senha_hash, password)
+
+    def senha_expirada(self):
+        """Verifica se a senha está expirada"""
+        if not self.senha_expira_em:
+            return False
+        from datetime import datetime
+        return datetime.now() > self.senha_expira_em
+
+    def dias_para_expirar_senha(self):
+        """Quantos dias faltam para a senha expirar"""
+        if not self.senha_expira_em:
+            return None
+        from datetime import datetime
+        delta = self.senha_expira_em - datetime.now()
+        return max(0, delta.days)
+
+    def precisa_trocar_senha(self):
+        """Verifica se precisa trocar a senha (expirada ou próxima do vencimento)"""
+        if self.senha_expirada():
+            return True, "Senha expirada"
+
+        dias_restantes = self.dias_para_expirar_senha()
+        if dias_restantes is not None and dias_restantes <= 7:
+            return True, f"Senha expira em {dias_restantes} dias"
+
+        return False, None
     
     def is_admin_geral(self):
         """Verifica se é administrador geral"""
@@ -59,6 +102,37 @@ class Usuario(db.Model):
         if self.is_admin_geral():
             return True
         return self.escola_id == escola_id
+
+    def can_switch_escola(self):
+        """Verifica se o usuário pode trocar de escola"""
+        # Apenas Admin Geral pode trocar de escola
+        return self.is_admin_geral()
+
+    def get_escolas_acessiveis(self):
+        """Retorna lista de escolas que o usuário pode acessar"""
+        from models import Escola
+
+        if self.is_admin_geral():
+            # Admin Geral pode acessar todas as escolas ativas
+            return Escola.query.filter_by(situacao='ativa').all()
+        else:
+            # Outros usuários só podem acessar sua própria escola
+            return [self.escola] if self.escola else []
+
+    def get_escola_atual_id(self):
+        """Retorna o ID da escola atual do usuário"""
+        from flask import session
+
+        if self.is_admin_geral():
+            # Admin Geral pode ter escola atual diferente na sessão
+            escola_atual_id = session.get('escola_atual_id')
+            if escola_atual_id:
+                return escola_atual_id
+            # Se não há escola na sessão, usar a escola padrão do usuário
+            return self.escola_id
+        else:
+            # Outros usuários sempre usam sua própria escola
+            return self.escola_id
     
     def reset_tentativas_login(self):
         """Reseta contador de tentativas de login"""
@@ -112,31 +186,6 @@ class Usuario(db.Model):
                 except:
                     pass  # Não falhar se não conseguir remover
         self.foto = None
-
-    def get_escolas_acessiveis(self):
-        """Retorna lista de escolas que o usuário pode acessar"""
-        from .escola import Escola
-
-        if self.is_admin_geral():
-            # Admin Geral pode acessar todas as escolas ativas
-            return Escola.query.filter_by(situacao='ativa').all()
-        else:
-            # Outros perfis só acessam sua escola
-            return [self.escola] if self.escola else []
-
-    def can_switch_escola(self):
-        """Verifica se o usuário pode trocar de escola"""
-        return self.is_admin_geral() and len(self.get_escolas_acessiveis()) > 1
-
-    def get_escola_atual_id(self):
-        """Retorna o ID da escola atual de trabalho"""
-        from flask import session
-        if self.is_admin_geral():
-            # Para Admin Geral, usar escola atual da sessão ou escola padrão
-            return session.get('escola_atual_id', self.escola_id)
-        else:
-            # Para outros perfis, sempre usar a escola do usuário
-            return self.escola_id
     
     def __repr__(self):
         return f'<Usuario {self.nome}>'

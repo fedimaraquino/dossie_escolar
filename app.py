@@ -6,6 +6,8 @@ Organizada por entidades para facilitar manutenção
 
 from flask import Flask, render_template, redirect, url_for, session, flash
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from datetime import datetime
 import secrets
 import os
@@ -45,10 +47,24 @@ def create_app():
     # Configurações de upload
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
-    
+
+    # Configurações de segurança de sessão
+    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS apenas
+    app.config['SESSION_COOKIE_HTTPONLY'] = True  # Não acessível via JavaScript
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Proteção CSRF
+    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora de timeout
+
     # Inicializar banco de dados
     from models import db
     db.init_app(app)
+
+    # Inicializar Rate Limiter
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
 
     # Inicializar Flask-Migrate
     migrate = Migrate(app, db)

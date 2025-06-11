@@ -175,6 +175,25 @@ def concluir(id):
 
     try:
         movimentacao.marcar_como_concluida()
+
+        # Log detalhado da conclusão
+        import json
+        detalhes_log = {
+            'movimentacao_concluida': {
+                'id': movimentacao.id,
+                'tipo': movimentacao.tipo_movimentacao,
+                'dossie_numero': movimentacao.dossie.numero_dossie if movimentacao.dossie else None,
+                'solicitante': movimentacao.solicitante.nome if movimentacao.solicitante else None
+            },
+            'concluido_por': usuario.nome,
+            'ip_origem': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        }
+
+        log_acao(AcoesAuditoria.MOVIMENTACAO_CONCLUIDA, 'Movimentacao',
+                f'Movimentação concluída: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"}',
+                detalhes=json.dumps(detalhes_log))
+
         db.session.commit()
         flash('Movimentação marcada como concluída!', 'success')
     except Exception as e:
@@ -201,6 +220,25 @@ def cancelar(id):
 
     try:
         movimentacao.status = 'cancelado'
+
+        # Log detalhado do cancelamento
+        import json
+        detalhes_log = {
+            'movimentacao_cancelada': {
+                'id': movimentacao.id,
+                'tipo': movimentacao.tipo_movimentacao,
+                'dossie_numero': movimentacao.dossie.numero_dossie if movimentacao.dossie else None,
+                'solicitante': movimentacao.solicitante.nome if movimentacao.solicitante else None
+            },
+            'cancelado_por': usuario.nome,
+            'ip_origem': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        }
+
+        log_acao(AcoesAuditoria.MOVIMENTACAO_CANCELADA, 'Movimentacao',
+                f'Movimentação cancelada: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"}',
+                detalhes=json.dumps(detalhes_log))
+
         db.session.commit()
         flash('Movimentação cancelada com sucesso!', 'success')
     except Exception as e:

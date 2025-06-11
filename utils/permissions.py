@@ -28,9 +28,40 @@ def require_permission(modulo, acao):
                 return redirect(url_for('auth.login'))
             
             # Verificar permissão
-            if not has_permission(usuario, modulo, acao):
+            tem_permissao = has_permission(usuario, modulo, acao)
+
+            # Log detalhado da verificação de permissão
+            from utils.logs import log_acao, AcoesAuditoria
+            from flask import request, current_app
+            import json
+
+            detalhes_log = {
+                'usuario_id': usuario.id,
+                'usuario_nome': usuario.nome,
+                'modulo': modulo,
+                'acao': acao,
+                'resultado': 'PERMITIDO' if tem_permissao else 'NEGADO',
+                'ip_origem': request.remote_addr if request else 'N/A',
+                'url_solicitada': request.url if request else 'N/A',
+                'metodo_http': request.method if request else 'N/A',
+                'user_agent': request.headers.get('User-Agent') if request else 'N/A',
+                'funcao': f.__name__
+            }
+
+            if not tem_permissao:
+                # Log específico para acessos negados
+                log_acao(AcoesAuditoria.ACESSO_NEGADO, 'Permissao',
+                        f'Acesso negado: {usuario.nome} tentou {acao} em {modulo}',
+                        detalhes=json.dumps(detalhes_log))
+
                 flash(f'Acesso negado. Você não tem permissão para {acao} {modulo}.', 'error')
                 return abort(403)
+            else:
+                # Log para acessos permitidos (apenas em debug)
+                if current_app.debug:
+                    log_acao(AcoesAuditoria.ACESSO_PERMITIDO, 'Permissao',
+                            f'Acesso permitido: {usuario.nome} executou {acao} em {modulo}',
+                            detalhes=json.dumps(detalhes_log))
             
             return f(*args, **kwargs)
         return decorated_function
@@ -54,9 +85,10 @@ def has_permission(usuario, modulo, acao):
     # Administrador Geral tem todas as permissões
     if usuario.perfil_obj.perfil == 'Administrador Geral':
         return True
-    
-    # Verificar permissão específica
-    return usuario.perfil_obj.has_permission(modulo, acao)
+
+    # Usar cache para verificação de permissões
+    from utils.permission_cache import has_permission_cached
+    return has_permission_cached(usuario.id, modulo, acao)
 
 def can_create(usuario, modulo):
     """Verifica se pode criar registros no módulo"""

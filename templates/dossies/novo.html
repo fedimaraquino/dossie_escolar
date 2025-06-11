@@ -76,13 +76,12 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label for="id_escola" class="form-label">Escola *</label>
-                            <select class="form-select" id="id_escola" name="id_escola" required>
-                                <option value="">Selecione...</option>
-                                {% for escola in escolas %}
-                                    <option value="{{ escola.id }}">{{ escola.nome }}</option>
-                                {% endfor %}
-                            </select>
+                            <label class="form-label">Escola</label>
+                            <div class="form-control-plaintext bg-light p-2 rounded">
+                                <i class="fas fa-school me-2 text-primary"></i>
+                                <strong>{{ session.get('escola_nome', 'Escola do usuário') }}</strong>
+                                <small class="text-muted d-block">Definida automaticamente</small>
+                            </div>
                         </div>
                     </div>
 
@@ -396,9 +395,8 @@
     document.querySelector('form').addEventListener('submit', function(e) {
         const nDossie = document.getElementById('n_dossie').value.trim();
         const nome = document.getElementById('nome').value.trim();
-        const idEscola = document.getElementById('id_escola').value;
 
-        if (!nDossie || !nome || !idEscola) {
+        if (!nDossie || !nome) {
             e.preventDefault();
             alert('Por favor, preencha todos os campos obrigatórios (*)');
             return false;

@@ -83,6 +83,7 @@
                                         <option value="transferido" {{ 'selected' if dossie.status == 'transferido' else '' }}>Transferido</option>
                                     </select>
                                 </div>
+                                {% if session.user_perfil == 'Administrador Geral' %}
                                 <div class="col-md-3">
                                     <label for="id_escola" class="form-label">Escola *</label>
                                     <select class="form-select" id="id_escola" name="id_escola" required>
@@ -94,6 +95,10 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                {% else %}
+                                <!-- Campo escola oculto para usuários não Admin Geral -->
+                                <input type="hidden" name="id_escola" value="{{ dossie.id_escola }}">
+                                {% endif %}
                             </div>
 
                             <!-- Dados do Aluno -->

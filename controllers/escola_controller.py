@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
 from models import db, Escola, Cidade, Usuario
+from utils.logs import log_acao, AcoesAuditoria
 from .auth_controller import login_required, admin_required
 
 escola_bp = Blueprint('escola', __name__, url_prefix='/escolas')
@@ -121,6 +122,25 @@ def editar(id):
                                  usuarios=Usuario.query.filter_by(situacao='ativo').all())
 
         try:
+            # Log detalhado da edição
+            import json
+            usuario_logado = Usuario.query.get(session['user_id'])
+            detalhes_log = {
+                'escola_editada': {
+                    'id': escola.id,
+                    'nome': escola.nome,
+                    'cnpj': escola.cnpj,
+                    'situacao': escola.situacao
+                },
+                'editado_por': usuario_logado.nome if usuario_logado else 'Sistema',
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent')
+            }
+
+            log_acao(AcoesAuditoria.ESCOLA_EDITADA, 'Escola',
+                    f'Escola editada: {escola.nome}',
+                    detalhes=json.dumps(detalhes_log))
+
             db.session.commit()
             flash('Escola atualizada com sucesso!', 'success')
             return redirect(url_for('escola.listar'))
@@ -142,6 +162,25 @@ def excluir(id):
     escola = Escola.query.get_or_404(id)
     
     try:
+        # Log detalhado da exclusão
+        import json
+        usuario_logado = Usuario.query.get(session['user_id'])
+        detalhes_log = {
+            'escola_excluida': {
+                'id': escola.id,
+                'nome': escola.nome,
+                'cnpj': escola.cnpj,
+                'situacao': escola.situacao
+            },
+            'excluido_por': usuario_logado.nome if usuario_logado else 'Sistema',
+            'ip_origem': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        }
+
+        log_acao(AcoesAuditoria.ESCOLA_EXCLUIDA, 'Escola',
+                f'Escola excluída: {escola.nome}',
+                detalhes=json.dumps(detalhes_log))
+
         db.session.delete(escola)
         db.session.commit()
         flash(f'Escola "{escola.nome}" excluída com sucesso!', 'success')

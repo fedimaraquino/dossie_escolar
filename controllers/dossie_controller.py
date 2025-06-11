@@ -94,10 +94,12 @@ def novo():
             escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
             return render_template('dossies/novo.html', escolas=escolas)
 
-        # Para Admin Geral, usar escola atual da sessão ou permitir seleção
+        # Definir escola automaticamente baseada no usuário
         if usuario.is_admin_geral():
-            id_escola = request.form.get('id_escola') or session.get('escola_atual_id', usuario.escola_id)
+            # Admin Geral usa a escola atual da sessão ou sua escola padrão
+            id_escola = session.get('escola_atual_id', usuario.escola_id)
         else:
+            # Outros usuários sempre usam sua própria escola
             id_escola = usuario.escola_id
 
         dossie = Dossie(
@@ -146,6 +148,25 @@ def novo():
 
                         # Atualizar dossiê com o nome da foto
                         dossie.set_foto(filename)
+
+            # Log detalhado da criação
+            import json
+            detalhes_log = {
+                'dossie_criado': {
+                    'id': dossie.id,
+                    'numero_dossie': dossie.numero_dossie,
+                    'nome_aluno': dossie.nome_aluno,
+                    'escola_id': dossie.escola_id,
+                    'situacao': dossie.situacao
+                },
+                'criado_por': usuario.nome,
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent')
+            }
+
+            log_acao(AcoesAuditoria.DOSSIE_CRIADO, 'Dossie',
+                    f'Dossiê criado: {dossie.numero_dossie} - {dossie.nome_aluno}',
+                    detalhes=json.dumps(detalhes_log))
 
             db.session.commit()
 
@@ -249,9 +270,12 @@ def editar(id):
         dossie.tipo_documento = request.form.get('tipo_documento', '').strip()
         dossie.observacao = request.form.get('observacao', '').strip()
 
-        # Atualizar escola se usuário for admin geral
+        # Atualizar escola apenas se usuário for admin geral
         if usuario.is_admin_geral():
-            dossie.id_escola = request.form.get('id_escola', type=int)
+            nova_escola_id = request.form.get('id_escola', type=int)
+            if nova_escola_id:
+                dossie.id_escola = nova_escola_id
+        # Para outros usuários, a escola permanece inalterada
 
         if not dossie.n_dossie or not dossie.nome:
             flash('Número do dossiê e nome do aluno são obrigatórios!', 'error')
@@ -295,6 +319,25 @@ def editar(id):
                         # Atualizar dossiê com o nome da foto
                         dossie.set_foto(filename)
 
+            # Log detalhado da edição
+            import json
+            detalhes_log = {
+                'dossie_editado': {
+                    'id': dossie.id,
+                    'numero_dossie': dossie.numero_dossie,
+                    'nome_aluno': dossie.nome_aluno,
+                    'escola_id': dossie.escola_id,
+                    'situacao': dossie.situacao
+                },
+                'editado_por': usuario.nome,
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent')
+            }
+
+            log_acao(AcoesAuditoria.DOSSIE_EDITADO, 'Dossie',
+                    f'Dossiê editado: {dossie.numero_dossie} - {dossie.nome_aluno}',
+                    detalhes=json.dumps(detalhes_log))
+
             db.session.commit()
             flash('Dossiê atualizado com sucesso!', 'success')
             return redirect(url_for('dossie.listar'))
@@ -318,9 +361,28 @@ def excluir(id):
         return redirect(url_for('dossie.listar'))
 
     try:
+        # Log detalhado da exclusão
+        import json
+        detalhes_log = {
+            'dossie_excluido': {
+                'id': dossie.id,
+                'numero_dossie': dossie.numero_dossie,
+                'nome_aluno': dossie.nome_aluno,
+                'escola_id': dossie.escola_id,
+                'situacao': dossie.situacao
+            },
+            'excluido_por': usuario.nome,
+            'ip_origem': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        }
+
+        log_acao(AcoesAuditoria.DOSSIE_EXCLUIDO, 'Dossie',
+                f'Dossiê excluído: {dossie.numero_dossie} - {dossie.nome_aluno}',
+                detalhes=json.dumps(detalhes_log))
+
         db.session.delete(dossie)
         db.session.commit()
-        flash(f'Dossiê "{dossie.n_dossie}" excluído com sucesso!', 'success')
+        flash(f'Dossiê "{dossie.numero_dossie}" excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao excluir dossiê: {str(e)}', 'error')

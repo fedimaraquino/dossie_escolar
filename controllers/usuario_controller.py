@@ -7,6 +7,65 @@ from utils.logs import log_acao, AcoesAuditoria
 
 usuario_bp = Blueprint('usuario', __name__, url_prefix='/usuarios')
 
+def get_perfis_permitidos(usuario_logado):
+    """Retorna perfis que o usuário logado pode cadastrar"""
+    from models import Perfil
+
+    if usuario_logado.is_admin_geral():
+        # Admin Geral pode cadastrar qualquer perfil
+        return Perfil.query.all()
+    elif usuario_logado.is_admin_escola():
+        # Admin Escola pode cadastrar perfis de nível igual ou inferior (exceto Admin Geral)
+        return Perfil.query.filter(Perfil.perfil != 'Administrador Geral').all()
+    else:
+        # Outros perfis não podem cadastrar usuários
+        return []
+
+def validar_hierarquia_perfil(usuario_logado, perfil_id):
+    """Valida se o usuário pode cadastrar/editar com o perfil especificado"""
+    from models import Perfil
+
+    if not perfil_id:
+        return False
+
+    try:
+        perfil_id = int(perfil_id)
+        perfil = Perfil.query.get(perfil_id)
+
+        if not perfil:
+            return False
+
+        # Admin Geral pode tudo
+        if usuario_logado.is_admin_geral():
+            return True
+
+        # Admin Escola não pode cadastrar Admin Geral
+        if usuario_logado.is_admin_escola():
+            return perfil.perfil != 'Administrador Geral'
+
+        # Outros perfis não podem cadastrar
+        return False
+
+    except (ValueError, TypeError):
+        return False
+
+def validar_edicao_perfil(usuario_logado, usuario_editado, novo_perfil_id):
+    """Valida se o usuário pode editar o perfil de outro usuário"""
+    from models import Perfil
+
+    # Ninguém pode alterar o próprio perfil para um nível superior
+    if usuario_logado.id == usuario_editado.id:
+        perfil_atual = usuario_logado.perfil_obj
+        novo_perfil = Perfil.query.get(novo_perfil_id)
+
+        if perfil_atual and novo_perfil:
+            # Se é Admin Escola, não pode virar Admin Geral
+            if perfil_atual.perfil == 'Administrador da Escola' and novo_perfil.perfil == 'Administrador Geral':
+                return False
+
+    # Aplicar validação normal de hierarquia
+    return validar_hierarquia_perfil(usuario_logado, novo_perfil_id)
+
 @usuario_bp.route('/')
 @login_required
 def listar():
@@ -82,35 +141,71 @@ def novo():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        nome = request.form.get('nome', '').strip()
-        email = request.form.get('email', '').strip()
-        cpf = request.form.get('cpf', '').strip()
-        
-        if not nome or not email:
-            flash('Nome e email são obrigatórios!', 'error')
-            return render_template('usuarios/cadastrar.html', 
-                                 escolas=Escola.query.all(), 
-                                 perfis=Perfil.query.all())
+        from utils.validators import validar_dados_usuario, validar_senha, ValidationError
 
-        if Usuario.query.filter_by(email=email).first():
-            flash('Email já cadastrado no sistema!', 'error')
-            return render_template('usuarios/cadastrar.html', 
-                                 escolas=Escola.query.all(), 
-                                 perfis=Perfil.query.all())
+        try:
+            # Coletar dados do formulário
+            dados_form = {
+                'nome': request.form.get('nome', ''),
+                'email': request.form.get('email', ''),
+                'cpf': request.form.get('cpf', ''),
+                'telefone': request.form.get('telefone', ''),
+                'data_nascimento': request.form.get('data_nascimento'),
+                'endereco': request.form.get('endereco', ''),
+                'cargo': request.form.get('cargo', '')
+            }
 
+            # Validar dados rigorosamente
+            dados_validados = validar_dados_usuario(dados_form)
+
+            # Validar senha
+            senha = request.form.get('senha', '').strip()
+            if not senha:
+                raise ValidationError("Senha é obrigatória")
+
+            senha_validada = validar_senha(senha)
+
+            # Verificar se email já existe
+            if Usuario.query.filter_by(email=dados_validados['email']).first():
+                raise ValidationError("Email já cadastrado no sistema")
+
+        except ValidationError as e:
+            flash(str(e), 'error')
+            return render_template('usuarios/cadastrar.html',
+                                 escolas=Escola.query.all(),
+                                 perfis=get_perfis_permitidos(usuario_logado))
+
+        # Validar hierarquia de perfis
+        perfil_id = request.form.get('perfil_id')
+        if not validar_hierarquia_perfil(usuario_logado, perfil_id):
+            flash('Você não tem permissão para cadastrar usuário com este perfil!', 'error')
+            return render_template('usuarios/cadastrar.html',
+                                 escolas=Escola.query.all(),
+                                 perfis=get_perfis_permitidos(usuario_logado))
+
+        # Validar outros campos obrigatórios
+        escola_id = request.form.get('escola_id')
+        perfil_id = request.form.get('perfil_id')
+        situacao = request.form.get('situacao', 'ativo')
+
+        if not escola_id or not perfil_id:
+            raise ValidationError("Escola e perfil são obrigatórios")
+
+        # Criar usuário com dados validados
         usuario = Usuario(
-            nome=nome,
-            email=email,
-            cpf=cpf,
-            telefone=request.form.get('telefone', '').strip(),
-            escola_id=request.form.get('escola_id'),
-            perfil_id=request.form.get('perfil_id'),
-            situacao=request.form.get('situacao', 'ativo'),
-            data_nascimento=datetime.strptime(request.form.get('data_nascimento'), '%Y-%m-%d').date() if request.form.get('data_nascimento') else None
+            nome=dados_validados['nome'],
+            email=dados_validados['email'],
+            cpf=dados_validados.get('cpf'),
+            telefone=dados_validados.get('telefone'),
+            endereco=dados_validados.get('endereco'),
+            escola_id=escola_id,
+            perfil_id=perfil_id,
+            situacao=situacao,
+            data_nascimento=dados_validados.get('data_nascimento')
         )
 
-        senha_padrao = request.form.get('senha', '123456')
-        usuario.set_password(senha_padrao)
+        # Definir senha validada
+        usuario.set_password(senha_validada)
 
         try:
             db.session.add(usuario)
@@ -144,6 +239,28 @@ def novo():
                         # Atualizar usuário com o nome da foto
                         usuario.set_foto(filename)
 
+            # Log detalhado da operação
+            from utils.logs import log_acao, AcoesAuditoria
+            import json
+
+            detalhes_log = {
+                'usuario_criado': {
+                    'id': usuario.id,
+                    'nome': usuario.nome,
+                    'email': usuario.email,
+                    'escola_id': usuario.escola_id,
+                    'perfil_id': usuario.perfil_id,
+                    'situacao': usuario.situacao
+                },
+                'criado_por': usuario_logado.nome,
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent')
+            }
+
+            log_acao(AcoesAuditoria.USUARIO_CRIADO, 'Usuario',
+                    f'Usuário criado: {usuario.nome} ({usuario.email})',
+                    detalhes=json.dumps(detalhes_log))
+
             db.session.commit()
             flash('Usuário cadastrado com sucesso!', 'success')
             return redirect(url_for('usuario.listar'))
@@ -152,7 +269,7 @@ def novo():
             flash(f'Erro ao cadastrar usuário: {str(e)}', 'error')
 
     escolas = Escola.query.all()
-    perfis = Perfil.query.all()
+    perfis = get_perfis_permitidos(usuario_logado)
     return render_template('usuarios/cadastrar.html', escolas=escolas, perfis=perfis)
 
 @usuario_bp.route('/ver/<int:id>')
@@ -174,12 +291,21 @@ def editar(id):
     usuario = Usuario.query.get_or_404(id)
 
     if request.method == 'POST':
+        # Validar hierarquia de perfis na edição
+        novo_perfil_id = request.form.get('perfil_id')
+        if not validar_edicao_perfil(usuario_logado, usuario, novo_perfil_id):
+            flash('Você não tem permissão para alterar para este perfil!', 'error')
+            return render_template('usuarios/editar.html',
+                                 usuario=usuario,
+                                 escolas=Escola.query.all(),
+                                 perfis=get_perfis_permitidos(usuario_logado))
+
         usuario.nome = request.form.get('nome', '').strip()
         usuario.email = request.form.get('email', '').strip()
         usuario.cpf = request.form.get('cpf', '').strip()
         usuario.telefone = request.form.get('telefone', '').strip()
         usuario.escola_id = request.form.get('escola_id')
-        usuario.perfil_id = request.form.get('perfil_id')
+        usuario.perfil_id = novo_perfil_id
         usuario.situacao = request.form.get('situacao', 'ativo')
         
         if request.form.get('data_nascimento'):
@@ -194,7 +320,7 @@ def editar(id):
             return render_template('usuarios/editar.html',
                                  usuario=usuario,
                                  escolas=Escola.query.all(),
-                                 perfis=Perfil.query.all())
+                                 perfis=get_perfis_permitidos(usuario_logado))
 
         try:
             # Processar upload da foto
@@ -240,6 +366,26 @@ def editar(id):
                     else:
                         flash('Tipo de arquivo não permitido para foto!', 'error')
 
+            # Log detalhado da edição
+            import json
+            detalhes_log = {
+                'usuario_editado': {
+                    'id': usuario.id,
+                    'nome': usuario.nome,
+                    'email': usuario.email,
+                    'escola_id': usuario.escola_id,
+                    'perfil_id': usuario.perfil_id,
+                    'situacao': usuario.situacao
+                },
+                'editado_por': usuario_logado.nome,
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent')
+            }
+
+            log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario',
+                    f'Usuário editado: {usuario.nome} ({usuario.email})',
+                    detalhes=json.dumps(detalhes_log))
+
             db.session.commit()
             flash('Usuário atualizado com sucesso!', 'success')
             return redirect(url_for('usuario.listar'))
@@ -248,10 +394,10 @@ def editar(id):
             flash(f'Erro ao atualizar usuário: {str(e)}', 'error')
 
     escolas = Escola.query.all()
-    perfis = Perfil.query.all()
-    return render_template('usuarios/editar.html', 
-                         usuario=usuario, 
-                         escolas=escolas, 
+    perfis = get_perfis_permitidos(usuario_logado)
+    return render_template('usuarios/editar.html',
+                         usuario=usuario,
+                         escolas=escolas,
                          perfis=perfis)
 
 @usuario_bp.route('/excluir/<int:id>', methods=['POST'])
@@ -266,6 +412,26 @@ def excluir(id):
         return redirect(url_for('usuario.listar'))
 
     try:
+        # Log detalhado da exclusão
+        import json
+        detalhes_log = {
+            'usuario_excluido': {
+                'id': usuario.id,
+                'nome': usuario.nome,
+                'email': usuario.email,
+                'escola_id': usuario.escola_id,
+                'perfil_id': usuario.perfil_id,
+                'situacao': usuario.situacao
+            },
+            'excluido_por': usuario_logado.nome,
+            'ip_origem': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        }
+
+        log_acao(AcoesAuditoria.USUARIO_EXCLUIDO, 'Usuario',
+                f'Usuário excluído: {usuario.nome} ({usuario.email})',
+                detalhes=json.dumps(detalhes_log))
+
         db.session.delete(usuario)
         db.session.commit()
         flash(f'Usuário "{usuario.nome}" excluído com sucesso!', 'success')

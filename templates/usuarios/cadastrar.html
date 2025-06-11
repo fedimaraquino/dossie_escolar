@@ -7,6 +7,75 @@
 <li class="breadcrumb-item active">Novo Usuário</li>
 {% endblock %}
 
+{% block styles %}
+<style>
+/* Estilos para indicador de força da senha */
+.password-strength {
+    margin-top: 8px;
+}
+
+.strength-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.strength-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.strength-weak {
+    background-color: #dc3545;
+    width: 25%;
+}
+
+.strength-fair {
+    background-color: #fd7e14;
+    width: 50%;
+}
+
+.strength-good {
+    background-color: #ffc107;
+    width: 75%;
+}
+
+.strength-strong {
+    background-color: #28a745;
+    width: 100%;
+}
+
+.strength-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.requirement {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+}
+
+.requirement.met {
+    color: #28a745;
+}
+
+.requirement.met::before {
+    content: "✓ ";
+}
+
+.requirement:not(.met) {
+    color: #dc3545;
+}
+
+.requirement:not(.met)::before {
+    content: "✗ ";
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -178,9 +247,15 @@
                             <select class="form-select" id="perfil_id" name="perfil_id" required>
                                 <option value="">Selecione o perfil...</option>
                                 {% for perfil in perfis %}
-                                <option value="{{ perfil.id }}">{{ perfil.nome }}</option>
+                                <option value="{{ perfil.id }}">{{ perfil.perfil }}</option>
                                 {% endfor %}
                             </select>
+                            {% if session.user_perfil == 'Administrador da Escola' %}
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Você pode cadastrar apenas perfis de nível igual ou inferior ao seu.
+                            </small>
+                            {% endif %}
                         </div>
                         <div class="col-md-4">
                             <label for="situacao" class="form-label">Situação</label>
@@ -204,10 +279,28 @@
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="senha" class="form-label">Senha Inicial</label>
-                            <input type="password" class="form-control" id="senha" name="senha" 
-                                   value="123456" placeholder="Senha padrão: 123456">
-                            <div class="form-text">Deixe em branco para usar senha padrão: 123456</div>
+                            <label for="senha" class="form-label">Senha Inicial *</label>
+                            <input type="password" class="form-control" id="senha" name="senha" required
+                                   autocomplete="new-password" maxlength="128"
+                                   onkeyup="verificarForcaSenha(this.value)"
+                                   placeholder="Digite uma senha segura">
+
+                            <!-- Indicador de força da senha -->
+                            <div class="password-strength mt-2" id="password-strength" style="display: none;">
+                                <div class="strength-bar">
+                                    <div id="strength-fill" class="strength-fill"></div>
+                                </div>
+                                <div id="strength-text" class="strength-text mt-1"></div>
+                                <div id="strength-requirements" class="strength-requirements mt-2">
+                                    <small class="text-muted">
+                                        <div id="req-length" class="requirement">✗ Pelo menos 8 caracteres</div>
+                                        <div id="req-upper" class="requirement">✗ Uma letra maiúscula</div>
+                                        <div id="req-lower" class="requirement">✗ Uma letra minúscula</div>
+                                        <div id="req-number" class="requirement">✗ Um número</div>
+                                        <div id="req-special" class="requirement">✗ Um caractere especial</div>
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="alert alert-info">
@@ -326,6 +419,228 @@ function removePreview() {
     document.getElementById('previewFoto').src = '/static/img/default-avatar.svg';
     document.getElementById('foto').value = '';
     document.getElementById('btnRemoverFoto').style.display = 'none';
+}
+
+// Função para verificar força da senha
+function verificarForcaSenha(senha) {
+    const strengthDiv = document.getElementById('password-strength');
+    const strengthFill = document.getElementById('strength-fill');
+    const strengthText = document.getElementById('strength-text');
+
+    // Mostrar indicador se há senha
+    if (senha.length > 0) {
+        strengthDiv.style.display = 'block';
+    } else {
+        strengthDiv.style.display = 'none';
+        return;
+    }
+
+    // Verificar requisitos
+    const requirements = {
+        length: senha.length >= 8,
+        upper: /[A-Z]/.test(senha),
+        lower: /[a-z]/.test(senha),
+        number: /\d/.test(senha),
+        special: /[!@#$%^&*(),.?":{}|<>]/.test(senha)
+    };
+
+    // Atualizar indicadores visuais dos requisitos
+    Object.keys(requirements).forEach(req => {
+        const element = document.getElementById(`req-${req}`);
+        if (requirements[req]) {
+            element.classList.add('met');
+            element.classList.remove('not-met');
+        } else {
+            element.classList.remove('met');
+            element.classList.add('not-met');
+        }
+    });
+
+    // Calcular força
+    const metRequirements = Object.values(requirements).filter(Boolean).length;
+    let strength = 'weak';
+    let strengthTextValue = 'Muito fraca';
+
+    if (metRequirements >= 5) {
+        strength = 'strong';
+        strengthTextValue = 'Muito forte';
+    } else if (metRequirements >= 4) {
+        strength = 'good';
+        strengthTextValue = 'Forte';
+    } else if (metRequirements >= 3) {
+        strength = 'fair';
+        strengthTextValue = 'Média';
+    } else if (metRequirements >= 2) {
+        strength = 'weak';
+        strengthTextValue = 'Fraca';
+    }
+
+    // Verificar senhas comuns
+    const senhasComuns = ['password', '123456', '123456789', 'qwerty', 'abc123', 'admin'];
+    if (senhasComuns.includes(senha.toLowerCase())) {
+        strength = 'weak';
+        strengthTextValue = 'Muito comum';
+    }
+
+    // Atualizar barra de força
+    strengthFill.className = `strength-fill strength-${strength}`;
+    strengthText.textContent = `Força: ${strengthTextValue}`;
+    strengthText.className = `strength-text text-${strength === 'weak' ? 'danger' : strength === 'fair' ? 'warning' : strength === 'good' ? 'info' : 'success'}`;
+}
+
+// Validação em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input[required], select[required]');
+
+    // Validação de email em tempo real
+    const emailInput = document.getElementById('email');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (email && !emailRegex.test(email)) {
+                this.classList.add('is-invalid');
+                showFieldError(this, 'Formato de email inválido');
+            } else {
+                this.classList.remove('is-invalid');
+                hideFieldError(this);
+            }
+        });
+    }
+
+    // Validação de CPF em tempo real
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('blur', function() {
+            const cpf = this.value.replace(/\D/g, '');
+
+            if (cpf && !validarCPF(cpf)) {
+                this.classList.add('is-invalid');
+                showFieldError(this, 'CPF inválido');
+            } else {
+                this.classList.remove('is-invalid');
+                hideFieldError(this);
+            }
+        });
+    }
+
+    // Validação de nome em tempo real
+    const nomeInput = document.getElementById('nome');
+    if (nomeInput) {
+        nomeInput.addEventListener('blur', function() {
+            const nome = this.value.trim();
+
+            if (nome && nome.length < 2) {
+                this.classList.add('is-invalid');
+                showFieldError(this, 'Nome deve ter pelo menos 2 caracteres');
+            } else if (nome && !nome.includes(' ')) {
+                this.classList.add('is-invalid');
+                showFieldError(this, 'Informe nome e sobrenome');
+            } else {
+                this.classList.remove('is-invalid');
+                hideFieldError(this);
+            }
+        });
+    }
+
+    // Validação do formulário no submit
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        // Validar campos obrigatórios
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+                showFieldError(input, 'Este campo é obrigatório');
+                isValid = false;
+            }
+        });
+
+        // Validar senha
+        const senhaInput = document.getElementById('senha');
+        if (senhaInput) {
+            const senha = senhaInput.value;
+
+            if (senha.length < 8) {
+                senhaInput.classList.add('is-invalid');
+                showFieldError(senhaInput, 'Senha deve ter pelo menos 8 caracteres');
+                isValid = false;
+            } else if (!/[A-Z]/.test(senha)) {
+                senhaInput.classList.add('is-invalid');
+                showFieldError(senhaInput, 'Senha deve ter pelo menos uma letra maiúscula');
+                isValid = false;
+            } else if (!/[a-z]/.test(senha)) {
+                senhaInput.classList.add('is-invalid');
+                showFieldError(senhaInput, 'Senha deve ter pelo menos uma letra minúscula');
+                isValid = false;
+            } else if (!/\d/.test(senha)) {
+                senhaInput.classList.add('is-invalid');
+                showFieldError(senhaInput, 'Senha deve ter pelo menos um número');
+                isValid = false;
+            } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(senha)) {
+                senhaInput.classList.add('is-invalid');
+                showFieldError(senhaInput, 'Senha deve ter pelo menos um caractere especial');
+                isValid = false;
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll para o primeiro campo com erro
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    });
+});
+
+// Função para mostrar erro em campo
+function showFieldError(field, message) {
+    hideFieldError(field); // Remove erro anterior
+
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'invalid-feedback';
+    errorDiv.textContent = message;
+
+    field.parentNode.appendChild(errorDiv);
+}
+
+// Função para esconder erro em campo
+function hideFieldError(field) {
+    const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
+}
+
+// Função para validar CPF
+function validarCPF(cpf) {
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+        soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+
+    let resto = 11 - (soma % 11);
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.charAt(9))) return false;
+
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+        soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+
+    resto = 11 - (soma % 11);
+    if (resto === 10 || resto === 11) resto = 0;
+
+    return resto === parseInt(cpf.charAt(10));
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>

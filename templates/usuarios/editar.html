@@ -124,10 +124,16 @@
                                 <option value="">Selecione...</option>
                                 {% for perfil in perfis %}
                                     <option value="{{ perfil.id }}" {{ 'selected' if usuario.perfil_id == perfil.id else '' }}>
-                                        {{ perfil.nome }}
+                                        {{ perfil.perfil }}
                                     </option>
                                 {% endfor %}
                             </select>
+                            {% if session.user_perfil == 'Administrador da Escola' %}
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Você pode alterar apenas para perfis de nível igual ou inferior ao seu.
+                            </small>
+                            {% endif %}
                         </div>
                         <div class="col-md-4">
                             <label for="situacao" class="form-label">Situação</label>
@@ -222,7 +228,7 @@
                 </h6>
             </div>
             <div class="card-body">
-                <p><strong>Perfil atual:</strong> {{ usuario.perfil_obj.nome }}</p>
+                <p><strong>Perfil atual:</strong> {{ usuario.perfil_obj.perfil }}</p>
                 <p><strong>Descrição:</strong> {{ usuario.perfil_obj.descricao }}</p>
                 <p><strong>Escola:</strong> {{ usuario.escola.nome }}</p>
                 {% if usuario.is_admin_geral() %}
