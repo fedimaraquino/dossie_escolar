@@ -88,12 +88,6 @@ def novo():
             escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
             return render_template('dossies/novo.html', escolas=escolas)
 
-        # Verificar se número do dossiê já existe
-        if Dossie.query.filter_by(n_dossie=n_dossie).first():
-            flash('Número de dossiê já existe no sistema!', 'error')
-            escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
-            return render_template('dossies/novo.html', escolas=escolas)
-
         # Definir escola automaticamente baseada no usuário
         if usuario.is_admin_geral():
             # Admin Geral usa a escola atual da sessão ou sua escola padrão
@@ -101,6 +95,17 @@ def novo():
         else:
             # Outros usuários sempre usam sua própria escola
             id_escola = usuario.escola_id
+
+        # Verificar se número do dossiê já existe na mesma escola
+        dossie_existente = Dossie.query.filter_by(
+            n_dossie=n_dossie,
+            id_escola=id_escola
+        ).first()
+
+        if dossie_existente:
+            flash(f'Número de dossiê "{n_dossie}" já existe nesta escola!', 'error')
+            escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
+            return render_template('dossies/novo.html', escolas=escolas)
 
         dossie = Dossie(
             n_dossie=n_dossie,

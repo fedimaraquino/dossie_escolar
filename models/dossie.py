@@ -7,12 +7,15 @@ class Dossie(db.Model):
     Modelo para dossiês conforme especificação da tabela
     """
     __tablename__ = 'dossies'
+    __table_args__ = (
+        db.UniqueConstraint('n_dossie', 'id_escola', name='unique_dossie_per_escola'),
+    )
 
     # Campos conforme especificação da tabela
     id_dossie = db.Column(db.Integer, primary_key=True)
     local = db.Column(db.String(100))  # Local físico armazenado
     pasta = db.Column(db.String(50))   # Número da pasta física
-    n_dossie = db.Column(db.String(50), nullable=False, unique=True)  # Número do dossiê
+    n_dossie = db.Column(db.String(50), nullable=False)  # Número do dossiê (único por escola)
     ano = db.Column(db.Integer)        # Ano do dossiê
     nome = db.Column(db.String(200), nullable=False)  # Nome do aluno
     dt_cadastro = db.Column(db.DateTime, default=datetime.now)  # Data de cadastro
