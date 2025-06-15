@@ -30,7 +30,7 @@ info() {
 }
 
 # Configurações
-REPO_URL="https://github.com/fedimaraquino/dossie_escolar.git"
+REPO_URL="git@github.com:fedimaraquino/dossie_escolar.git"
 APP_DIR="/var/www/dossie_escolar"
 BRANCH="main"
 
@@ -50,6 +50,33 @@ log "🚀 Iniciando deploy via Git no servidor local 10.0.1.185"
 # Verificar se Git está instalado
 if ! command -v git &> /dev/null; then
     error "Git não está instalado! Execute: sudo apt install git"
+fi
+
+# Verificar se SSH está configurado para GitHub
+log "🔑 Verificando acesso SSH ao GitHub..."
+if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+    error "❌ SSH não está configurado para GitHub!
+
+📋 Configure SSH seguindo estes passos:
+
+1. Gerar chave SSH:
+   ssh-keygen -t ed25519 -C \"seu-email@exemplo.com\"
+
+2. Adicionar ao ssh-agent:
+   eval \"\$(ssh-agent -s)\"
+   ssh-add ~/.ssh/id_ed25519
+
+3. Copiar chave pública:
+   cat ~/.ssh/id_ed25519.pub
+
+4. Adicionar no GitHub:
+   - Vá em: Settings > SSH and GPG keys > New SSH key
+   - Cole a chave pública
+
+5. Testar:
+   ssh -T git@github.com"
+else
+    log "✅ SSH configurado corretamente para GitHub"
 fi
 
 # Verificar se Docker está rodando

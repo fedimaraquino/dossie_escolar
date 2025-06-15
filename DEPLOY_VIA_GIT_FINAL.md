@@ -20,7 +20,7 @@
 ### **Informações:**
 - **👤 Usuário**: `fedimaraquino`
 - **📦 Repositório**: `dossie_escolar`
-- **🔗 URL**: `https://github.com/fedimaraquino/dossie_escolar.git`
+- **🔗 URL SSH**: `git@github.com:fedimaraquino/dossie_escolar.git`
 - **🌿 Branch**: `main`
 - **📁 Diretório**: `/var/www/dossie_escolar`
 
@@ -47,14 +47,26 @@ chmod +x *.sh
 
 ## 🔄 **WORKFLOW COMPLETO**
 
-### **1. Preparar Repositório (Primeira vez):**
+### **1. Configurar SSH (Primeira vez):**
+```bash
+# No servidor (e no seu computador local)
+curl -fsSL https://raw.githubusercontent.com/fedimaraquino/dossie_escolar/main/setup-ssh-github.sh | bash
+
+# Ou manualmente:
+ssh-keygen -t ed25519 -C "seu-email@exemplo.com"
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub  # Copiar e adicionar no GitHub
+```
+
+### **2. Preparar Repositório (Primeira vez):**
 ```bash
 # No seu computador local
 cd /caminho/para/dossie_novo
 
 # Inicializar Git (se não estiver)
 git init
-git remote add origin https://github.com/fedimaraquino/dossie_escolar.git
+git remote add origin git@github.com:fedimaraquino/dossie_escolar.git
 
 # Adicionar todos os arquivos
 git add .
@@ -64,7 +76,7 @@ git commit -m "Deploy inicial via Git - Sistema de Dossiê Escolar"
 git push -u origin main
 ```
 
-### **2. Deploy no Servidor:**
+### **3. Deploy no Servidor:**
 ```bash
 # Conectar no servidor
 ssh usuario@10.0.1.185
@@ -84,7 +96,7 @@ docker swarm init --advertise-addr 10.0.1.185
 curl -fsSL https://raw.githubusercontent.com/fedimaraquino/dossie_escolar/main/git-deploy.sh | bash
 ```
 
-### **3. Atualizações Futuras:**
+### **4. Atualizações Futuras:**
 ```bash
 # Fazer mudanças no código local
 git add .

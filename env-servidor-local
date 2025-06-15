@@ -6,8 +6,8 @@ SERVER_IP=10.0.1.185
 # Diretório da aplicação
 APP_DIR=/var/www/dossie_escolar
 
-# Repositório Git
-GIT_REPO=https://github.com/fedimaraquino/dossie_escolar.git
+# Repositório Git (SSH)
+GIT_REPO=git@github.com:fedimaraquino/dossie_escolar.git
 GIT_BRANCH=main
 
 # Email para certificados (não usado com IP)
