@@ -104,7 +104,14 @@ sleep 30
 
 log "🏗️ Fazendo build da aplicação..."
 cd /var/www/dossie_escolar
-docker build -t dossie-app:latest .
+docker build -t dossie-app:latest . || error "Falha no build da aplicação"
+
+# Verificar se a imagem foi criada
+if ! docker images | grep -q "dossie-app.*latest"; then
+    error "Imagem dossie-app:latest não foi criada"
+fi
+
+log "✅ Imagem dossie-app:latest criada com sucesso"
 
 log "🌐 Fazendo deploy da aplicação..."
 docker stack deploy -c docker-compose.app.yml dossie
