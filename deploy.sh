@@ -93,12 +93,30 @@ chmod 600 traefik/data/acme.json
 log "🔀 Fazendo deploy do Traefik..."
 docker stack deploy -c docker-compose.traefik.yml traefik
 
-log "📊 Fazendo deploy do Portainer..."
+log "�️ Removendo Portainer existente para evitar timeout..."
+docker stack rm portainer 2>/dev/null || true
+
+log "⏳ Aguardando remoção do Portainer..."
+sleep 10
+
+log "�📊 Fazendo deploy do Portainer..."
 docker stack deploy -c docker-compose.portainer.yml portainer
 
 # Aguardar Portainer inicializar para evitar timeout
 log "⏳ Aguardando Portainer inicializar..."
-sleep 20
+sleep 30
+
+# Verificar se Portainer está rodando
+log "🔍 Verificando se Portainer está acessível..."
+for i in {1..6}; do
+    if curl -f -s http://localhost:9000 > /dev/null 2>&1; then
+        log "✅ Portainer está acessível!"
+        warn "⚠️ IMPORTANTE: Configure o Portainer em até 5 minutos em http://10.0.1.185:9000"
+        break
+    fi
+    log "⏳ Aguardando Portainer... ($i/6)"
+    sleep 10
+done
 
 log "🗑️ Removendo PostgreSQL existente (container e volumes)..."
 docker stack rm postgres 2>/dev/null || true
