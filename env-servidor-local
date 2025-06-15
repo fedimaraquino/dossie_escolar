@@ -16,7 +16,7 @@ ACME_EMAIL=admin@empresa.local
 # Banco de dados
 POSTGRES_DB=dossie_escola
 POSTGRES_USER=dossie
-POSTGRES_PASSWORD=DossieLocal@2024!Seguro
+POSTGRES_PASSWORD=fep09151
 
 # Flask
 SECRET_KEY=JKefBRECh7xT5CKxRYhGFT8PrsG0p-ABi_kFOT6raks
