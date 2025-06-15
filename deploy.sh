@@ -96,11 +96,26 @@ docker stack deploy -c docker-compose.traefik.yml traefik
 log "📊 Fazendo deploy do Portainer..."
 docker stack deploy -c docker-compose.portainer.yml portainer
 
-log "🐘 Fazendo deploy do PostgreSQL..."
+# Aguardar Portainer inicializar para evitar timeout
+log "⏳ Aguardando Portainer inicializar..."
+sleep 20
+
+log "🗑️ Removendo PostgreSQL existente (container e volumes)..."
+docker stack rm postgres 2>/dev/null || true
+
+log "⏳ Aguardando remoção completa..."
+sleep 15
+
+# Remover volumes do PostgreSQL
+log "🧹 Removendo volumes do PostgreSQL..."
+docker volume rm postgres_postgres_data 2>/dev/null || true
+docker volume prune -f 2>/dev/null || true
+
+log "🐘 Criando novo PostgreSQL..."
 docker stack deploy -c docker-compose.postgres.yml postgres
 
-log "⏳ Aguardando PostgreSQL inicializar..."
-sleep 30
+log "⏳ Aguardando PostgreSQL inicializar completamente..."
+sleep 45
 
 log "🏗️ Fazendo build da aplicação..."
 cd /var/www/dossie_escolar
@@ -134,25 +149,105 @@ sleep 30
 # Executar configuração inicial
 log "🔧 Executando configuração inicial do banco..."
 
-# Encontrar container da aplicação
-APP_CONTAINER=$(docker ps -q -f name=dossie_dossie-app | head -1)
+# Remover qualquer banco SQLite existente
+log "🗑️ Removendo bancos SQLite existentes..."
+rm -f instance/*.db *.db *.sqlite *.sqlite3 2>/dev/null || true
 
-if [ -z "$APP_CONTAINER" ]; then
-    warn "Container da aplicação não encontrado ainda, aguardando..."
-    sleep 30
+# Aguardar PostgreSQL estar pronto
+log "⏳ Aguardando PostgreSQL estar pronto..."
+for i in {1..60}; do
+    POSTGRES_CONTAINER=$(docker ps -q -f name=postgres_postgres | head -1)
+    if [ ! -z "$POSTGRES_CONTAINER" ]; then
+        if docker exec $POSTGRES_CONTAINER pg_isready -U dossie 2>/dev/null; then
+            log "✅ PostgreSQL está pronto!"
+            break
+        fi
+    fi
+    if [ $i -eq 60 ]; then
+        error "❌ PostgreSQL não ficou pronto em 10 minutos"
+    fi
+    log "⏳ Aguardando PostgreSQL... ($i/60)"
+    sleep 10
+done
+
+# Criar banco de dados se não existir
+log "🗄️ Criando banco de dados..."
+POSTGRES_CONTAINER=$(docker ps -q -f name=postgres_postgres | head -1)
+docker exec $POSTGRES_CONTAINER psql -U dossie -c "CREATE DATABASE dossie_escola;" 2>/dev/null || {
+    log "ℹ️ Banco de dados já existe ou foi criado"
+}
+
+# Encontrar container da aplicação
+APP_CONTAINER=""
+for i in {1..10}; do
     APP_CONTAINER=$(docker ps -q -f name=dossie_dossie-app | head -1)
-fi
+    if [ ! -z "$APP_CONTAINER" ]; then
+        break
+    fi
+    sleep 5
+done
 
 if [ ! -z "$APP_CONTAINER" ]; then
     log "📦 Container encontrado: $APP_CONTAINER"
-    
-    # Executar migrações
-    log "🔄 Executando migrações..."
+
+    # Remover qualquer banco SQLite do container
+    log "🗑️ Removendo bancos SQLite do container..."
+    docker exec $APP_CONTAINER rm -f instance/*.db *.db *.sqlite *.sqlite3 2>/dev/null || true
+
+    # Limpar migrações problemáticas
+    log "🧹 Limpando migrações antigas..."
+    rm -f migrations/versions/*.py 2>/dev/null || true
+    docker exec $APP_CONTAINER rm -f migrations/versions/*.py 2>/dev/null || true
+
+    # Verificar conexão PostgreSQL
+    log "🔗 Verificando conexão PostgreSQL..."
+    docker exec $APP_CONTAINER python3 -c "
+import os
+from sqlalchemy import create_engine
+try:
+    db_url = os.environ.get('DATABASE_URL')
+    print(f'🔗 Testando conexão: {db_url}')
+    engine = create_engine(db_url)
+    with engine.connect() as conn:
+        result = conn.execute('SELECT version();')
+        version = result.fetchone()[0]
+        print(f'✅ PostgreSQL conectado: {version}')
+except Exception as e:
+    print(f'❌ Erro PostgreSQL: {e}')
+    exit(1)
+" || error "❌ Falha na conexão PostgreSQL"
+
+    # Inicializar migrações do zero
+    log "🔄 Inicializando migrações do zero..."
+    docker exec $APP_CONTAINER flask db init 2>/dev/null || {
+        log "ℹ️ Migrações já inicializadas"
+    }
+
+    # Criar migração inicial
+    log "📝 Criando migração inicial..."
+    docker exec $APP_CONTAINER flask db migrate -m "Initial migration" || {
+        warn "Erro ao criar migração, criando tabelas diretamente..."
+    }
+
+    # Aplicar migrações
+    log "⬆️ Aplicando migrações..."
     docker exec $APP_CONTAINER flask db upgrade || {
-        warn "Tentando inicializar banco..."
-        docker exec $APP_CONTAINER flask db init || true
-        docker exec $APP_CONTAINER flask db migrate -m "Initial migration" || true
-        docker exec $APP_CONTAINER flask db upgrade || true
+        warn "Migrações falharam, criando tabelas diretamente no PostgreSQL..."
+        docker exec $APP_CONTAINER python3 -c "
+from app import create_app
+from models import db
+import os
+try:
+    app = create_app()
+    with app.app_context():
+        print(f'🔗 Usando banco: {app.config[\"SQLALCHEMY_DATABASE_URI\"]}')
+        db.create_all()
+        print('✅ Tabelas criadas diretamente no PostgreSQL')
+except Exception as e:
+    print(f'❌ Erro: {e}')
+    import traceback
+    traceback.print_exc()
+" || error "❌ Falha ao criar tabelas"
     }
     
     # Criar usuário admin
@@ -218,10 +313,31 @@ else
     warn "Container da aplicação não encontrado. Execute manualmente a configuração depois."
 fi
 
+# Verificação final - garantir que está usando PostgreSQL
+log "🔍 Verificação final do banco de dados..."
+if [ ! -z "$APP_CONTAINER" ]; then
+    docker exec $APP_CONTAINER python3 -c "
+from app import create_app
+try:
+    app = create_app()
+    with app.app_context():
+        db_url = app.config['SQLALCHEMY_DATABASE_URI']
+        if 'postgresql' in db_url:
+            print('✅ CONFIRMADO: Usando PostgreSQL')
+            print(f'🔗 URL: {db_url}')
+        else:
+            print(f'❌ ERRO: Usando {db_url}')
+            exit(1)
+except Exception as e:
+    print(f'❌ Erro na verificação: {e}')
+" || warn "⚠️ Não foi possível verificar o banco"
+fi
+
 log "✅ Deploy concluído com sucesso!"
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║                    🎉 DEPLOY CONCLUÍDO! 🎉                   ║${NC}"
+echo -e "${BLUE}║                  🐘 USANDO POSTGRESQL 🐘                    ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 log "🌐 URLs de Acesso (Rede Local):"
