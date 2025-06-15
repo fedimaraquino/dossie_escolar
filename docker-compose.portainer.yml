@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    networks:
+      - traefik-public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.portainer.rule=Host(`10.0.1.185`) && PathPrefix(`/portainer`)
+        - traefik.http.routers.portainer.entrypoints=web
+        - traefik.http.services.portainer.loadbalancer.server.port=9000
+        - traefik.http.middlewares.portainer-stripprefix.stripprefix.prefixes=/portainer
+        - traefik.http.routers.portainer.middlewares=portainer-stripprefix
+
+volumes:
+  portainer_data:
+
+networks:
+  traefik-public:
+    external: true

@@ -127,7 +127,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+docs
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -361,13 +361,23 @@ dados_teste/
 test_data/
 
 # ===================================
-# DOCKER (caso use no futuro)
+# DOCKER E DEPLOY
 # ===================================
 
 # Docker
 Dockerfile.dev
 docker-compose.override.yml
 .dockerignore
+
+# Traefik
+traefik/data/acme.json
+traefik/data/*.json
+
+# Deploy específico
+.env.server
+.env.production
+deploy_*.sh
+config_server.py
 
 # ===================================
 # OUTROS
