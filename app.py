@@ -509,9 +509,10 @@ def init_database(app):
             db.session.commit()
             print("✅ Usuário admin criado: admin@sistema.com / admin123")
 
+# Criar instância da aplicação para Gunicorn
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    
     # Inicializar banco de dados
     init_database(app)
     
