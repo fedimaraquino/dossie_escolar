@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   dossie-app:
+    build: .
     image: dossie-app:latest
     environment:
       - FLASK_ENV=production
