@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script para corrigir timeout do Portainer
+# Script para corrigir timeout do Portainer e problemas do Traefik
 
 set -e
 
@@ -31,13 +31,32 @@ info() {
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                                                              ║"
-echo "║    📊 CORREÇÃO DO PORTAINER                                  ║"
-echo "║    🔧 Timeout de Segurança                                   ║"
+echo "║    📊 CORREÇÃO DO STACK COMPLETO                            ║"
+echo "║    🔧 Traefik + Portainer + PostgreSQL                      ║"
 echo "║                                                              ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-log "📊 Corrigindo timeout do Portainer..."
+log "� Iniciando correção do stack completo..."
+
+# Verificar se estamos no diretório correto
+if [ ! -f "docker-compose.traefik.yml" ] || [ ! -f "docker-compose.portainer.yml" ]; then
+    error "❌ Arquivos Docker Compose não encontrados! Execute no diretório correto."
+fi
+
+# Criar diretórios necessários para o Traefik
+log "📁 Criando diretórios necessários..."
+mkdir -p traefik/data
+chmod 755 traefik/data
+
+# Criar rede externa se não existir
+log "🌐 Verificando rede traefik-public..."
+if ! docker network ls | grep -q traefik-public; then
+    log "🌐 Criando rede traefik-public..."
+    docker network create --driver overlay traefik-public
+else
+    log "✅ Rede traefik-public já existe"
+fi
 
 # Verificar se arquivo existe
 if [ ! -f "docker-compose.portainer.yml" ]; then

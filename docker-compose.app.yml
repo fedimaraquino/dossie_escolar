@@ -21,42 +21,36 @@ services:
     depends_on:
       - postgres
     deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 10s
-        failure_action: rollback
-        order: start-first
-      rollback_config:
-        parallelism: 1
-        delay: 5s
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
       labels:
         - traefik.enable=true
         - traefik.http.routers.dossie.rule=Host(`10.0.1.185`)
         - traefik.http.routers.dossie.entrypoints=web
         - traefik.http.services.dossie.loadbalancer.server.port=5000
-        - traefik.http.middlewares.dossie-headers.headers.customrequestheaders.X-Forwarded-Proto=http
-        - traefik.http.middlewares.dossie-headers.headers.customrequestheaders.X-Forwarded-For=$$remote_addr
-        - traefik.http.routers.dossie.middlewares=dossie-headers
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=dossie
+      - POSTGRES_PASSWORD=DossieLocal@2024!Seguro
+      - POSTGRES_DB=dossie_escola
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
 volumes:
   app_uploads:
   app_logs:
+  postgres_data:
 
 networks:
   traefik-public:
