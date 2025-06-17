@@ -49,7 +49,7 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
     # Configurações de segurança de sessão
-    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS apenas
+    app.config['SESSION_COOKIE_SECURE'] = False  # Permitir HTTP para desenvolvimento
     app.config['SESSION_COOKIE_HTTPONLY'] = True  # Não acessível via JavaScript
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Proteção CSRF
     app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora de timeout
@@ -122,7 +122,7 @@ def create_app():
         inicio_mes = hoje.replace(day=1)
 
         # Consultas otimizadas baseadas na escola atual
-        escola_atual_id = usuario.get_escola_atual_id()
+        escola_atual_id = session.get('escola_atual_id') or usuario.escola_id
 
         if usuario.is_admin_geral():
             # Admin Geral vê dados da escola atual selecionada

@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
 from models import db, Usuario
+from utils.constantes import AcoesAuditoria
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -97,7 +98,7 @@ def login():
                 current_app.permanent_session_lifetime = timedelta(days=30)
 
                 # Log da ação de lembrar-me
-                from utils.logs import log_acao, AcoesAuditoria
+                from utils.logs import log_acao
                 log_acao(AcoesAuditoria.LOGIN_SUCESSO, 'Usuario',
                         f'Login com "Lembrar-me": {usuario.nome} ({request.remote_addr})')
             else:
@@ -114,8 +115,8 @@ def login():
                 session['can_switch_escola'] = False
 
             # Registrar log de login
-            from utils.logs import log_acao, AcoesAuditoria
-            log_acao(AcoesAuditoria.LOGIN, 'Usuario', f'Login realizado: {usuario.nome}', usuario.id)
+            from utils.logs import log_acao
+            log_acao(AcoesAuditoria.LOGIN_SUCESSO, 'Usuario', f'Login realizado: {usuario.nome}', usuario.id)
 
             flash('Login realizado com sucesso!', 'success')
             return redirect(url_for('dashboard'))
@@ -128,8 +129,8 @@ def login():
             registrar_tentativa(request.remote_addr, sucesso=False)
 
             # Registrar log de login falhado
-            from utils.logs import log_acao, AcoesAuditoria
-            log_acao(AcoesAuditoria.LOGIN_FALHOU, 'Usuario', f'Login falhou: {email}')
+            from utils.logs import log_acao
+            log_acao(AcoesAuditoria.LOGIN_FALHA, 'Usuario', f'Login falhou: {email}')
 
             flash('Email ou senha incorretos!', 'error')
 
@@ -153,7 +154,7 @@ def logout():
     """Logout do sistema"""
     # Registrar log de logout antes de limpar sessão
     if 'user_id' in session:
-        from utils.logs import log_acao, AcoesAuditoria
+        from utils.logs import log_acao
         log_acao(AcoesAuditoria.LOGOUT, 'Usuario', f'Logout realizado: {session.get("user_name", "Usuário")}')
 
     session.clear()

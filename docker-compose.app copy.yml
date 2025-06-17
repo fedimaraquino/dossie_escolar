@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  dossie-app:
+    image: localhost:5000/dossie-app:latest
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://dossie:DossieLocal@2024!Seguro@postgres:5432/dossie_escola
+      - SECRET_KEY=${SECRET_KEY}
+      - SERVER_NAME=10.0.1.185
+      - UPLOAD_FOLDER=/app/static/uploads
+      - MAX_CONTENT_LENGTH=16777216
+    ports:
+      - "5000:5000"
+    volumes:
+      - app_uploads:/app/static/uploads
+      - app_logs:/app/logs
+    networks:
+      - traefik-public
+      - app-network
+    depends_on:
+      - postgres
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.dossie.rule=Host(`10.0.1.185`)
+        - traefik.http.routers.dossie.entrypoints=web
+        - traefik.http.services.dossie.loadbalancer.server.port=5000
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=dossie
+      - POSTGRES_PASSWORD=DossieLocal@2024!Seguro
+      - POSTGRES_DB=dossie_escola
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+volumes:
+  app_uploads:
+  app_logs:
+  postgres_data:
+
+networks:
+  traefik-public:
+    external: true
+  app-network:
+    external: true
