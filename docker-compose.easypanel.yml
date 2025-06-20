@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  dossie-app:
+    build: .
+    image: dossie-app:latest
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://dossie_user:${POSTGRES_PASSWORD}@postgres:5432/dossie_escola
+      - SECRET_KEY=${SECRET_KEY}
+      - SERVER_NAME=dossie.easistemas.dev.br
+      - UPLOAD_FOLDER=/app/static/uploads
+      - MAX_CONTENT_LENGTH=16777216
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - app_uploads:/app/static/uploads
+      - app_logs:/app/logs
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dossie.rule=Host(`dossie.easistemas.dev.br`)"
+      - "traefik.http.routers.dossie.entrypoints=websecure"
+      - "traefik.http.routers.dossie.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dossie.loadbalancer.server.port=5000"
+      - "traefik.http.routers.dossie-http.rule=Host(`dossie.easistemas.dev.br`)"
+      - "traefik.http.routers.dossie-http.entrypoints=web"
+      - "traefik.http.routers.dossie-http.middlewares=dossie-redirect"
+      - "traefik.http.middlewares.dossie-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.dossie-redirect.redirectscheme.permanent=true"
+    networks:
+      - easypanel
+      - default
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=dossie_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=dossie_escola
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - default
+
+volumes:
+  app_uploads:
+  app_logs:
+  postgres_data:
+
+networks:
+  easypanel:
+    external: true
+  default:
+    driver: bridge 

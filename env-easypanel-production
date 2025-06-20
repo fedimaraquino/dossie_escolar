@@ -1,0 +1,21 @@
+# Variáveis de ambiente para produção - EasyPanel Hostinger
+# IMPORTANTE: Substitua os valores antes do deploy
+
+# Configurações da aplicação
+FLASK_ENV=production
+SECRET_KEY=sua_chave_secreta_super_forte_aqui_32_chars
+SERVER_NAME=dossie.easistemas.dev.br
+
+# Configurações do banco de dados PostgreSQL
+POSTGRES_PASSWORD=Fep09151*
+DATABASE_URL=postgresql://dossie_user:Fep09151*@postgres:5432/dossie_escola
+
+# Configurações de upload
+UPLOAD_FOLDER=/app/static/uploads
+MAX_CONTENT_LENGTH=16777216
+
+# Configurações de otimização
+PYTHONUNBUFFERED=1
+
+# Configurações de logs
+LOG_LEVEL=INFO 
