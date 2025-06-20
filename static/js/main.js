@@ -293,3 +293,311 @@ window.DossieSystem = {
         return isValid;
     }
 };
+
+// Gerenciamento do tema
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar tema salvo
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    // Configurar botão de tema
+    const themeToggle = document.querySelector('.theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Configurar sidebar
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+
+    // Configurar tooltips do Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Configurar popovers do Bootstrap
+    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+
+    // Configurar dropdowns do Bootstrap
+    const dropdownTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+    dropdownTriggerList.map(function (dropdownTriggerEl) {
+        return new bootstrap.Dropdown(dropdownTriggerEl);
+    });
+
+    // Configurar alertas auto-fecháveis
+    const alerts = document.querySelectorAll('.alert-dismissible');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            const closeButton = alert.querySelector('.btn-close');
+            if (closeButton) {
+                closeButton.click();
+            }
+        }, 5000);
+    });
+});
+
+// Função para alternar o tema
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+// Função para atualizar o ícone do tema
+function updateThemeIcon(theme) {
+    const themeToggle = document.querySelector('.theme-toggle');
+    if (themeToggle) {
+        themeToggle.innerHTML = theme === 'light' 
+            ? '<i class="fas fa-moon"></i>' 
+            : '<i class="fas fa-sun"></i>';
+    }
+}
+
+// Função para alternar a sidebar
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+        if (mainContent) {
+            mainContent.classList.toggle('expanded');
+        }
+    }
+}
+
+// Função para mostrar loading
+function showLoading() {
+    const loading = document.createElement('div');
+    loading.className = 'loading-overlay';
+    loading.innerHTML = '<div class="spinner"></div>';
+    document.body.appendChild(loading);
+}
+
+// Função para esconder loading
+function hideLoading() {
+    const loading = document.querySelector('.loading-overlay');
+    if (loading) {
+        loading.remove();
+    }
+}
+
+// Função para mostrar mensagem de sucesso
+function showSuccess(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.alert-container').appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Função para mostrar mensagem de erro
+function showError(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.alert-container').appendChild(alert);
+    
+    setTimeout(() => {
+        alert.remove();
+    }, 5000);
+}
+
+// Função para confirmar ação
+function confirmAction(message) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary confirm-btn">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(modal);
+        
+        modal.querySelector('.confirm-btn').addEventListener('click', () => {
+            modalInstance.hide();
+            resolve(true);
+        });
+        
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+            resolve(false);
+        });
+        
+        modalInstance.show();
+    });
+}
+
+// Função para formatar data
+function formatDate(date) {
+    return new Date(date).toLocaleDateString('pt-BR');
+}
+
+// Função para formatar CPF
+function formatCPF(cpf) {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+// Função para formatar CNPJ
+function formatCNPJ(cnpj) {
+    return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+// Função para formatar telefone
+function formatPhone(phone) {
+    return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+}
+
+// Função para validar email
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Função para validar CPF
+function validateCPF(cpf) {
+    cpf = cpf.replace(/[^\d]/g, '');
+    
+    if (cpf.length !== 11) return false;
+    
+    // Verifica se todos os dígitos são iguais
+    if (/^(\d)\1{10}$/.test(cpf)) return false;
+    
+    // Validação do primeiro dígito verificador
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        sum += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    let rev = 11 - (sum % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(cpf.charAt(9))) return false;
+    
+    // Validação do segundo dígito verificador
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+        sum += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    rev = 11 - (sum % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(cpf.charAt(10))) return false;
+    
+    return true;
+}
+
+// Função para validar CNPJ
+function validateCNPJ(cnpj) {
+    cnpj = cnpj.replace(/[^\d]/g, '');
+    
+    if (cnpj.length !== 14) return false;
+    
+    // Verifica se todos os dígitos são iguais
+    if (/^(\d)\1{13}$/.test(cnpj)) return false;
+    
+    // Validação do primeiro dígito verificador
+    let size = cnpj.length - 2;
+    let numbers = cnpj.substring(0, size);
+    let digits = cnpj.substring(size);
+    let sum = 0;
+    let pos = size - 7;
+    
+    for (let i = size; i >= 1; i--) {
+        sum += numbers.charAt(size - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    
+    let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+    if (result !== parseInt(digits.charAt(0))) return false;
+    
+    // Validação do segundo dígito verificador
+    size = size + 1;
+    numbers = cnpj.substring(0, size);
+    sum = 0;
+    pos = size - 7;
+    
+    for (let i = size; i >= 1; i--) {
+        sum += numbers.charAt(size - i) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    
+    result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+    if (result !== parseInt(digits.charAt(1))) return false;
+    
+    return true;
+}
+
+// Controle do menu lateral
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const body = document.body;
+
+    // Função para alternar o menu
+    function toggleSidebar() {
+        sidebar.classList.toggle('collapsed');
+        body.classList.toggle('sidebar-collapsed');
+    }
+
+    // Evento de clique no botão de toggle
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+
+    // Ajustar menu em telas pequenas
+    function handleResize() {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.add('collapsed');
+            body.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+            body.classList.remove('sidebar-collapsed');
+        }
+    }
+
+    // Evento de redimensionamento
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // Fechar menu ao clicar fora em telas pequenas
+    document.addEventListener('click', function(event) {
+        if (window.innerWidth <= 768 && 
+            !sidebar.contains(event.target) && 
+            !sidebarToggle.contains(event.target) && 
+            !sidebar.classList.contains('collapsed')) {
+            toggleSidebar();
+        }
+    });
+});

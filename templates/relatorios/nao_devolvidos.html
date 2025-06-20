@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Dossiês Não Devolvidos - Sistema de Controle de Dossiê Escolar{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Dossiês Não Devolvidos</h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+            <button type="button" class="btn btn-outline-success" onclick="exportarExcel()">
+                <i class="fas fa-file-excel"></i> Exportar Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="data_inicio" class="form-label">Data Início</label>
+                    <input type="date" class="form-control" id="data_inicio" name="data_inicio">
+                </div>
+                <div class="col-md-4">
+                    <label for="data_fim" class="form-label">Data Fim</label>
+                    <input type="date" class="form-control" id="data_fim" name="data_fim">
+                </div>
+                <div class="col-md-4">
+                    <label for="escola" class="form-label">Escola</label>
+                    <select class="form-select" id="escola" name="escola">
+                        <option value="">Todas</option>
+                        {% for escola in escolas %}
+                        <option value="{{ escola.id }}">{{ escola.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Dossiês Não Devolvidos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Dossiês Não Devolvidos</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Dossiê</th>
+                            <th>Aluno</th>
+                            <th>Escola</th>
+                            <th>Solicitante</th>
+                            <th>Data Empréstimo</th>
+                            <th>Dias em Atraso</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movimentacao in movimentacoes %}
+                        <tr>
+                            <td>{{ movimentacao.dossie.titulo }}</td>
+                            <td>{{ movimentacao.dossie.aluno.nome }}</td>
+                            <td>{{ movimentacao.dossie.escola.nome }}</td>
+                            <td>{{ movimentacao.solicitante.nome }}</td>
+                            <td>{{ movimentacao.data_emprestimo.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% set dias = (now - movimentacao.data_emprestimo).days %}
+                                <span class="badge {% if dias > 30 %}bg-danger{% elif dias > 15 %}bg-warning{% else %}bg-success{% endif %}">
+                                    {{ dias }} dias
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Em Atraso</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('movimentacao.registrar_devolucao', id=movimentacao.id) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-undo"></i> Registrar Devolução
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Função para exportar para Excel
+function exportarExcel() {
+    // Implementar exportação para Excel
+    alert('Funcionalidade em desenvolvimento');
+}
+
+// Inicializar DataTable
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Portuguese-Brasil.json'
+        },
+        order: [[4, 'desc']] // Ordenar por data de empréstimo
+    });
+});
+</script>
+{% endblock %} 

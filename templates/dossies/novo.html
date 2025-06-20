@@ -42,7 +42,7 @@
                 </ul>
             </div>
             <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="formNovoDossie" action="{{ url_for('dossie.novo') }}">
                     <div class="tab-content" id="dossieTabContent">
                         <!-- Aba Informações -->
                         <div class="tab-pane fade show active" id="informacoes" role="tabpanel">
@@ -60,7 +60,7 @@
                         <div class="col-md-3">
                             <label for="n_dossie" class="form-label">Número do Dossiê *</label>
                             <input type="text" class="form-control" id="n_dossie" name="n_dossie" required
-                                   placeholder="Ex: 2024001">
+                                   placeholder="Ex: 2024001" maxlength="50">
                         </div>
                         <div class="col-md-3">
                             <label for="ano" class="form-label">Ano *</label>
@@ -99,12 +99,12 @@
                         <div class="col-md-8">
                             <label for="nome" class="form-label">Nome Completo do Aluno *</label>
                             <input type="text" class="form-control" id="nome" name="nome" required
-                                   placeholder="Nome completo do aluno">
+                                   placeholder="Nome completo do aluno" maxlength="200">
                         </div>
                         <div class="col-md-4">
                             <label for="cpf" class="form-label">CPF do Aluno</label>
                             <input type="text" class="form-control" id="cpf" name="cpf"
-                                   placeholder="000.000.000-00">
+                                   placeholder="000.000.000-00" maxlength="14">
                         </div>
                     </div>
 
@@ -112,12 +112,12 @@
                         <div class="col-md-6">
                             <label for="n_mae" class="form-label">Nome da Mãe</label>
                             <input type="text" class="form-control" id="n_mae" name="n_mae"
-                                   placeholder="Nome completo da mãe">
+                                   placeholder="Nome completo da mãe" maxlength="200">
                         </div>
                         <div class="col-md-6">
                             <label for="n_pai" class="form-label">Nome do Pai</label>
                             <input type="text" class="form-control" id="n_pai" name="n_pai"
-                                   placeholder="Nome completo do pai">
+                                   placeholder="Nome completo do pai" maxlength="200">
                         </div>
                     </div>
 
@@ -135,12 +135,12 @@
                         <div class="col-md-4">
                             <label for="local" class="form-label">Local Físico</label>
                             <input type="text" class="form-control" id="local" name="local"
-                                   placeholder="Ex: Arquivo Central, Sala 10">
+                                   placeholder="Ex: Arquivo Central, Sala 10" maxlength="100">
                         </div>
                         <div class="col-md-4">
                             <label for="pasta" class="form-label">Número da Pasta</label>
                             <input type="text" class="form-control" id="pasta" name="pasta"
-                                   placeholder="Ex: P001, Pasta-2024-01">
+                                   placeholder="Ex: P001, Pasta-2024-01" maxlength="50">
                         </div>
                         <div class="col-md-4">
                             <label for="tipo_documento" class="form-label">Tipo de Documento</label>
@@ -243,72 +243,83 @@
                         </div>
                     </div>
 
+                    <div class="row mt-4">
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary" id="btnSalvar">
+                                <i class="fas fa-save me-2"></i>
+                                Salvar Dossiê
+                            </button>
+                        </div>
+                    </div>
+
                         </div>
 
                         <!-- Aba Anexos -->
                         <div class="tab-pane fade" id="anexos" role="tabpanel">
                             <div class="row">
                                 <div class="col-12">
-                                    <h6 class="text-info border-bottom pb-2 mb-3">
-                                        <i class="fas fa-paperclip me-2"></i>
-                                        Anexar Arquivos ao Dossiê
-                                    </h6>
-
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Dica:</strong> Você pode anexar arquivos junto com o cadastro do dossiê.
-                                    </div>
-
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <h6 class="card-title">
-                                                <i class="fas fa-cloud-upload-alt me-2"></i>Anexar Arquivos (Opcional)
-                                            </h6>
-
-                                            <div id="anexosContainer">
-                                                <!-- Primeiro anexo -->
-                                                <div class="anexo-item mb-3 p-3 border rounded">
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Arquivo</label>
-                                                            <input type="file" class="form-control" name="anexos_files[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt,.zip,.rar">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label">Nome/Descrição *</label>
-                                                            <input type="text" class="form-control" name="anexos_nomes[]" placeholder="Ex: Histórico Escolar, Certificado..." required>
-                                                            <div class="form-text">Campo obrigatório para identificar o documento</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="text-center">
-                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarCampoAnexo()">
-                                                    <i class="fas fa-plus me-2"></i>Adicionar Mais um Arquivo
-                                                </button>
-                                            </div>
-
-                                            <div class="form-text mt-2">
-                                                <i class="fas fa-info-circle me-1"></i>
-                                                Tipos permitidos: PDF, DOC, XLS, imagens, TXT, ZIP. Máximo 16MB por arquivo.
-                                            </div>
-                                        </div>
+                                        <strong>Informação:</strong> Você pode adicionar documentos e anexos ao dossiê.
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Botões de Ação -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ url_for('dossie.listar') }}" class="btn btn-secondary">
-                                    <i class="fas fa-times me-2"></i>Cancelar
-                                </a>
-                                <button type="submit" class="btn btn-info">
-                                    <i class="fas fa-save me-2"></i>Salvar Dossiê
-                                </button>
+                            <!-- Lista de Anexos -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="tabelaAnexos">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Nome do Arquivo</th>
+                                                    <th>Nome Personalizado</th>
+                                                    <th>Tamanho</th>
+                                                    <th>Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Anexos serão adicionados aqui via JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Formulário de Upload -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="anexos_files" class="form-label">Selecionar Arquivos</label>
+                                        <input type="file" class="form-control" id="anexos_files" multiple
+                                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                                        <small class="text-muted">
+                                            Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG<br>
+                                            Tamanho máximo por arquivo: 10MB
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="anexo_nome" class="form-label">Nome Personalizado (opcional)</label>
+                                        <input type="text" class="form-control" id="anexo_nome"
+                                               placeholder="Ex: Histórico Escolar 2024">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <strong>Importante:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li>Verifique se os arquivos estão legíveis antes de enviar</li>
+                                            <li>Use nomes personalizados para facilitar a identificação</li>
+                                            <li>O tamanho total dos anexos não deve exceder 50MB</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -392,101 +403,219 @@
     }
 
     // Validação do formulário
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const nDossie = document.getElementById('n_dossie').value.trim();
-        const nome = document.getElementById('nome').value.trim();
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formNovoDossie');
+        const btnSalvar = document.getElementById('btnSalvar');
+        const tabelaAnexos = document.getElementById('tabelaAnexos').getElementsByTagName('tbody')[0];
+        const inputAnexos = document.getElementById('anexos_files');
+        const inputNomePersonalizado = document.getElementById('anexo_nome');
+        let anexos = [];
 
-        if (!nDossie || !nome) {
-            e.preventDefault();
-            alert('Por favor, preencha todos os campos obrigatórios (*)');
-            return false;
+        // Função para formatar tamanho do arquivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Validar anexos - se há arquivo, deve ter nome
-        const arquivos = document.querySelectorAll('input[name="anexos_files[]"]');
-        const nomes = document.querySelectorAll('input[name="anexos_nomes[]"]');
+        // Função para adicionar anexo à tabela
+        function adicionarAnexo(file, nomePersonalizado = '') {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${file.name}</td>
+                <td>${nomePersonalizado || '-'}</td>
+                <td>${formatFileSize(file.size)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removerAnexo(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tabelaAnexos.appendChild(tr);
 
-        for (let i = 0; i < arquivos.length; i++) {
-            const arquivo = arquivos[i];
-            const nome = nomes[i];
+            // Adicionar ao array de anexos
+            anexos.push({
+                file: file,
+                nomePersonalizado: nomePersonalizado
+            });
 
-            if (arquivo.files.length > 0 && !nome.value.trim()) {
-                e.preventDefault();
-                alert('Por favor, preencha o nome/descrição para todos os arquivos selecionados');
-                nome.focus();
-                return false;
-            }
-
-            if (!arquivo.files.length && nome.value.trim()) {
-                e.preventDefault();
-                alert('Por favor, selecione um arquivo para o nome/descrição informado');
-                arquivo.focus();
-                return false;
-            }
+            // Limpar inputs
+            inputAnexos.value = '';
+            inputNomePersonalizado.value = '';
         }
 
-        // Confirmar cadastro
-        if (!confirm(`Confirma o cadastro do dossiê "${nDossie}" para o aluno "${nome}"?`)) {
+        // Evento de mudança no input de arquivos
+        inputAnexos.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            const nomePersonalizado = inputNomePersonalizado.value.trim();
+
+            files.forEach(file => {
+                // Verificar tamanho do arquivo (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`O arquivo ${file.name} excede o tamanho máximo permitido de 10MB.`);
+                    return;
+                }
+
+                // Verificar tipo do arquivo
+                const tiposPermitidos = [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'image/jpeg',
+                    'image/png'
+                ];
+
+                if (!tiposPermitidos.includes(file.type)) {
+                    alert(`O arquivo ${file.name} não é de um tipo permitido.`);
+                    return;
+                }
+
+                adicionarAnexo(file, nomePersonalizado);
+            });
+        });
+
+        // Função para remover anexo
+        window.removerAnexo = function(button) {
+            const tr = button.closest('tr');
+            const index = Array.from(tabelaAnexos.children).indexOf(tr);
+            anexos.splice(index, 1);
+            tr.remove();
+        };
+
+        // Evento de submit do formulário
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
-            return false;
+            
+            // Desabilitar botão de salvar
+            btnSalvar.disabled = true;
+            btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+            
+            // Validar campos obrigatórios
+            const n_dossie = document.getElementById('n_dossie').value.trim();
+            const nome = document.getElementById('nome').value.trim();
+            const ano = document.getElementById('ano').value.trim();
+            
+            if (!n_dossie || !nome || !ano) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = '<i class="fas fa-save me-2"></i>Salvar Dossiê';
+                return;
+            }
+            
+            // Validar CPF se preenchido
+            const cpf = document.getElementById('cpf').value.trim();
+            if (cpf && !validarCPF(cpf)) {
+                alert('CPF inválido. Por favor, verifique.');
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = '<i class="fas fa-save me-2"></i>Salvar Dossiê';
+                return;
+            }
+
+            // Adicionar anexos ao FormData
+            const formData = new FormData(form);
+            anexos.forEach((anexo, index) => {
+                formData.append('anexos_files[]', anexo.file);
+                formData.append('anexos_nomes[]', anexo.nomePersonalizado);
+            });
+            
+            // Enviar formulário
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    window.location.href = "{{ url_for('dossie.listar') }}";
+                } else {
+                    throw new Error('Erro ao salvar dossiê');
+                }
+            })
+            .catch(error => {
+                alert('Erro ao salvar dossiê: ' + error.message);
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = '<i class="fas fa-save me-2"></i>Salvar Dossiê';
+            });
+        });
+        
+        // Função para validar CPF
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/[^\d]/g, '');
+            
+            if (cpf.length !== 11) return false;
+            
+            // Verifica se todos os dígitos são iguais
+            if (/^(\d)\1{10}$/.test(cpf)) return false;
+            
+            // Validação do primeiro dígito verificador
+            let soma = 0;
+            for (let i = 0; i < 9; i++) {
+                soma += parseInt(cpf.charAt(i)) * (10 - i);
+            }
+            let resto = 11 - (soma % 11);
+            let digitoVerificador1 = resto > 9 ? 0 : resto;
+            
+            if (digitoVerificador1 !== parseInt(cpf.charAt(9))) return false;
+            
+            // Validação do segundo dígito verificador
+            soma = 0;
+            for (let i = 0; i < 10; i++) {
+                soma += parseInt(cpf.charAt(i)) * (11 - i);
+            }
+            resto = 11 - (soma % 11);
+            let digitoVerificador2 = resto > 9 ? 0 : resto;
+            
+            return digitoVerificador2 === parseInt(cpf.charAt(10));
+        }
+        
+        // Função para formatar CPF
+        document.getElementById('cpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            
+            if (value.length > 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/(\d{3})(\d{3})/, '$1.$2');
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Função para preview da foto
+        function previewImageAluno(input) {
+            const preview = document.getElementById('previewFotoAluno');
+            const btnRemover = document.getElementById('btnRemoverFotoAluno');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    btnRemover.style.display = 'inline-block';
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Função para remover preview da foto
+        function removePreviewAluno() {
+            const preview = document.getElementById('previewFotoAluno');
+            const input = document.getElementById('foto');
+            const btnRemover = document.getElementById('btnRemoverFotoAluno');
+            
+            preview.src = '/static/img/default-student.svg';
+            input.value = '';
+            btnRemover.style.display = 'none';
         }
     });
-
-    // Converter nome para maiúsculas
-    const nomeInput = document.getElementById('nome');
-    if (nomeInput) {
-        nomeInput.addEventListener('blur', function() {
-            this.value = this.value.toUpperCase();
-        });
-    }
-
-    const nMaeInput = document.getElementById('n_mae');
-    if (nMaeInput) {
-        nMaeInput.addEventListener('blur', function() {
-            this.value = this.value.toUpperCase();
-        });
-    }
-
-    const nPaiInput = document.getElementById('n_pai');
-    if (nPaiInput) {
-        nPaiInput.addEventListener('blur', function() {
-            this.value = this.value.toUpperCase();
-        });
-    }
-
-    // Funções para preview da foto do aluno
-    function previewImageAluno(input) {
-        if (input.files && input.files[0]) {
-            // Validar tamanho do arquivo (5MB)
-            if (input.files[0].size > 5 * 1024 * 1024) {
-                alert('Arquivo muito grande! O tamanho máximo é 5MB.');
-                input.value = '';
-                return;
-            }
-
-            // Validar tipo do arquivo
-            const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(input.files[0].type)) {
-                alert('Tipo de arquivo não permitido! Use PNG, JPG, JPEG, GIF ou WEBP.');
-                input.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                document.getElementById('previewFotoAluno').src = e.target.result;
-                document.getElementById('btnRemoverFotoAluno').style.display = 'inline-block';
-            }
-
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function removePreviewAluno() {
-        document.getElementById('previewFotoAluno').src = '/static/img/default-student.svg';
-        document.getElementById('foto').value = '';
-        document.getElementById('btnRemoverFotoAluno').style.display = 'none';
-    }
 </script>
 {% endblock %}

@@ -17,51 +17,53 @@ def listar():
     ano = request.args.get('ano', '')
     page = request.args.get('page', 1, type=int)
 
-    # Verificar permissões
-    usuario = Usuario.query.get(session['user_id'])
+    usuario = db.session.get(Usuario, session['user_id'])
     query = Dossie.query
 
-    # Usar escola atual da sessão (para Admin Geral) ou escola do usuário
-    escola_atual_id = session.get('escola_atual_id', usuario.escola_id)
-
-    # Se não for admin geral, filtrar apenas dossiês da escola do usuário
-    if not usuario.is_admin_geral():
-        query = query.filter(Dossie.escola_id == usuario.escola_id)
+    # Corrigido: lógica clara para filtro de escola usando id_escola
+    if usuario.is_admin_geral():
+        if escola_id:
+            try:
+                escola_id_int = int(escola_id)
+                query = query.filter(Dossie.id_escola == escola_id_int)
+            except ValueError:
+                pass  # Ignora filtro inválido
+        else:
+            escola_atual_id = session.get('escola_atual_id')
+            if escola_atual_id:
+                query = query.filter(Dossie.id_escola == escola_atual_id)
     else:
-        # Admin Geral vê dossiês da escola atual selecionada
-        if escola_atual_id:
-            query = query.filter(Dossie.escola_id == escola_atual_id)
-    
+        query = query.filter(Dossie.id_escola == usuario.escola_id)
+
     if search:
         query = query.filter(
             db.or_(
-                Dossie.numero_dossie.contains(search),
-                Dossie.nome_aluno.contains(search),
-                Dossie.cpf_aluno.contains(search),
-                Dossie.nome_mae.contains(search),
-                Dossie.nome_pai.contains(search)
+                Dossie.n_dossie.contains(search),
+                Dossie.nome.contains(search),
+                Dossie.cpf.contains(search),
+                Dossie.n_mae.contains(search),
+                Dossie.n_pai.contains(search)
             )
         )
-    
-    if escola_id and usuario.is_admin_geral():
-        query = query.filter(Dossie.escola_id == escola_id)
-    
+
     if situacao:
         query = query.filter(Dossie.status == situacao)
-    
+
     if ano:
-        query = query.filter(
-            db.or_(
-                Dossie.ano_ingresso == int(ano),
-                Dossie.ano_conclusao == int(ano)
-            )
-        )
+        try:
+            ano_int = int(ano)
+            query = query.filter(Dossie.ano == ano_int)
+        except ValueError:
+            pass
 
     dossies = query.paginate(page=page, per_page=15, error_out=False)
 
     escola_filtro = None
     if escola_id:
-        escola_filtro = Escola.query.get(escola_id)
+        try:
+            escola_filtro = db.session.get(Escola, int(escola_id))
+        except Exception:
+            escola_filtro = None
 
     escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
 
@@ -71,59 +73,65 @@ def listar():
                          escola_filtro=escola_filtro,
                          escolas=escolas,
                          situacao=situacao,
-                         ano=ano)
+                         ano=ano,
+                         usuario=usuario)
 
 @dossie_bp.route('/novo', methods=['GET', 'POST'])
 @login_required
 def novo():
     """Cadastra novo dossiê"""
-    usuario = Usuario.query.get(session['user_id'])
+    usuario = db.session.get(Usuario, session['user_id'])
     
     if request.method == 'POST':
-        n_dossie = request.form.get('n_dossie', '').strip()
-        nome = request.form.get('nome', '').strip()
-
-        if not n_dossie or not nome:
-            flash('Número do dossiê e nome do aluno são obrigatórios!', 'error')
-            escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
-            return render_template('dossies/novo.html', escolas=escolas)
-
-        # Definir escola automaticamente baseada no usuário
-        if usuario.is_admin_geral():
-            # Admin Geral usa a escola atual da sessão ou sua escola padrão
-            id_escola = session.get('escola_atual_id', usuario.escola_id)
-        else:
-            # Outros usuários sempre usam sua própria escola
-            id_escola = usuario.escola_id
-
-        # Verificar se número do dossiê já existe na mesma escola
-        dossie_existente = Dossie.query.filter_by(
-            n_dossie=n_dossie,
-            id_escola=id_escola
-        ).first()
-
-        if dossie_existente:
-            flash(f'Número de dossiê "{n_dossie}" já existe nesta escola!', 'error')
-            escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
-            return render_template('dossies/novo.html', escolas=escolas)
-
-        dossie = Dossie(
-            n_dossie=n_dossie,
-            nome=nome,
-            cpf=request.form.get('cpf', '').strip(),
-            n_mae=request.form.get('n_mae', '').strip(),
-            n_pai=request.form.get('n_pai', '').strip(),
-            id_escola=id_escola,
-            ano=int(request.form.get('ano')) if request.form.get('ano') else None,
-            status=request.form.get('status', 'ativo'),
-            local=request.form.get('local', '').strip(),
-            pasta=request.form.get('pasta', '').strip(),
-            tipo_documento=request.form.get('tipo_documento', '').strip(),
-            observacao=request.form.get('observacao', '').strip(),
-            usuario_cadastro_id=usuario.id
-        )
-
         try:
+            # Obter dados do formulário
+            n_dossie = request.form.get('n_dossie', '').strip()
+            nome = request.form.get('nome', '').strip()
+            ano = request.form.get('ano', '').strip()
+
+            # Validar campos obrigatórios
+            if not n_dossie or not nome or not ano:
+                flash('Número do dossiê, nome do aluno e ano são obrigatórios!', 'error')
+                escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
+                return render_template('dossies/novo.html', escolas=escolas)
+
+            # Definir escola automaticamente baseada no usuário
+            if usuario.is_admin_geral():
+                # Admin Geral usa a escola atual da sessão ou sua escola padrão
+                id_escola = session.get('escola_atual_id', usuario.escola_id)
+            else:
+                # Outros usuários sempre usam sua própria escola
+                id_escola = usuario.escola_id
+
+            # Verificar se número do dossiê já existe na mesma escola
+            dossie_existente = Dossie.query.filter_by(
+                n_dossie=n_dossie,
+                id_escola=id_escola
+            ).first()
+
+            if dossie_existente:
+                flash(f'Número de dossiê "{n_dossie}" já existe na escola {dossie_existente.escola.nome}!', 'error')
+                escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
+                return render_template('dossies/novo.html', escolas=escolas)
+
+            # Criar novo dossiê
+            dossie = Dossie(
+                n_dossie=n_dossie,
+                nome=nome,
+                cpf=request.form.get('cpf', '').strip(),
+                n_mae=request.form.get('n_mae', '').strip(),
+                n_pai=request.form.get('n_pai', '').strip(),
+                id_escola=id_escola,
+                ano=int(ano),
+                status=request.form.get('status', 'ativo'),
+                local=request.form.get('local', '').strip(),
+                pasta=request.form.get('pasta', '').strip(),
+                tipo_documento=request.form.get('tipo_documento', '').strip(),
+                observacao=request.form.get('observacao', '').strip(),
+                usuario_cadastro_id=usuario.id
+            )
+
+            # Adicionar ao banco de dados
             db.session.add(dossie)
             db.session.flush()  # Para obter o ID do dossiê
 
@@ -154,31 +162,8 @@ def novo():
                         # Atualizar dossiê com o nome da foto
                         dossie.set_foto(filename)
 
-            # Log detalhado da criação
-            import json
-            detalhes_log = {
-                'dossie_criado': {
-                    'id': dossie.id,
-                    'numero_dossie': dossie.numero_dossie,
-                    'nome_aluno': dossie.nome_aluno,
-                    'escola_id': dossie.escola_id,
-                    'situacao': dossie.situacao
-                },
-                'criado_por': usuario.nome,
-                'ip_origem': request.remote_addr,
-                'user_agent': request.headers.get('User-Agent')
-            }
-
-            log_acao(AcoesAuditoria.DOSSIE_CRIADO, 'Dossie',
-                    f'Dossiê criado: {dossie.numero_dossie} - {dossie.nome_aluno}',
-                    detalhes=json.dumps(detalhes_log))
-
-            db.session.commit()
-
-            # Processar anexos se houver (método simplificado)
+            # Processar anexos
             anexos_enviados = 0
-
-            # Verificar se há arquivos de anexo
             files = request.files.getlist('anexos_files[]')
             nomes_personalizados = request.form.getlist('anexos_nomes[]')
 
@@ -188,9 +173,8 @@ def novo():
                 from werkzeug.utils import secure_filename
 
                 # Criar pasta de upload se não existir
-                upload_folder = 'uploads/anexos'
-                if not os.path.exists(upload_folder):
-                    os.makedirs(upload_folder)
+                upload_folder = os.path.join('static', 'uploads', 'anexos')
+                os.makedirs(upload_folder, exist_ok=True)
 
                 for i, file in enumerate(files):
                     if file and file.filename:
@@ -218,18 +202,46 @@ def novo():
                         db.session.add(anexo)
                         anexos_enviados += 1
 
-                db.session.commit()
+            # Log detalhado da criação
+            import json
+            detalhes_log = {
+                'dossie_criado': {
+                    'id': dossie.id_dossie,
+                    'n_dossie': dossie.n_dossie,
+                    'nome': dossie.nome,
+                    'id_escola': dossie.id_escola,
+                    'status': dossie.status
+                },
+                'criado_por': usuario.nome,
+                'ip_origem': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent')
+            }
+
+            log_acao(
+                acao=AcoesAuditoria.DOSSIE_CRIADO,
+                item_alterado='Dossie',
+                detalhes=json.dumps(detalhes_log)
+            )
+
+            # Commit das alterações
+            db.session.commit()
 
             if anexos_enviados > 0:
                 flash(f'Dossiê cadastrado com sucesso! {anexos_enviados} anexo(s) enviado(s).', 'success')
             else:
                 flash('Dossiê cadastrado com sucesso!', 'success')
 
+            # Redirecionar para a listagem
             return redirect(url_for('dossie.listar'))
+
         except Exception as e:
             db.session.rollback()
+            print(f"Erro ao cadastrar dossiê: {str(e)}")  # Log para debug
             flash(f'Erro ao cadastrar dossiê: {str(e)}', 'error')
+            escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
+            return render_template('dossies/novo.html', escolas=escolas)
 
+    # GET - Mostrar formulário
     escolas = Escola.query.all() if usuario.is_admin_geral() else [usuario.escola]
     return render_template('dossies/novo.html', escolas=escolas)
 
@@ -237,7 +249,7 @@ def novo():
 @login_required
 def ver(id):
     """Visualiza detalhes do dossiê"""
-    usuario = Usuario.query.get(session['user_id'])
+    usuario = db.session.get(Usuario, session['user_id'])
     dossie = Dossie.query.get_or_404(id)
     
     # Verificar se usuário pode acessar este dossiê
@@ -254,7 +266,7 @@ def ver(id):
 @login_required
 def editar(id):
     """Edita dossiê"""
-    usuario = Usuario.query.get(session['user_id'])
+    usuario = db.session.get(Usuario, session['user_id'])
     dossie = Dossie.query.get_or_404(id)
     
     # Verificar se usuário pode editar este dossiê
@@ -357,7 +369,7 @@ def editar(id):
 @login_required
 def excluir(id):
     """Exclui dossiê"""
-    usuario = Usuario.query.get(session['user_id'])
+    usuario = db.session.get(Usuario, session['user_id'])
     dossie = Dossie.query.get_or_404(id)
     
     # Verificar se usuário pode excluir este dossiê

@@ -35,7 +35,7 @@ def index():
                 if configs:
                     categorias[categoria.value] = {
                         'nome': categoria.value.replace('_', ' ').title(),
-                        'configuracoes': configs[:10]  # Limitar a 10 por categoria
+                        'configuracoes': dict(list(configs.items())[:10])  # Limitar a 10 por categoria
                     }
             except Exception as e:
                 print(f"Erro ao carregar categoria {categoria}: {e}")

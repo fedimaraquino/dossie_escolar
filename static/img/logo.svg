@@ -1,0 +1,10 @@
+<svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="40" rx="8" fill="#1976D2"/>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="bold">
+    <text x="48" y="27" fill="#fff">Sistema de Dossiês</text>
+  </g>
+  <g>
+    <circle cx="24" cy="20" r="12" fill="#fff"/>
+    <path d="M24 12v8l6 3" stroke="#1976D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg> 

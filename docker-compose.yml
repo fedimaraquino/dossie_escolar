@@ -6,13 +6,13 @@ services:
     image: dossie-app:latest
     environment:
       - FLASK_ENV=production
-      - DATABASE_URL=postgresql://dossie:DossieLocal@2024!Seguro@postgres:5432/dossie_escola
+      - DATABASE_URL=postgresql://dossie:DossieLocal%402024%21Seguro@postgres:5432/dossie_escola
       - SECRET_KEY=${SECRET_KEY}
       - SERVER_NAME=10.0.1.185
       - UPLOAD_FOLDER=/app/static/uploads
       - MAX_CONTENT_LENGTH=16777216
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - app_uploads:/app/static/uploads
       - app_logs:/app/logs
@@ -28,7 +28,7 @@ services:
         max_attempts: 3
       labels:
         - traefik.enable=true
-        - traefik.http.routers.dossie.rule=Host(`10.0.1.185`)
+        - traefik.http.routers.dossie.rule=Host(`1localhost`)
         - traefik.http.routers.dossie.entrypoints=web
         - traefik.http.services.dossie.loadbalancer.server.port=5000
 

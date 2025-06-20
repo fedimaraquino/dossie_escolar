@@ -8,9 +8,10 @@ from flask import Flask, render_template, redirect, url_for, session, flash
 from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from datetime import datetime
+from datetime import datetime, timedelta
 import secrets
 import os
+from sqlalchemy import func
 
 # Configuração da aplicação
 def create_app():
@@ -73,9 +74,10 @@ def create_app():
     from controllers import auth_bp, escola_bp, usuario_bp, dossie_bp, movimentacao_bp, cidade_bp, perfil_bp, anexo_bp
     from controllers.permissao_controller import permissao_bp
     from controllers.diretor_controller import diretor_bp
-    from controllers.solicitante_controller import solicitante_bp
+    from controllers.solicitante_controller import solicitantes_bp
     from controllers.configuracao_controller import config_bp
     from controllers.foto_controller import foto_bp
+    from controllers.relatorio_controller import relatorio_bp
     from admin import admin_bp
 
     app.register_blueprint(auth_bp)
@@ -88,9 +90,10 @@ def create_app():
     app.register_blueprint(anexo_bp)
     app.register_blueprint(diretor_bp)
     app.register_blueprint(permissao_bp)
-    app.register_blueprint(solicitante_bp)
+    app.register_blueprint(solicitantes_bp)
     app.register_blueprint(config_bp)
     app.register_blueprint(foto_bp)
+    app.register_blueprint(relatorio_bp)
     app.register_blueprint(admin_bp)
     
     # Rotas principais
@@ -108,96 +111,77 @@ def create_app():
             return redirect(url_for('auth.login'))
 
         from models import Usuario, Escola, Dossie, Movimentacao
-
         usuario = Usuario.query.get(session['user_id'])
         if not usuario:
             session.clear()
             flash('Sessão inválida. Faça login novamente.', 'error')
             return redirect(url_for('auth.login'))
 
-        # Estatísticas otimizadas e rápidas
-        from datetime import datetime, timedelta
-
         hoje = datetime.now()
         inicio_mes = hoje.replace(day=1)
-
-        # Consultas otimizadas baseadas na escola atual
         escola_atual_id = session.get('escola_atual_id') or usuario.escola_id
+        escola_atual = Escola.query.get(escola_atual_id)
+        escola_nome = escola_atual.nome if escola_atual else 'Escola Atual'
 
-        if usuario.is_admin_geral():
-            # Admin Geral vê dados da escola atual selecionada
-            if escola_atual_id:
-                stats = {
-                    'total_escolas': Escola.query.count(),
-                    'total_usuarios': Usuario.query.filter_by(escola_id=escola_atual_id).count(),
-                    'total_dossies': Dossie.query.filter_by(escola_id=escola_atual_id).count(),
-                    'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == escola_atual_id).count(),
-                    'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
-                    'dossies_ativos': Dossie.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
-                    'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
-                        Dossie.escola_id == escola_atual_id,
-                        Movimentacao.status == 'pendente'
-                    ).count(),
-                    'dossies_mes_atual': Dossie.query.filter(
-                        Dossie.escola_id == escola_atual_id,
-                        Dossie.dt_cadastro >= inicio_mes
-                    ).count(),
-                    'movimentacoes_mes_atual': Movimentacao.query.join(Dossie).filter(
-                        Dossie.escola_id == escola_atual_id,
-                        Movimentacao.data_movimentacao >= inicio_mes
-                    ).count()
-                }
-            else:
-                # Fallback para dados globais se não houver escola selecionada
-                stats = {
-                    'total_escolas': Escola.query.count(),
-                    'total_usuarios': Usuario.query.count(),
-                    'total_dossies': Dossie.query.count(),
-                    'total_movimentacoes': Movimentacao.query.count(),
-                    'usuarios_ativos': Usuario.query.filter_by(situacao='ativo').count(),
-                    'dossies_ativos': Dossie.query.filter_by(situacao='ativo').count(),
-                    'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count(),
-                    'dossies_mes_atual': Dossie.query.filter(Dossie.dt_cadastro >= inicio_mes).count(),
-                    'movimentacoes_mes_atual': Movimentacao.query.filter(Movimentacao.data_movimentacao >= inicio_mes).count()
-                }
-        else:
-            # Dados específicos da escola do usuário
-            stats = {
-                'total_escolas': 1,
-                'total_usuarios': Usuario.query.filter_by(escola_id=escola_atual_id).count(),
-                'total_dossies': Dossie.query.filter_by(escola_id=escola_atual_id).count(),
-                'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.escola_id == escola_atual_id).count(),
-                'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
-                'dossies_ativos': Dossie.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count(),
-                'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
-                    Dossie.escola_id == escola_atual_id,
-                    Movimentacao.status == 'pendente'
-                ).count(),
-                'dossies_mes_atual': Dossie.query.filter(
-                    Dossie.escola_id == escola_atual_id,
-                    Dossie.dt_cadastro >= inicio_mes
-                ).count(),
-                'movimentacoes_mes_atual': Movimentacao.query.join(Dossie).filter(
-                    Dossie.escola_id == escola_atual_id,
-                    Movimentacao.data_movimentacao >= inicio_mes
-                ).count()
-            }
+        # Indicadores principais
+        stats = {
+            'total_dossies': Dossie.query.filter_by(id_escola=escola_atual_id).count(),
+            'dossies_ativos': Dossie.query.filter_by(id_escola=escola_atual_id, status='ativo').count(),
+            'dossies_pendentes': Dossie.query.filter_by(id_escola=escola_atual_id, status='pendente').count(),
+            'movimentacoes_mes': Movimentacao.query.join(Dossie).filter(
+                Dossie.id_escola == escola_atual_id,
+                Movimentacao.data_movimentacao >= inicio_mes
+            ).count()
+        }
 
-        # Dados simplificados para gráficos (apenas 3 meses)
-        stats['dossies_por_mes'] = [
-            {'mes': 'Nov/2024', 'count': max(1, stats['total_dossies'] // 4)},
-            {'mes': 'Dez/2024', 'count': max(1, stats['total_dossies'] // 3)},
-            {'mes': 'Jan/2025', 'count': stats['dossies_mes_atual']}
+        # Alertas
+        alertas = {
+            'dossies_pendentes': stats['dossies_pendentes'],
+            'movimentacoes_atrasadas': Movimentacao.query.join(Dossie).filter(
+                Dossie.id_escola == escola_atual_id,
+                Movimentacao.status == 'pendente',
+                Movimentacao.data_prevista_devolucao != None,
+                Movimentacao.data_prevista_devolucao < hoje
+            ).count()
+        }
+
+        # Gráficos
+        graficos = {'evolucao_mensal': [], 'tipos_movimentacao': [], 'status_dossies': []}
+        for i in range(5, -1, -1):
+            mes_inicio = (hoje.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+            mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            count = Dossie.query.filter(
+                Dossie.id_escola == escola_atual_id,
+                Dossie.dt_cadastro >= mes_inicio,
+                Dossie.dt_cadastro <= mes_fim
+            ).count()
+            graficos['evolucao_mensal'].append({
+                'mes': mes_inicio.strftime('%b/%Y'),
+                'count': count
+            })
+        tipos_mov = db.session.query(
+            Movimentacao.tipo_movimentacao,
+            func.count(Movimentacao.id)
+        ).join(Dossie).filter(Dossie.id_escola == escola_atual_id).group_by(Movimentacao.tipo_movimentacao).all()
+        graficos['tipos_movimentacao'] = [
+            {'tipo': tipo or 'Outro', 'count': count} for tipo, count in tipos_mov
+        ]
+        status_counts = db.session.query(
+            Dossie.status,
+            func.count(Dossie.id_dossie)
+        ).filter(Dossie.id_escola == escola_atual_id).group_by(Dossie.status).all()
+        graficos['status_dossies'] = [
+            {'status': status.title(), 'count': count} for status, count in status_counts
         ]
 
-        # Tipos de movimentação simplificados
-        stats['movimentacoes_por_tipo'] = [
-            {'tipo': 'Empréstimo', 'count': max(1, stats['total_movimentacoes'] // 2)},
-            {'tipo': 'Devolução', 'count': max(1, stats['total_movimentacoes'] // 3)},
-            {'tipo': 'Consulta', 'count': max(1, stats['total_movimentacoes'] // 6)}
-        ]
-
-        return render_template('dashboard_otimizado.html', usuario=usuario, stats=stats, current_date=datetime.now())
+        return render_template('dashboard.html',
+            usuario=usuario,
+            stats=stats,
+            alertas=alertas,
+            graficos=graficos,
+            escola_nome=escola_nome,
+            current_date=datetime.now()
+        )
 
     @app.route('/dashboard/avancado')
     def dashboard_avancado():
@@ -364,6 +348,29 @@ def create_app():
             return f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
         return cnpj
     
+    def situacao_badge(status):
+        cores = {
+            'ativo': 'success',
+            'inativo': 'secondary',
+            'arquivado': 'warning',
+            'pendente': 'danger',
+            'emprestado': 'info'
+        }
+        return cores.get(status, 'secondary')
+
+    def situacao_label(status):
+        labels = {
+            'ativo': 'Ativo',
+            'inativo': 'Inativo',
+            'arquivado': 'Arquivado',
+            'pendente': 'Pendente',
+            'emprestado': 'Emprestado'
+        }
+        return labels.get(status, status.title())
+
+    app.jinja_env.filters['situacao_badge'] = situacao_badge
+    app.jinja_env.filters['situacao_label'] = situacao_label
+
     # Handlers de erro
     @app.errorhandler(404)
     def not_found(error):

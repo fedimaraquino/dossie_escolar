@@ -527,7 +527,7 @@ try:
         
         perfil = Perfil.query.filter_by(perfil='Administrador Geral').first()
         if not perfil:
-            perfil = Perfil(perfil='Administrador Geral', nome='Administrador Geral')
+            perfil = Perfil(perfil='Administrador Geral')
             db.session.add(perfil)
             db.session.commit()
         

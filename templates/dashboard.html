@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Escola Atual{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold mb-0"><i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard - {{ escola_nome }}</h2>
+        <span class="text-muted">{{ current_date.strftime('%d/%m/%Y %H:%M') }}</span>
+    </div>
+</div>
+
+<!-- Alertas -->
+<div class="row mb-3">
+    {% if alertas.dossies_pendentes > 0 %}
+    <div class="col-md-6 mb-2">
+        <div class="alert alert-warning shadow-sm">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>{{ alertas.dossies_pendentes }}</strong> dossiês pendentes nesta escola.
+            <a href="{{ url_for('dossie.listar', situacao='pendente') }}" class="btn btn-sm btn-outline-warning ms-2">Ver pendentes</a>
+        </div>
+    </div>
+    {% endif %}
+    {% if alertas.movimentacoes_atrasadas > 0 %}
+    <div class="col-md-6 mb-2">
+        <div class="alert alert-danger shadow-sm">
+            <i class="fas fa-clock me-2"></i>
+            <strong>{{ alertas.movimentacoes_atrasadas }}</strong> movimentações atrasadas.
+            <a href="{{ url_for('movimentacao.listar', status='atrasada') }}" class="btn btn-sm btn-outline-danger ms-2">Ver atrasadas</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Cards principais -->
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #1976D2 60%, #42A5F5 100%); color: #fff;">
+            <div class="card-body p-3">
+                <div class="mb-2"><i class="fas fa-folder fa-2x"></i></div>
+                <div class="fw-bold fs-3">{{ stats.total_dossies or 0 }}</div>
+                <div class="small">Total de Dossiês</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #43A047 60%, #66BB6A 100%); color: #fff;">
+            <div class="card-body p-3">
+                <div class="mb-2"><i class="fas fa-check-circle fa-2x"></i></div>
+                <div class="fw-bold fs-3">{{ stats.dossies_ativos or 0 }}</div>
+                <div class="small">Dossiês Ativos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #FFA000 60%, #FFD54F 100%); color: #fff;">
+            <div class="card-body p-3">
+                <div class="mb-2"><i class="fas fa-exclamation-triangle fa-2x"></i></div>
+                <div class="fw-bold fs-3">{{ stats.dossies_pendentes or 0 }}</div>
+                <div class="small">Pendentes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #8E24AA 60%, #BA68C8 100%); color: #fff;">
+            <div class="card-body p-3">
+                <div class="mb-2"><i class="fas fa-exchange-alt fa-2x"></i></div>
+                <div class="fw-bold fs-3">{{ stats.movimentacoes_mes or 0 }}</div>
+                <div class="small">Movimentações do Mês</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow border-0">
+            <div class="card-header bg-white border-0 pb-0">
+                <i class="fas fa-chart-line me-2 text-primary"></i>Evolução Mensal de Dossiês
+            </div>
+            <div class="card-body">
+                <canvas id="graficoEvolucao"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 mb-4">
+        <div class="card h-100 shadow border-0">
+            <div class="card-header bg-white border-0 pb-0">
+                <i class="fas fa-chart-pie me-2 text-success"></i>Tipos de Movimentação
+            </div>
+            <div class="card-body">
+                <canvas id="graficoTipos"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 mb-4">
+        <div class="card h-100 shadow border-0">
+            <div class="card-header bg-white border-0 pb-0">
+                <i class="fas fa-chart-pie me-2 text-warning"></i>Status dos Dossiês
+            </div>
+            <div class="card-body">
+                <canvas id="graficoStatus"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Atalhos rápidos -->
+<div class="row mb-4">
+    <div class="col-12 d-flex gap-2">
+        <a href="{{ url_for('dossie.novo') }}" class="btn btn-primary btn-lg animate__animated animate__fadeInLeft"><i class="fas fa-plus me-1"></i>Novo Dossiê</a>
+        <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-success btn-lg animate__animated animate__fadeInLeft"><i class="fas fa-exchange-alt me-1"></i>Nova Movimentação</a>
+        <a href="{{ url_for('configuracao.exportar') }}" class="btn btn-info btn-lg animate__animated animate__fadeInLeft"><i class="fas fa-file-export me-1"></i>Exportar Relatório</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de evolução mensal
+    var ctxEvolucao = document.getElementById('graficoEvolucao');
+    if (ctxEvolucao) {
+        var dadosEvolucao = {{ graficos.evolucao_mensal | tojson }};
+        new Chart(ctxEvolucao, {
+            type: 'line',
+            data: {
+                labels: dadosEvolucao.map(function(item) { return item.mes; }),
+                datasets: [{
+                    label: 'Dossiês',
+                    data: dadosEvolucao.map(function(item) { return item.count; }),
+                    borderColor: '#1976D2',
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+    // Gráfico de tipos de movimentação
+    var ctxTipos = document.getElementById('graficoTipos');
+    if (ctxTipos) {
+        var dadosTipos = {{ graficos.tipos_movimentacao | tojson }};
+        new Chart(ctxTipos, {
+            type: 'doughnut',
+            data: {
+                labels: dadosTipos.map(function(item) { return item.tipo; }),
+                datasets: [{
+                    data: dadosTipos.map(function(item) { return item.count; }),
+                    backgroundColor: ['#1976D2', '#43A047', '#FFA000', '#8E24AA', '#F44336'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%'
+            }
+        });
+    }
+    // Gráfico de status dos dossiês
+    var ctxStatus = document.getElementById('graficoStatus');
+    if (ctxStatus) {
+        var dadosStatus = {{ graficos.status_dossies | tojson }};
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: dadosStatus.map(function(item) { return item.status; }),
+                datasets: [{
+                    data: dadosStatus.map(function(item) { return item.count; }),
+                    backgroundColor: ['#43A047', '#FFA000', '#F44336', '#1976D2', '#BDBDBD'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%'
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

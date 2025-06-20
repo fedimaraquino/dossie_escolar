@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Controle de Dossiê Escolar{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar -->
     {% if session.user_id %}
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-                <i class="fas fa-graduation-cap me-2"></i>
-                Dossiê Escolar
+                <i class="fas fa-folder-open fa-lg me-2"></i>
+                Sistema de Dossiês
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -31,199 +30,149 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
                         </a>
                     </li>
-
-                    <!-- Menu Cadastros -->
+                    <!-- Cadastros -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['escola.listar','cidade.listar','perfil.listar','usuario.listar','diretor.index','dossie.listar','solicitantes.listar'] %}active{% endif %}" href="#" id="cadastrosDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-plus-circle me-1"></i>Cadastros
                         </a>
                         <ul class="dropdown-menu">
                             {% if session.user_perfil == 'Administrador Geral' %}
-                            <li><a class="dropdown-item" href="{{ url_for('escola.listar') }}">
-                                <i class="fas fa-school me-2"></i>Escolas
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('cidade.listar') }}">
-                                <i class="fas fa-map-marker-alt me-2"></i>Cidades
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('perfil.listar') }}">
-                                <i class="fas fa-user-shield me-2"></i>Perfis
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('escola.listar') }}"><i class="fas fa-school me-1"></i>Escolas</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('cidade.listar') }}"><i class="fas fa-map-marker-alt me-1"></i>Cidades</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('perfil.listar') }}"><i class="fas fa-user-shield me-1"></i>Perfis</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('usuario.listar') }}">
-                                <i class="fas fa-users me-2"></i>Usuários
-                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('usuario.listar') }}"><i class="fas fa-users me-1"></i>Usuários</a></li>
                             {% if session.user_perfil == 'Administrador Geral' %}
-                            <li><a class="dropdown-item" href="{{ url_for('diretor.index') }}">
-                                <i class="fas fa-user-tie me-2"></i>Diretores
-                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('diretor.index') }}"><i class="fas fa-user-tie me-1"></i>Diretores</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('dossie.listar') }}">
-                                <i class="fas fa-folder me-2"></i>Dossiês
-                            </a></li>
-                            <li><a class="dropdown-item" href="/solicitantes/">
-                                <i class="fas fa-user-friends me-2"></i>Solicitantes
-                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('dossie.listar') }}"><i class="fas fa-folder me-1"></i>Dossiês</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('solicitantes.listar') }}"><i class="fas fa-user-friends me-1"></i>Solicitantes</a></li>
                         </ul>
                     </li>
-
-                    <!-- Menu Movimentações -->
+                    <!-- Movimentações -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['movimentacao.listar','movimentacao.nova','movimentacao.pendentes','movimentacao.emprestados'] %}active{% endif %}" href="#" id="movimentacoesDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-exchange-alt me-1"></i>Movimentações
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.listar') }}">
-                                <i class="fas fa-list me-2"></i>Todas as Movimentações
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.nova') }}">
-                                <i class="fas fa-plus me-2"></i>Nova Movimentação
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.pendentes') }}">
-                                <i class="fas fa-clock me-2"></i>Pendentes
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.emprestados') }}">
-                                <i class="fas fa-hand-holding me-2"></i>Emprestados
-                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.listar') }}"><i class="fas fa-list me-1"></i>Todas as Movimentações</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.nova') }}"><i class="fas fa-plus me-1"></i>Nova Movimentação</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.pendentes') }}"><i class="fas fa-clock me-1"></i>Pendentes</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('movimentacao.emprestados') }}"><i class="fas fa-hand-holding me-1"></i>Emprestados</a></li>
                         </ul>
                     </li>
-
-                    <!-- Menu Relatórios -->
+                    <!-- Relatórios -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['relatorio.dashboard','relatorio.solicitante','relatorio.nao_devolvidos'] %}active{% endif %}" href="#" id="relatoriosDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-chart-bar me-1"></i>Relatórios
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/relatorios/">
-                                <i class="fas fa-chart-pie me-2"></i>Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="/relatorios/por-solicitante">
-                                <i class="fas fa-user-friends me-2"></i>Por Solicitante
-                            </a></li>
-                            <li><a class="dropdown-item" href="/relatorios/nao-devolvidos">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Não Devolvidos
-                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('relatorio.dashboard') }}"><i class="fas fa-chart-pie me-1"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('relatorio.solicitante') }}"><i class="fas fa-user-friends me-1"></i>Por Solicitante</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('relatorio.nao_devolvidos') }}"><i class="fas fa-exclamation-triangle me-1"></i>Não Devolvidos</a></li>
                         </ul>
                     </li>
-
-                    <!-- Menu Administração -->
+                    <!-- Administração -->
                     {% if session.user_perfil in ['Administrador Geral', 'Administrador da Escola'] %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint in ['admin.index','permissao.perfis','configuracao.index','admin.logs','admin.system_info','admin.backup'] %}active{% endif %}" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-cogs me-1"></i>Administração
                         </a>
                         <ul class="dropdown-menu">
                             {% if session.user_perfil == 'Administrador Geral' %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard Admin
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('permissao.perfis') }}">
-                                <i class="fas fa-shield-alt me-2"></i>Permissões
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard Admin</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('permissao.perfis') }}"><i class="fas fa-shield-alt me-1"></i>Permissões</a></li>
                             {% endif %}
-
-                            <!-- Configurações do Sistema -->
-                            <li><a class="dropdown-item" href="{{ url_for('configuracao.index') }}">
-                                <i class="fas fa-cog me-2"></i>Configurações do Sistema
-                            </a></li>
-
-                            <!-- Logs e Auditoria -->
-                            <li><a class="dropdown-item" href="{{ url_for('admin.logs') }}">
-                                <i class="fas fa-history me-2"></i>Logs de Auditoria
-                            </a></li>
-
+                            <li><a class="dropdown-item" href="{{ url_for('configuracao.index') }}"><i class="fas fa-cog me-1"></i>Configurações</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.logs') }}"><i class="fas fa-history me-1"></i>Logs</a></li>
                             {% if session.user_perfil == 'Administrador Geral' %}
-                            <!-- Ferramentas Avançadas -->
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin.system_info') }}">
-                                <i class="fas fa-info-circle me-2"></i>Informações do Sistema
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin.backup') }}">
-                                <i class="fas fa-download me-2"></i>Backup do Sistema
-                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.system_info') }}"><i class="fas fa-info-circle me-1"></i>Informações</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.backup') }}"><i class="fas fa-download me-1"></i>Backup</a></li>
                             {% endif %}
                         </ul>
                     </li>
                     {% endif %}
                 </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <img src="{{ session.user_foto_url or '/static/img/default-avatar.svg' }}"
-                                 alt="Foto do usuário"
-                                 class="rounded-circle me-2"
-                                 width="32"
-                                 height="32"
-                                 style="object-fit: cover;">
-                            <span>{{ session.user_nome }}</span>
+
+                <!-- Menu do Usuário -->
+                <div class="navbar-nav">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <img src="{{ session.user_foto_url or '/static/img/default-avatar.svg' }}" alt="Foto do usuário" class="rounded-circle me-1" style="width: 24px; height: 24px; object-fit: cover;">
+                            <span class="fw-bold">{{ session.user_nome }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <!-- Informações da Escola Atual -->
-                            <li class="dropdown-header">
-                                <i class="fas fa-school me-2"></i>{{ session.escola_atual_nome or session.get('escola_nome', 'Escola não definida') }}
+                            {% if session.escola_atual_nome %}
+                            <li class="dropdown-item disabled text-primary small">
+                                <i class="fas fa-school me-1"></i>{{ session.escola_atual_nome }}
                             </li>
                             <li><hr class="dropdown-divider"></li>
-
-                            <!-- Opções do Perfil -->
-                            <li><a class="dropdown-item" href="{{ url_for('usuario.perfil') }}"><i class="fas fa-user-cog me-2"></i>Meu Perfil</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('usuario.alterar_senha') }}"><i class="fas fa-key me-2"></i>Alterar Senha</a></li>
-
-                            <!-- Trocar Escola (apenas para Admin Geral) -->
-                            {% if session.can_switch_escola %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('usuario.trocar_escola') }}">
-                                <i class="fas fa-exchange-alt me-2"></i>Trocar Escola
-                            </a></li>
                             {% endif %}
-
-                            <li><a class="dropdown-item" href="{{ url_for('configuracao.index') }}"><i class="fas fa-cog me-2"></i>Configurações</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('usuario.perfil') }}">
+                                    <i class="fas fa-user me-2"></i>Meu Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('usuario.alterar_senha') }}">
+                                    <i class="fas fa-key me-2"></i>Alterar Senha
+                                </a>
+                            </li>
+                            {% if session.can_switch_escola or session.user_perfil == 'Administrador Geral' %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('usuario.trocar_escola') }}">
+                                    <i class="fas fa-exchange-alt me-2"></i>Trocar Escola
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                </a>
+                            </li>
                         </ul>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
-    {% endif %}
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container-fluid mt-3">
+    <!-- Conteúdo Principal -->
+    <main class="container-fluid">
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+            {% endif %}
+        {% endwith %}
 
-    <!-- Main Content -->
-    <main class="{% if session.user_id %}container-fluid mt-4{% else %}container{% endif %}">
+        <!-- Conteúdo da página -->
         {% block content %}{% endblock %}
     </main>
+    {% else %}
+    <div class="container">
+        {% block auth_content %}{% endblock %}
+    </div>
+    {% endif %}
 
-    <!-- Footer -->
-    <footer class="bg-light text-center text-muted py-3 mt-5">
-        <div class="container">
-            <p>&copy; 2024 Sistema de Controle de Dossiê Escolar. Todos os direitos reservados.</p>
-        </div>
-    </footer>
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     

@@ -8,4 +8,4 @@ from flask import Blueprint
 from apps.solicitantes.routes import solicitantes_bp
 
 # Exportar o blueprint para ser usado no app.py
-solicitante_bp = solicitantes_bp
+solicitantes_bp = solicitantes_bp
