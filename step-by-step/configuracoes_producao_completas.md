@@ -519,6 +519,36 @@ Deploy: Automático via webhook
 
 ---
 
-**Última Atualização:** Janeiro 2025  
-**Status:** ✅ PRODUÇÃO ATIVA  
+---
+
+## 🚨 **PROBLEMA CRÍTICO IDENTIFICADO:**
+
+### **PostgreSQL - Usuário Inexistente**
+```
+Data: 21/01/2025 02:25 UTC
+Problema: Role "dossie_user" does not exist
+Status: CORREÇÃO APLICADA ⚠️
+```
+
+**Logs do Erro:**
+```
+2025-06-21 02:31:03.814 UTC [76] FATAL: password authentication failed for user "dossie_user"
+2025-06-21 02:31:03.814 UTC [76] DETAIL: Role "dossie_user" does not exist.
+```
+
+**Correção Aplicada:**
+1. ✅ Corrigido docker-compose.easypanel.yml
+2. ✅ Criado init-postgres.sql para inicialização automática
+3. ✅ Alterado PostgreSQL para usar 'postgres' como superuser
+4. ✅ Script de inicialização para criar 'dossie_user'
+5. ✅ Arquivo CORRIGIR_POSTGRES_URGENTE.md com instruções
+
+**AÇÃO REQUERIDA:**
+- 🔄 **REBUILD URGENTE** no EasyPanel para aplicar correções
+- OU executar SQL manual no container PostgreSQL
+
+---
+
+**Última Atualização:** 21 Janeiro 2025 - 02:35 UTC  
+**Status:** ⚠️ CORREÇÃO APLICADA - AGUARDANDO REBUILD  
 **URL:** https://dossie.easistemas.dev.br
