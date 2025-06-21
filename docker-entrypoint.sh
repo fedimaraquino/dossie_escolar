@@ -59,11 +59,11 @@ try:
         
         # Criar perfil de administrador se não existir
         print('👑 Verificando perfil admin...')
-        admin_perfil = Perfil.query.filter_by(perfil='Administrador').first()
+        admin_perfil = Perfil.query.filter_by(perfil='Administrador Geral').first()
         if not admin_perfil:
             print('👑 Criando perfil administrador...')
             admin_perfil = Perfil(
-                perfil='Administrador',
+                perfil='Administrador Geral',
                 descricao='Perfil com acesso total ao sistema'
             )
             db.session.add(admin_perfil)
