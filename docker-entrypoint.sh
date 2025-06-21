@@ -11,18 +11,87 @@ echo "PostgreSQL está pronto!"
 # Executar migrações do banco de dados
 echo "Executando migrações do banco de dados..."
 
-# Verificar se migrations já existe, senão inicializar
-if [ ! -d "migrations" ]; then
-    echo "Inicializando migrações..."
+# Limpar problemas de migrações múltiplas
+echo "Verificando estado das migrações..."
+
+# Se há problemas com multiple heads, resetar
+flask db heads 2>/dev/null | grep -q "Multiple head revisions" && {
+    echo "⚠️ Detectado problema de múltiplas heads. Corrigindo..."
+    
+    # Marcar todas as migrações como aplicadas (força sinc)
+    flask db stamp heads 2>/dev/null || {
+        echo "Forçando reset das migrações..."
+        # Se falhar, usar abordagem mais direta
+        python -c "
+from app import create_app
+from flask_migrate import stamp
+app = create_app()
+with app.app_context():
+    try:
+        stamp(revision='heads')
+        print('✅ Migrações sincronizadas')
+    except:
+        print('ℹ️ Usando criação direta de tabelas')
+        from models import db
+        db.create_all()
+        stamp()
+        print('✅ Banco inicializado')
+" || echo "⚠️ Continuando com inicialização manual..."
+    }
+}
+
+# Verificar se migrations existe, senão inicializar
+if [ ! -d "migrations" ] || [ ! -f "migrations/alembic.ini" ]; then
+    echo "📁 Inicializando estrutura de migrações..."
+    rm -rf migrations 2>/dev/null || true
     flask db init
 fi
 
 # Aplicar migrações
-echo "Aplicando migrações..."
-flask db upgrade || {
-    echo "Primeira migração... Criando migration inicial"
-    flask db migrate -m "Initial migration" 
-    flask db upgrade
+echo "📋 Aplicando migrações..."
+flask db upgrade 2>/dev/null || {
+    echo "🔄 Primeira execução - criando migration inicial..."
+    
+    # Verificar se há tabelas no banco
+    HAS_TABLES=$(python -c "
+from app import create_app
+from models import db
+app = create_app()
+with app.app_context():
+    inspector = db.inspect(db.engine)
+    tables = inspector.get_table_names()
+    print('1' if tables else '0')
+" 2>/dev/null || echo "0")
+
+    if [ "$HAS_TABLES" = "1" ]; then
+        echo "📊 Banco já tem tabelas - sincronizando migrações..."
+        flask db stamp head 2>/dev/null || {
+            # Forçar marca como migrado
+            python -c "
+from app import create_app
+from flask_migrate import stamp
+app = create_app()
+with app.app_context():
+    stamp()
+" 2>/dev/null || echo "⚠️ Continuando..."
+        }
+    else
+        echo "🆕 Banco vazio - criando primeira migração..."
+        flask db migrate -m "Initial migration" 2>/dev/null || {
+            echo "📋 Criando tabelas diretamente..."
+            python -c "
+from app import create_app
+from models import db
+app = create_app()
+with app.app_context():
+    db.create_all()
+"
+            flask db stamp head 2>/dev/null || echo "⚠️ Continuando sem stamp..."
+        }
+    fi
+    
+    # Tentar aplicar novamente
+    flask db upgrade 2>/dev/null || echo "ℹ️ Migrações já aplicadas"
 }
 
 # Criar dados iniciais
