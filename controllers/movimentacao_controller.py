@@ -191,8 +191,7 @@ def concluir(id):
         }
 
         log_acao(AcoesAuditoria.MOVIMENTACAO_CONCLUIDA, 'Movimentacao',
-                f'Movimentação concluída: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"}',
-                detalhes=json.dumps(detalhes_log))
+                f'Movimentação concluída: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"} - {json.dumps(detalhes_log)}')
 
         db.session.commit()
         flash('Movimentação marcada como concluída!', 'success')
@@ -236,8 +235,7 @@ def cancelar(id):
         }
 
         log_acao(AcoesAuditoria.MOVIMENTACAO_CANCELADA, 'Movimentacao',
-                f'Movimentação cancelada: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"}',
-                detalhes=json.dumps(detalhes_log))
+                f'Movimentação cancelada: {movimentacao.tipo_movimentacao} - Dossiê {movimentacao.dossie.numero_dossie if movimentacao.dossie else "N/A"} - {json.dumps(detalhes_log)}')
 
         db.session.commit()
         flash('Movimentação cancelada com sucesso!', 'success')

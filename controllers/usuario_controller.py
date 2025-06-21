@@ -258,8 +258,7 @@ def novo():
             }
 
             log_acao(AcoesAuditoria.USUARIO_CRIADO, 'Usuario',
-                    f'Usuário criado: {usuario.nome} ({usuario.email})',
-                    detalhes=json.dumps(detalhes_log))
+                    f'Usuário criado: {usuario.nome} ({usuario.email}) - {json.dumps(detalhes_log)}')
 
             db.session.commit()
             flash('Usuário cadastrado com sucesso!', 'success')
@@ -383,8 +382,7 @@ def editar(id):
             }
 
             log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario',
-                    f'Usuário editado: {usuario.nome} ({usuario.email})',
-                    detalhes=json.dumps(detalhes_log))
+                    f'Usuário editado: {usuario.nome} ({usuario.email}) - {json.dumps(detalhes_log)}')
 
             db.session.commit()
             flash('Usuário atualizado com sucesso!', 'success')
@@ -429,8 +427,7 @@ def excluir(id):
         }
 
         log_acao(AcoesAuditoria.USUARIO_EXCLUIDO, 'Usuario',
-                f'Usuário excluído: {usuario.nome} ({usuario.email})',
-                detalhes=json.dumps(detalhes_log))
+                f'Usuário excluído: {usuario.nome} ({usuario.email}) - {json.dumps(detalhes_log)}')
 
         db.session.delete(usuario)
         db.session.commit()
