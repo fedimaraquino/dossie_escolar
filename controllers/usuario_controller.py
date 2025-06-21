@@ -4,6 +4,7 @@ from datetime import datetime
 from models import db, Usuario, Escola, Perfil
 from .auth_controller import login_required, admin_required
 from utils.logs import log_acao, AcoesAuditoria
+import json
 
 usuario_bp = Blueprint('usuario', __name__, url_prefix='/usuarios')
 
@@ -240,9 +241,6 @@ def novo():
                         usuario.set_foto(filename)
 
             # Log detalhado da operação
-            from utils.logs import log_acao, AcoesAuditoria
-            import json
-
             detalhes_log = {
                 'usuario_criado': {
                     'id': usuario.id,
@@ -257,7 +255,7 @@ def novo():
                 'user_agent': request.headers.get('User-Agent')
             }
 
-            log_acao(AcoesAuditoria.USUARIO_CRIADO, 'Usuario',
+            log_acao(AcoesAuditoria.USUARIO_CRIADO, 'Usuario', 
                     f'Usuário criado: {usuario.nome} ({usuario.email}) - {json.dumps(detalhes_log)}')
 
             db.session.commit()
@@ -265,7 +263,7 @@ def novo():
             return redirect(url_for('usuario.listar'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Erro ao cadastrar usuário: {str(e)}', 'error')
+            flash(f'Erro ao criar usuário: {str(e)}', 'error')
 
     escolas = Escola.query.all()
     perfis = get_perfis_permitidos(usuario_logado)
@@ -366,7 +364,6 @@ def editar(id):
                         flash('Tipo de arquivo não permitido para foto!', 'error')
 
             # Log detalhado da edição
-            import json
             detalhes_log = {
                 'usuario_editado': {
                     'id': usuario.id,
@@ -381,7 +378,7 @@ def editar(id):
                 'user_agent': request.headers.get('User-Agent')
             }
 
-            log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario',
+            log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario', 
                     f'Usuário editado: {usuario.nome} ({usuario.email}) - {json.dumps(detalhes_log)}')
 
             db.session.commit()
@@ -411,7 +408,6 @@ def excluir(id):
 
     try:
         # Log detalhado da exclusão
-        import json
         detalhes_log = {
             'usuario_excluido': {
                 'id': usuario.id,
@@ -426,7 +422,7 @@ def excluir(id):
             'user_agent': request.headers.get('User-Agent')
         }
 
-        log_acao(AcoesAuditoria.USUARIO_EXCLUIDO, 'Usuario',
+        log_acao(AcoesAuditoria.USUARIO_EXCLUIDO, 'Usuario', 
                 f'Usuário excluído: {usuario.nome} ({usuario.email}) - {json.dumps(detalhes_log)}')
 
         db.session.delete(usuario)
@@ -623,11 +619,12 @@ def trocar_escola():
             # Atualizar escola atual na sessão
             session['escola_atual_id'] = nova_escola_id
             session['escola_atual_nome'] = nova_escola.nome
-
-            # Log da ação
-            from utils.logs import log_acao, AcoesAuditoria
-            log_acao(AcoesAuditoria.ALTERACAO, 'Usuario',
-                    f'Trocou escola de trabalho para: {nova_escola.nome}')
+            
+            # Log da alteração
+            escola_anterior = Escola.query.get(usuario_atual.escola_id) if usuario_atual.escola_id else None
+            
+            log_acao(AcoesAuditoria.ALTERACAO, 'Usuario', 
+                    f'Escola alterada: {usuario_atual.nome} - {escola_anterior.nome if escola_anterior else "Nenhuma"} → {nova_escola.nome}')
 
             flash(f'Escola alterada para: {nova_escola.nome}', 'success')
             return redirect(url_for('dashboard'))
@@ -675,7 +672,8 @@ def alterar_senha():
         try:
             # Atualizar senha
             usuario.set_password(nova_senha)
-
+            usuario.resetar_controle_senha()
+            
             # Log da ação
             log_acao(AcoesAuditoria.USUARIO_EDITADO, 'Usuario', f'Senha alterada: {usuario.nome}')
 
