@@ -3,7 +3,7 @@
 
 # Configurações da aplicação
 FLASK_ENV=production
-SECRET_KEY=sua_chave_secreta_super_forte_aqui_32_chars
+SECRET_KEY=ujkwoyZLRk-alp4m2kj58l1Yh1haTAZSzVEfgAnF6JY
 SERVER_NAME=dossie.easistemas.dev.br
 
 # Configurações do banco de dados PostgreSQL

@@ -64,7 +64,7 @@ Vá para: `https://SEU_IP_VPS:3000`
 ```
 FLASK_ENV=production
 DATABASE_URL=postgresql://dossie_user:MinhaSenh@123Forte@postgres:5432/dossie_escola
-SECRET_KEY=chave_secreta_32_caracteres_aqui
+SECRET_KEY=ujkwoyZLRk-alp4m2kj58l1Yh1haTAZSzVEfgAnF6JY
 SERVER_NAME=dossie.easistemas.dev.br
 UPLOAD_FOLDER=/app/static/uploads
 MAX_CONTENT_LENGTH=16777216
