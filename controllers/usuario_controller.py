@@ -145,14 +145,13 @@ def novo():
         from utils.validators import validar_dados_usuario, validar_senha, ValidationError
 
         try:
-            # Coletar dados do formulário
+            # Capturar dados do formulário
             dados_form = {
                 'nome': request.form.get('nome', ''),
                 'email': request.form.get('email', ''),
                 'cpf': request.form.get('cpf', ''),
                 'telefone': request.form.get('telefone', ''),
                 'data_nascimento': request.form.get('data_nascimento'),
-                'endereco': request.form.get('endereco', ''),
                 'cargo': request.form.get('cargo', '')
             }
 
@@ -198,7 +197,6 @@ def novo():
             email=dados_validados['email'],
             cpf=dados_validados.get('cpf'),
             telefone=dados_validados.get('telefone'),
-            endereco=dados_validados.get('endereco'),
             escola_id=escola_id,
             perfil_id=perfil_id,
             situacao=situacao,
@@ -517,7 +515,6 @@ def editar_perfil():
             usuario.nome = request.form.get('nome')
             usuario.email = request.form.get('email')
             usuario.telefone = request.form.get('telefone')
-            usuario.endereco = request.form.get('endereco')
 
             # Validar email único
             email_existente = Usuario.query.filter(

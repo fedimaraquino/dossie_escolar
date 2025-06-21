@@ -13,6 +13,9 @@ import secrets
 import os
 from sqlalchemy import func
 
+# Importar db dos modelos
+from models import db
+
 # Configuração da aplicação
 def create_app():
     """Factory para criar a aplicação Flask"""
@@ -56,7 +59,6 @@ def create_app():
     app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora de timeout
 
     # Inicializar banco de dados
-    from models import db
     db.init_app(app)
 
     # Inicializar Rate Limiter
@@ -71,14 +73,15 @@ def create_app():
     migrate = Migrate(app, db)
     
     # Registrar blueprints (controladores)
-    from controllers import auth_bp, escola_bp, usuario_bp, dossie_bp, movimentacao_bp, cidade_bp, perfil_bp, anexo_bp
-    from controllers.permissao_controller import permissao_bp
-    from controllers.diretor_controller import diretor_bp
-    from controllers.solicitante_controller import solicitantes_bp
-    from controllers.configuracao_controller import config_bp
-    from controllers.foto_controller import foto_bp
-    from controllers.relatorio_controller import relatorio_bp
-    from admin import admin_bp
+    with app.app_context():
+        from controllers import auth_bp, escola_bp, usuario_bp, dossie_bp, movimentacao_bp, cidade_bp, perfil_bp, anexo_bp
+        from controllers.permissao_controller import permissao_bp
+        from controllers.diretor_controller import diretor_bp
+        from controllers.solicitante_controller import solicitantes_bp
+        from controllers.configuracao_controller import config_bp
+        from controllers.foto_controller import foto_bp
+        from controllers.relatorio_controller import relatorio_bp
+        from admin import admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(escola_bp)

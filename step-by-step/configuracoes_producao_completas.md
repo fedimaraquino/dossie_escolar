@@ -372,6 +372,19 @@ Problema: Conflitos entre múltiplas versões de migração
 Solução: Sistema inteligente de detecção e reset com flask db stamp heads
 ```
 
+### **5. ERRO Import DB (21/06/2025)**
+```
+NameError: name 'db' is not defined
+/app/controllers/relatorio_controller.py, line 19
+```
+
+### **11. ERRO Imports Duplicados (21/06/2025)**
+- **Problema:** `log_acao() got multiple values for argument 'detalhes'` 
+- **Causa:** Imports duplicados nas linhas 5, 242, 627 do usuario_controller.py
+- **Correção:** Removidos imports duplicados, mantido apenas o import do topo
+- **Commit:** `41b4ed1` - "FIX: Remover imports duplicados log_acao no usuario_controller"
+- **Status:** ✅ Corrigido, aguardando deploy
+
 ---
 
 ## ✅ Checklist de Deploy
@@ -516,8 +529,6 @@ GitHub: https://github.com/fedimaraquino/dossie_escolar.git
 Branch Principal: master
 Deploy: Automático via webhook
 ```
-
----
 
 ---
 

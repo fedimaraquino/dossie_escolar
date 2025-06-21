@@ -3,9 +3,8 @@ Controller para Relatórios - Integração com app.py
 """
 
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
-from models import Usuario, Dossie, Movimentacao
+from models import Usuario, Dossie, Movimentacao, db
 from datetime import datetime, timedelta
-from app import db
 
 # Criar blueprint
 relatorio_bp = Blueprint('relatorio', __name__, url_prefix='/relatorios')

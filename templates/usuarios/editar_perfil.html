@@ -93,15 +93,10 @@
                                                value="{{ usuario.cpf }}" readonly>
                                         <div class="form-text">O CPF não pode ser alterado</div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-6">
                                         <label for="telefone" class="form-label">Telefone</label>
-                                        <input type="text" class="form-control" id="telefone" name="telefone"
+                                        <input type="tel" class="form-control" id="telefone" name="telefone" 
                                                value="{{ usuario.telefone or '' }}" placeholder="(11) 99999-9999">
-                                    </div>
-                                    <div class="col-12 mb-3">
-                                        <label for="endereco" class="form-label">Endereço</label>
-                                        <textarea class="form-control" id="endereco" name="endereco" rows="3"
-                                                  placeholder="Rua, número, bairro, cidade - UF">{{ usuario.endereco or '' }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -113,13 +108,13 @@
                             Entre em contato com o administrador se precisar modificar essas informações.
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('usuario.perfil') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancelar
-                            </a>
+                        <div class="col-12">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                                <i class="fas fa-save"></i> Salvar Alterações
                             </button>
+                            <a href="{{ url_for('usuario.perfil') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
                         </div>
                     </form>
                 </div>
