@@ -8,8 +8,25 @@ while ! nc -z postgres 5432; do
 done
 echo "PostgreSQL está pronto!"
 
-# Criar todas as tabelas automaticamente
-echo "Criando tabelas do banco de dados..."
+# Executar migrações do banco de dados
+echo "Executando migrações do banco de dados..."
+
+# Verificar se migrations já existe, senão inicializar
+if [ ! -d "migrations" ]; then
+    echo "Inicializando migrações..."
+    flask db init
+fi
+
+# Aplicar migrações
+echo "Aplicando migrações..."
+flask db upgrade || {
+    echo "Primeira migração... Criando migration inicial"
+    flask db migrate -m "Initial migration" 
+    flask db upgrade
+}
+
+# Criar dados iniciais
+echo "Verificando dados iniciais..."
 python -c "
 import traceback
 from app import create_app
@@ -32,10 +49,8 @@ try:
     with app.app_context():
         print('🔗 Conectado ao banco de dados')
         
-        # Criar todas as tabelas
-        print('📋 Criando tabelas...')
-        db.create_all()
-        print('✅ Tabelas criadas com sucesso!')
+        # Verificar se tabelas existem (migrações já aplicadas)
+        print('📋 Verificando estrutura do banco...')
         
         # Criar escola padrão se não existir
         print('🏫 Verificando escola...')
