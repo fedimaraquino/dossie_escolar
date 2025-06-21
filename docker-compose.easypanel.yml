@@ -7,7 +7,7 @@ services:
     environment:
       - FLASK_ENV=production
       - DATABASE_URL=postgresql://dossie_user:Fep09151*@postgres:5432/dossie_escola
-      - SECRET_KEY=${SECRET_KEY}
+      - SECRET_KEY=ujkwoyZLRk-alp4m2kj58l1Yh1haTAZSzVEfgAnF6JY
       - SERVER_NAME=dossie.easistemas.dev.br
       - UPLOAD_FOLDER=/app/static/uploads
       - MAX_CONTENT_LENGTH=16777216
@@ -36,13 +36,12 @@ services:
   postgres:
     image: postgres:13-alpine
     environment:
-      - POSTGRES_USER=postgres
+      - POSTGRES_USER=dossie_user
       - POSTGRES_PASSWORD=Fep09151*
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=dossie_escola
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
     restart: unless-stopped
     networks:
       - default
