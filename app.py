@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import secrets
 import os
 from sqlalchemy import func
+from werkzeug.security import generate_password_hash
 
 # Importar db dos modelos
 from models import db
@@ -454,70 +455,67 @@ def create_app():
     return app
 
 def init_database(app):
-    """Inicializa o banco de dados com dados padrão"""
     with app.app_context():
-        from models import db, Perfil, Cidade, Escola, Usuario
+        # Imports necessários para esta função
+        from models import Perfil, Cidade, Escola, Usuario, db
+        from werkzeug.security import generate_password_hash
         
-        # Criar tabelas
         db.create_all()
-        
-        # Criar perfis padrão
-        if not Perfil.query.first():
+
+        # --- Etapa 1: Perfis ---
+        if not Perfil.query.filter_by(perfil='Administrador Geral').first():
+            print("👤 Criando perfis padrão...")
             perfis = [
-                Perfil(perfil='Administrador Geral'),
-                Perfil(perfil='Administrador da Escola'),
-                Perfil(perfil='Operador'),
-                Perfil(perfil='Consulta')
+                {'perfil': 'Administrador Geral', 'descricao': 'Acesso total ao sistema.'},
+                {'perfil': 'Diretor', 'descricao': 'Acesso de gerenciamento da sua escola.'},
+                {'perfil': 'Secretário', 'descricao': 'Acesso operacional da sua escola.'},
+                {'perfil': 'Convidado', 'descricao': 'Acesso de apenas leitura.'}
             ]
-            for perfil in perfis:
-                db.session.add(perfil)
+            for p_info in perfis:
+                db.session.add(Perfil(**p_info))
             db.session.commit()
             print("✅ Perfis criados")
-        
-        # Criar cidade padrão
-        if not Cidade.query.first():
-            cidade = Cidade(nome='São Paulo', uf='SP', codigo_ibge='3550308')
+
+        # --- Etapa 2: Cidade ---
+        cidade = Cidade.query.filter_by(nome='São Paulo', uf='SP').first()
+        if not cidade:
+            print("🏙️ Criando cidade padrão...")
+            cidade = Cidade(nome='São Paulo', uf='SP')
             db.session.add(cidade)
             db.session.commit()
+            cidade = Cidade.query.filter_by(nome='São Paulo', uf='SP').first() # Recarregar para ter o ID
             print("✅ Cidade padrão criada")
-        
-        # Criar escola padrão
-        if not Escola.query.first():
-            cidade_padrao = Cidade.query.first()
-            escola = Escola(
-                nome='Escola Municipal Exemplo',
-                endereco='Rua das Flores, 123',
-                uf='SP',
-                cnpj='12.345.678/0001-90',
-                inep='12345678',
-                email='escola@exemplo.gov.br',
-                diretor='João Silva',
-                id_cidade=cidade_padrao.id if cidade_padrao else None
-            )
+
+        # --- Etapa 3: Escola ---
+        escola = Escola.query.filter_by(nome='Escola Matriz').first()
+        if not escola:
+            print("🏫 Criando escola padrão...")
+            escola = Escola(nome='Escola Matriz', uf='SP', id_cidade=cidade.id)
             db.session.add(escola)
             db.session.commit()
+            escola = Escola.query.filter_by(nome='Escola Matriz').first() # Recarregar para ter o ID
             print("✅ Escola padrão criada")
-        
-        # Criar usuário administrador
+
+        # --- Etapa 4: Usuário Administrador ---
         if not Usuario.query.filter_by(email='admin@sistema.com').first():
-            perfil_admin = Perfil.query.filter_by(nome='Administrador Geral').first()
-            escola_padrao = Escola.query.first()
+            print("👮 Criando usuário administrador...")
+            perfil_admin = Perfil.query.filter_by(perfil='Administrador Geral').first()
             
-            admin = Usuario(
-                nome='Administrador do Sistema',
-                email='admin@sistema.com',
-                cpf='000.000.000-00',
-                telefone='(11) 99999-9999',
-                perfil_id=perfil_admin.id,
-                escola_id=escola_padrao.id,
-                situacao='ativo',
-                data_nascimento=datetime(1980, 1, 1).date()
-            )
-            admin.set_password('admin123')
-            
-            db.session.add(admin)
-            db.session.commit()
-            print("✅ Usuário admin criado: admin@sistema.com / admin123")
+            if perfil_admin and escola:
+                usuario_admin = Usuario(
+                    nome='Administrador do Sistema',
+                    email='admin@sistema.com',
+                    escola_id=escola.id,
+                    perfil_id=perfil_admin.id,
+                    situacao='ativo',
+                    # Definindo a senha diretamente com hash para evitar a validação complexa no primeiro login
+                    senha_hash=generate_password_hash('Admin@123')
+                )
+                db.session.add(usuario_admin)
+                db.session.commit()
+                print("✅ Usuário administrador criado")
+            else:
+                print("❌ ERRO CRÍTICO: Perfil de admin ou escola padrão não encontrados. Usuário admin não foi criado.")
 
 # Criar instância da aplicação para Gunicorn
 app = create_app()

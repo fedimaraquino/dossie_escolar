@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Variável para forçar o rebuild completo
+ENV CACHE_BUSTER=202506230248
+
 WORKDIR /app
 
 # Instalar dependências do sistema

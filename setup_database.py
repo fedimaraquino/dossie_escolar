@@ -1,11 +1,10 @@
-from app import create_app, db
+from app import create_app, init_database
 
-print("Iniciando a criação das tabelas no banco de dados...")
+print("Iniciando a configuração completa do banco de dados (tabelas e dados iniciais)...")
 
 app = create_app()
-with app.app_context():
-    try:
-        db.create_all()
-        print("Tabelas criadas com sucesso!")
-    except Exception as e:
-        print(f"Ocorreu um erro ao criar as tabelas: {e}") 
+
+# A função init_database já cria as tabelas e os dados iniciais (usuário admin, perfis, etc.)
+init_database(app)
+
+print("Configuração do banco de dados concluída com sucesso.") 
