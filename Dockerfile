@@ -37,3 +37,5 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:create_app()"]
+
+# Cache buster: 2025-06-23 02:40
