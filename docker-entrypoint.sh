@@ -29,4 +29,4 @@ python setup_database.py
 
 # 4. Iniciar o servidor de aplicação Gunicorn
 echo "Iniciando o servidor Gunicorn..."
-exec gunicorn --bind 0.0.0.0:8000 "app:create_app()" 
+exec "$@" 
