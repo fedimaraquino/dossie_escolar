@@ -6,6 +6,14 @@ set -e
 # Função para verificar se o Postgres está pronto
 wait_for_postgres() {
     echo "Aguardando o PostgreSQL iniciar..."
+    
+    # Adicionando comandos de diagnóstico de rede
+    echo "--- INÍCIO DO DIAGNÓSTICO DE REDE ---"
+    ping -c 4 dossie_db || echo "Ping para dossie_db FALHOU"
+    echo "Tentando conexão na porta 5432 com netcat..."
+    nc -z -v -w 5 dossie_db 5432
+    echo "--- FIM DO DIAGNÓSTICO DE REDE ---"
+
     # O nome 'dossie_db' vem do nome do serviço no docker-compose/easypanel
     # O pg_isready é uma ferramenta do cliente postgres
     until pg_isready -h dossie_db -p 5432 -U "${POSTGRES_USER:-dossie_user}"; do
