@@ -13,8 +13,9 @@ services:
       - MAX_CONTENT_LENGTH=16777216
       - PYTHONUNBUFFERED=1
     volumes:
-      - app_uploads:/app/static/uploads
-      - app_logs:/app/logs
+      - app_uploads:/app/static/uploads:rw
+      - app_logs:/app/logs:rw
+      - app_static:/app/static:rw
     depends_on:
       - postgres
     restart: unless-stopped
@@ -48,8 +49,13 @@ services:
 
 volumes:
   app_uploads:
+    driver: local
   app_logs:
+    driver: local
+  app_static:
+    driver: local
   postgres_data:
+    driver: local
 
 networks:
   easypanel:

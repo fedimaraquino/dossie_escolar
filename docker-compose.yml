@@ -9,13 +9,17 @@ services:
       - SECRET_KEY=uma-chave-secreta-forte-para-desenvolvimento-local
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
+      - UPLOAD_FOLDER=/app/static/uploads
+      - MAX_CONTENT_LENGTH=16777216
     ports:
       - "8000:8000"
     volumes:
-      - app_uploads:/app/static/uploads
-      - app_logs:/app/instance/logs
+      - app_uploads:/app/static/uploads:rw
+      - app_logs:/app/instance/logs:rw
+      - app_static:/app/static:rw
     depends_on:
       - dossie_db
+    restart: unless-stopped
 
   dossie_db:
     image: postgres:13
@@ -27,8 +31,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: unless-stopped
 
 volumes:
   app_uploads:
+    driver: local
   app_logs:
+    driver: local
+  app_static:
+    driver: local
   postgres_data:
+    driver: local

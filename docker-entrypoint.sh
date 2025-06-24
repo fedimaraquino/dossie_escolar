@@ -17,17 +17,40 @@ wait_for_postgres() {
     echo "PostgreSQL iniciado com sucesso!"
 }
 
-# 1. Aguardar o banco de dados ficar pronto
+# Função para configurar diretórios de uploads
+setup_upload_directories() {
+    echo "Configurando diretórios de uploads..."
+    
+    # Criar diretórios se não existirem
+    mkdir -p /app/static/uploads/fotos
+    mkdir -p /app/static/uploads/dossies
+    mkdir -p /app/static/uploads/diretores
+    mkdir -p /app/static/uploads/anexos
+    mkdir -p /app/logs
+    
+    # Definir permissões corretas
+    chmod -R 755 /app/static/uploads
+    chmod -R 755 /app/logs
+    
+    # Definir proprietário (se possível)
+    if command -v chown >/dev/null 2>&1; then
+        chown -R www-data:www-data /app/static/uploads 2>/dev/null || true
+        chown -R www-data:www-data /app/logs 2>/dev/null || true
+    fi
+    
+    echo "Diretórios de uploads configurados com sucesso!"
+}
+
+# 1. Configurar diretórios de uploads
+setup_upload_directories
+
+# 2. Aguardar o banco de dados ficar pronto
 wait_for_postgres
 
-# 2. Executar o script de criação das tabelas
+# 3. Executar o script de criação das tabelas
 # Isso garante que o esquema do banco de dados está criado ou atualizado.
 echo "Executando a inicialização do banco de dados (criação de tabelas)..."
 python setup_database.py
-
-# 3. Executar as migrações do banco de dados (se houver)
-# echo "Aplicando migrações do banco de dados..."
-# flask db upgrade
 
 # 4. Iniciar o servidor de aplicação Gunicorn
 echo "Iniciando o servidor Gunicorn..."
