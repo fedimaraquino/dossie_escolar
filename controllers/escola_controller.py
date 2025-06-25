@@ -137,9 +137,7 @@ def editar(id):
                 'user_agent': request.headers.get('User-Agent')
             }
 
-            log_acao(AcoesAuditoria.ESCOLA_EDITADA, 'Escola',
-                    f'Escola editada: {escola.nome}',
-                    detalhes=json.dumps(detalhes_log))
+            log_acao(AcoesAuditoria.ESCOLA_EDITADA, 'Escola', json.dumps(detalhes_log))
 
             db.session.commit()
             flash('Escola atualizada com sucesso!', 'success')
@@ -177,9 +175,7 @@ def excluir(id):
             'user_agent': request.headers.get('User-Agent')
         }
 
-        log_acao(AcoesAuditoria.ESCOLA_EXCLUIDA, 'Escola',
-                f'Escola excluída: {escola.nome}',
-                detalhes=json.dumps(detalhes_log))
+        log_acao(AcoesAuditoria.ESCOLA_EXCLUIDA, 'Escola', json.dumps(detalhes_log))
 
         db.session.delete(escola)
         db.session.commit()
