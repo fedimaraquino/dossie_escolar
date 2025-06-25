@@ -351,9 +351,7 @@ def editar(id):
                 'user_agent': request.headers.get('User-Agent')
             }
 
-            log_acao(AcoesAuditoria.DOSSIE_EDITADO, 'Dossie',
-                    f'Dossiê editado: {dossie.numero_dossie} - {dossie.nome_aluno}',
-                    detalhes=json.dumps(detalhes_log))
+            log_acao(AcoesAuditoria.DOSSIE_EDITADO, 'Dossie', json.dumps(detalhes_log))
 
             db.session.commit()
             flash('Dossiê atualizado com sucesso!', 'success')
@@ -393,9 +391,7 @@ def excluir(id):
             'user_agent': request.headers.get('User-Agent')
         }
 
-        log_acao(AcoesAuditoria.DOSSIE_EXCLUIDO, 'Dossie',
-                f'Dossiê excluído: {dossie.numero_dossie} - {dossie.nome_aluno}',
-                detalhes=json.dumps(detalhes_log))
+        log_acao(AcoesAuditoria.DOSSIE_EXCLUIDO, 'Dossie', json.dumps(detalhes_log))
 
         db.session.delete(dossie)
         db.session.commit()

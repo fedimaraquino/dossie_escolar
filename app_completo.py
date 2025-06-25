@@ -72,7 +72,7 @@ def escola_access_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def log_acao(acao, item_alterado=None, detalhes=None):
+def log_acao_simples(acao, item_alterado=None, detalhes=None):
     """Função para registrar logs de auditoria"""
     if 'user_id' in session:
         log = LogAuditoria(
@@ -119,7 +119,7 @@ def login():
                 session['user_perfil'] = usuario.perfil_obj.nome
                 session['escola_id'] = usuario.escola_id
                 
-                log_acao('LOGIN_SUCESSO', 'Usuario', f'Login realizado com sucesso')
+                log_acao_simples('LOGIN_SUCESSO', 'Usuario', f'Login realizado com sucesso')
                 flash('Login realizado com sucesso!', 'success')
                 return redirect(url_for('dashboard'))
             else:
@@ -132,17 +132,17 @@ def login():
                     flash(f'Senha incorreta. Tentativas restantes: {5 - usuario.tentativas_login}', 'error')
                 
                 db.session.commit()
-                log_acao('LOGIN_FALHA', 'Usuario', f'Tentativa de login falhada para {email}')
+                log_acao_simples('LOGIN_FALHA', 'Usuario', f'Tentativa de login falhada para {email}')
         else:
             flash('Email não encontrado!', 'error')
-            log_acao('LOGIN_FALHA', 'Usuario', f'Tentativa de login com email inexistente: {email}')
+            log_acao_simples('LOGIN_FALHA', 'Usuario', f'Tentativa de login com email inexistente: {email}')
     
     return render_template('login_completo.html')
 
 @app.route('/logout')
 def logout():
     if 'user_id' in session:
-        log_acao('LOGOUT', 'Usuario', 'Logout realizado')
+        log_acao_simples('LOGOUT', 'Usuario', 'Logout realizado')
     session.clear()
     flash('Logout realizado com sucesso!', 'success')
     return redirect(url_for('index'))
@@ -221,7 +221,7 @@ def nova_escola():
         try:
             db.session.add(escola)
             db.session.commit()
-            log_acao('CREATE', 'Escola', f'Escola criada: {escola.nome}')
+            log_acao_simples('CREATE', 'Escola', f'Escola criada: {escola.nome}')
             flash('Escola cadastrada com sucesso!', 'success')
             return redirect(url_for('listar_escolas'))
         except Exception as e:
