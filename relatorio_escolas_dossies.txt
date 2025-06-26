@@ -1,0 +1,6 @@
+Escola | ID | Qtd Dossiês
+----------------------------------------
+ESCOLA MUNICIPAL LINDALVA MARIA DE SOUZA | 3 | 2
+Escola Matriz | 4 | 0
+Escola Municipal Exemplo1 | 1 | 1
+ESCOLA MUNICIPAL ELINAS DIAS | 2 | 0

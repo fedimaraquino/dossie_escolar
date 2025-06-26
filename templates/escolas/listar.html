@@ -64,15 +64,15 @@
                 {% if escolas.items %}
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead class="table-dark">
+                            <thead>
                                 <tr>
-                                    <th>Nome</th>
+                                    <th>Nome da Escola</th>
                                     <th>Diretor</th>
                                     <th>CNPJ</th>
                                     <th>INEP</th>
                                     <th>UF</th>
                                     <th>Situação</th>
-                                    <th>Data Cadastro</th>
+                                    <th>Data de Cadastro</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -199,40 +199,7 @@
 </div>
 
 <!-- Estatísticas -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <h4>{{ escolas.total }}</h4>
-                <p class="mb-0">Total de Escolas</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h4>{{ escolas.items | selectattr('situacao', 'equalto', 'ativa') | list | length }}</h4>
-                <p class="mb-0">Escolas Ativas</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body text-center">
-                <h4>{{ escolas.items | selectattr('situacao', 'equalto', 'inativa') | list | length }}</h4>
-                <p class="mb-0">Escolas Inativas</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h4>0</h4>
-                <p class="mb-0">Cadastradas (30 dias)</p>
-            </div>
-        </div>
-    </div>
-</div>
+{# Bloco removido conforme solicitado pelo usuário: cards de estatísticas #}
 {% endblock %}
 
 {% block extra_js %}

@@ -208,7 +208,7 @@
                             <div class="col-6 mb-3">
                                 <div class="card bg-success text-white">
                                     <div class="card-body">
-                                        <h4>{{ escola.total_usuarios }}</h4>
+                                        <h4>{{ escola.usuarios|length }}</h4>
                                         <small>Usuários</small>
                                     </div>
                                 </div>
@@ -216,7 +216,7 @@
                             <div class="col-6 mb-3">
                                 <div class="card bg-info text-white">
                                     <div class="card-body">
-                                        <h4>{{ escola.total_dossies }}</h4>
+                                        <h4>{{ escola.dossies|length }}</h4>
                                         <small>Dossiês</small>
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@
                             <div class="col-6 mb-3">
                                 <div class="card bg-warning text-dark">
                                     <div class="card-body">
-                                        <h4>{{ escola.total_movimentacoes }}</h4>
+                                        <h4>{% set total_movs = 0 %}{% for dossie in escola.dossies %}{% set total_movs = total_movs + (dossie.movimentacoes|length) %}{% endfor %}{{ total_movs }}</h4>
                                         <small>Movimentações</small>
                                     </div>
                                 </div>
@@ -232,7 +232,7 @@
                             <div class="col-6 mb-3">
                                 <div class="card bg-danger text-white">
                                     <div class="card-body">
-                                        <h4>{{ escola.movimentacoes_pendentes }}</h4>
+                                        <h4>{% set pendentes = 0 %}{% for dossie in escola.dossies %}{% for mov in dossie.movimentacoes %}{% if mov.status == 'pendente' %}{% set pendentes = pendentes + 1 %}{% endif %}{% endfor %}{% endfor %}{{ pendentes }}</h4>
                                         <small>Pendentes</small>
                                     </div>
                                 </div>

@@ -1,7 +1,7 @@
 # controllers/escola_controller.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
-from models import db, Escola, Cidade, Usuario
+from models import db, Escola, Cidade, Usuario, Movimentacao, Dossie
 from utils.logs import log_acao, AcoesAuditoria
 from .auth_controller import login_required, admin_required
 
@@ -91,6 +91,19 @@ def nova():
 def ver(id):
     """Visualiza detalhes da escola"""
     escola = Escola.query.get_or_404(id)
+
+    # Estatísticas
+    total_usuarios = len(escola.usuarios)
+    total_dossies = len(escola.dossies)
+    total_movimentacoes = Movimentacao.query.join(Dossie).filter(Dossie.id_escola == escola.id).count()
+    movimentacoes_pendentes = Movimentacao.query.join(Dossie).filter(Dossie.id_escola == escola.id, Movimentacao.status == 'pendente').count()
+
+    # Adiciona dinamicamente os atributos ao objeto escola
+    escola.total_usuarios = total_usuarios
+    escola.total_dossies = total_dossies
+    escola.total_movimentacoes = total_movimentacoes
+    escola.movimentacoes_pendentes = movimentacoes_pendentes
+
     return render_template('escolas/ver.html', escola=escola)
 
 @escola_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
