@@ -51,7 +51,7 @@
                 {% if perfis.items %}
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead class="table-dark">
+                            <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Nome do Perfil</th>
@@ -173,42 +173,6 @@
                         {% endif %}
                     </div>
                 {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Estatísticas -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h4>{{ perfis.total }}</h4>
-                <p class="mb-0">Total de Perfis</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body text-center">
-                <h4>{{ perfis.items | selectattr('perfil', 'in', ['Administrador Geral', 'Administrador da Escola', 'Operador', 'Consulta']) | list | length }}</h4>
-                <p class="mb-0">Perfis do Sistema</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-secondary text-white">
-            <div class="card-body text-center">
-                <h4>{{ perfis.items | rejectattr('perfil', 'in', ['Administrador Geral', 'Administrador da Escola', 'Operador', 'Consulta']) | list | length }}</h4>
-                <p class="mb-0">Perfis Personalizados</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h4>{{ (perfis.items | map(attribute='usuarios') | map('length') | sum) if perfis.items else 0 }}</h4>
-                <p class="mb-0">Usuários Vinculados</p>
             </div>
         </div>
     </div>

@@ -60,7 +60,7 @@
                 {% if cidades.items %}
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead class="table-dark">
+                            <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Nome</th>
@@ -172,42 +172,6 @@
                         {% endif %}
                     </div>
                 {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Estatísticas -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <h4>{{ cidades.total }}</h4>
-                <p class="mb-0">Total de Cidades</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h4>{{ ufs | length }}</h4>
-                <p class="mb-0">Estados (UFs)</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h4>{{ cidades.items | selectattr('escolas') | list | length }}</h4>
-                <p class="mb-0">Com Escolas</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-secondary text-white">
-            <div class="card-body text-center">
-                <h4>{{ cidades.items | rejectattr('escolas') | list | length }}</h4>
-                <p class="mb-0">Sem Escolas</p>
             </div>
         </div>
     </div>

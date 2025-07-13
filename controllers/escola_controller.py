@@ -171,7 +171,12 @@ def editar(id):
 def excluir(id):
     """Exclui escola"""
     escola = Escola.query.get_or_404(id)
-    
+
+    # Verificação: impedir exclusão se houver usuários vinculados
+    if escola.usuarios:
+        flash('Não é possível excluir uma escola que possui usuários vinculados. Transfira ou exclua os usuários primeiro.', 'error')
+        return redirect(url_for('escola.ver', id=escola.id))
+
     try:
         # Log detalhado da exclusão
         import json

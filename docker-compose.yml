@@ -12,7 +12,7 @@ services:
       - UPLOAD_FOLDER=/app/static/uploads
       - MAX_CONTENT_LENGTH=16777216
     ports:
-      - "8000:8000"
+      - "5000:5000"
     volumes:
       - app_uploads:/app/static/uploads:rw
       - app_logs:/app/instance/logs:rw

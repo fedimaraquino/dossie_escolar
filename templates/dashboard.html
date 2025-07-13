@@ -10,26 +10,7 @@
 </div>
 
 <!-- Alertas -->
-<div class="row mb-3">
-    {% if alertas.dossies_pendentes > 0 %}
-    <div class="col-md-6 mb-2">
-        <div class="alert alert-warning shadow-sm">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <strong>{{ alertas.dossies_pendentes }}</strong> dossiês pendentes nesta escola.
-            <a href="{{ url_for('dossie.listar', situacao='pendente') }}" class="btn btn-sm btn-outline-warning ms-2">Ver pendentes</a>
-        </div>
-    </div>
-    {% endif %}
-    {% if alertas.movimentacoes_atrasadas > 0 %}
-    <div class="col-md-6 mb-2">
-        <div class="alert alert-danger shadow-sm">
-            <i class="fas fa-clock me-2"></i>
-            <strong>{{ alertas.movimentacoes_atrasadas }}</strong> movimentações atrasadas.
-            <a href="{{ url_for('movimentacao.listar', status='atrasada') }}" class="btn btn-sm btn-outline-danger ms-2">Ver atrasadas</a>
-        </div>
-    </div>
-    {% endif %}
-</div>
+
 
 <!-- Cards principais -->
 <div class="row mb-4">
