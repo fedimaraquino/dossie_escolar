@@ -6,7 +6,7 @@ services:
     image: dossie-app:local
     environment:
       - DATABASE_URL=postgresql://dossie_user:Fep09151*@dossie_db:5432/dossie_escola
-      - SECRET_KEY=uma-chave-secreta-forte-para-desenvolvimento-local
+      - SECRET_KEY=ae45574f35b34620917d1490fe635e3c065d009cdf582fce46fa191fc7f00cd7
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
       - UPLOAD_FOLDER=/app/static/uploads

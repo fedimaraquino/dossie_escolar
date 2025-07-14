@@ -60,6 +60,10 @@ Cada arquivo de documentação segue o padrão:
 - Documentar integração com banco de dados
 - ✅ Deploy e configuração - **CONCLUÍDO**
 
+## Persistência de Imagens e Uploads
+
+Para garantir que fotos e arquivos enviados pelos usuários não sejam perdidos ao reiniciar o container Docker, é fundamental configurar volumes persistentes. Veja o guia completo em [correcao_persistencia_fotos.md](correcao_persistencia_fotos.md).
+
 ---
 
 **Última atualização:** 27/01/2025  

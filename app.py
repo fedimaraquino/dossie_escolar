@@ -51,7 +51,7 @@ def create_app():
     
     # Configurações de upload
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-    app.config['UPLOAD_FOLDER'] = 'static/uploads'
+    app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'static/uploads')
 
     # Configurações de segurança de sessão
     app.config['SESSION_COOKIE_SECURE'] = False  # Permitir HTTP para desenvolvimento
