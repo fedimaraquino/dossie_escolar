@@ -1,5 +1,5 @@
 # controllers/diretor_controller.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from models import db, Diretor
 from controllers.auth_controller import login_required
 # Removido: from utils.permissions import require_permission, Modulos, Acoes
@@ -176,7 +176,7 @@ def criar():
                         filename = f"diretor_{diretor.id_diretor}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join('static', 'uploads', 'diretores')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'diretores')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 
@@ -300,7 +300,7 @@ def editar(id_diretor):
                     if allowed_file(foto.filename):
                         # Remover foto anterior se existir
                         if diretor.foto:
-                            old_photo_path = os.path.join('static', 'uploads', 'diretores', diretor.foto)
+                            old_photo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'diretores', diretor.foto)
                             if os.path.exists(old_photo_path):
                                 try:
                                     os.remove(old_photo_path)
@@ -312,7 +312,7 @@ def editar(id_diretor):
                         filename = f"diretor_{diretor.id_diretor}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join('static', 'uploads', 'diretores')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'diretores')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 

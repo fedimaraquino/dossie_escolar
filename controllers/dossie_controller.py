@@ -1,5 +1,5 @@
 # controllers/dossie_controller.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from datetime import datetime
 from models import db, Dossie, Escola, Usuario
 from utils.logs import log_acao, AcoesAuditoria
@@ -149,7 +149,7 @@ def novo():
                         filename = f"dossie_{dossie.id_dossie}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join('static', 'uploads', 'dossies')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'dossies')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 
@@ -173,7 +173,7 @@ def novo():
                 from werkzeug.utils import secure_filename
 
                 # Criar pasta de upload se não existir
-                upload_folder = os.path.join('static', 'uploads', 'anexos')
+                upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'anexos')
                 os.makedirs(upload_folder, exist_ok=True)
 
                 for i, file in enumerate(files):
@@ -311,7 +311,7 @@ def editar(id):
                     if allowed_file(foto.filename):
                         # Remover foto anterior se existir
                         if dossie.foto:
-                            old_photo_path = os.path.join('static', 'uploads', 'dossies', dossie.foto)
+                            old_photo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'dossies', dossie.foto)
                             if os.path.exists(old_photo_path):
                                 try:
                                     os.remove(old_photo_path)
@@ -323,7 +323,7 @@ def editar(id):
                         filename = f"dossie_{dossie.id_dossie}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join('static', 'uploads', 'dossies')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'dossies')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 

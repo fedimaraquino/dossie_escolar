@@ -225,7 +225,7 @@ def novo():
                         filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'fotos')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 
@@ -330,7 +330,7 @@ def editar(id):
                     if allowed_file(foto.filename):
                         # Remover foto anterior se existir
                         if usuario.foto:
-                            old_photo_path = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos', usuario.foto)
+                            old_photo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'fotos', usuario.foto)
                             if os.path.exists(old_photo_path):
                                 try:
                                     os.remove(old_photo_path)
@@ -342,7 +342,7 @@ def editar(id):
                         filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'fotos')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 
@@ -538,7 +538,7 @@ def editar_perfil():
                     if allowed_file(foto.filename):
                         # Remover foto anterior se existir
                         if usuario.foto:
-                            old_photo_path = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos', usuario.foto)
+                            old_photo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'fotos', usuario.foto)
                             if os.path.exists(old_photo_path):
                                 try:
                                     os.remove(old_photo_path)
@@ -550,7 +550,7 @@ def editar_perfil():
                         filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
                         # Definir caminho para salvar
-                        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+                        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'fotos')
                         os.makedirs(upload_folder, exist_ok=True)
                         file_path = os.path.join(upload_folder, filename)
 

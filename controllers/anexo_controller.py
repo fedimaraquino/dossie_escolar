@@ -1,14 +1,13 @@
 # controllers/anexo_controller.py
 import os
 from werkzeug.utils import secure_filename
-from flask import Blueprint, request, redirect, url_for, flash, session, jsonify, send_file
+from flask import Blueprint, request, redirect, url_for, flash, session, jsonify, send_file, current_app
 from models import db, Anexo, Dossie
 from .auth_controller import login_required
 
 anexo_bp = Blueprint('anexo', __name__, url_prefix='/anexos')
 
 # Configurações de upload
-UPLOAD_FOLDER = 'uploads/anexos'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'}
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
@@ -19,8 +18,9 @@ def allowed_file(filename):
 
 def create_upload_folder():
     """Cria a pasta de upload se não existir"""
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
+    upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'anexos')
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
 
 @anexo_bp.route('/upload/<int:dossie_id>', methods=['POST'])
 @login_required
@@ -64,7 +64,8 @@ def upload(dossie_id):
             filename = timestamp + filename
             
             # Caminho completo
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'anexos')
+            filepath = os.path.join(upload_folder, filename)
             
             try:
                 # Salvar arquivo

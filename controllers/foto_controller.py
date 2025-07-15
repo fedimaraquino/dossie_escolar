@@ -73,7 +73,7 @@ def upload_foto():
         filename = f"user_{usuario.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
         
         # Definir caminho para salvar
-        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'fotos')
+        upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'fotos')
         os.makedirs(upload_folder, exist_ok=True)
         file_path = os.path.join(upload_folder, filename)
         
