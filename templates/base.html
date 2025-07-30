@@ -29,11 +29,6 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
                     <!-- Cadastros -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if request.endpoint in ['escola.listar','cidade.listar','perfil.listar','usuario.listar','diretor.index','dossie.listar','solicitantes.listar'] %}active{% endif %}" href="#" id="cadastrosDropdown" role="button" data-bs-toggle="dropdown">
