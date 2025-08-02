@@ -17,6 +17,7 @@ services:
       - app_uploads:/app/static/uploads:rw
       - app_logs:/app/instance/logs:rw
       - app_static:/app/static:rw
+      - ./backups:/app/backups:rw
     depends_on:
       - dossie_db
     restart: unless-stopped

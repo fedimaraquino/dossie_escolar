@@ -1,97 +1,385 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - Escola Atual{% endblock %}
+{% block title %}Dashboard - {{ escola_nome }}{% endblock %}
 
 {% block content %}
+
+
+<!-- Informações da Escola Atual -->
 <div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <h2 class="fw-bold mb-0"><i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard - {{ escola_nome }}</h2>
-        <span class="text-muted">{{ current_date.strftime('%d/%m/%Y %H:%M') }}</span>
-    </div>
-</div>
-
-<!-- Alertas -->
-
-
-<!-- Cards principais -->
-<div class="row mb-4">
-    <div class="col-md-3 col-6 mb-3">
-        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #1976D2 60%, #42A5F5 100%); color: #fff;">
-            <div class="card-body p-3">
-                <div class="mb-2"><i class="fas fa-folder fa-2x"></i></div>
-                <div class="fw-bold fs-3">{{ stats.total_dossies or 0 }}</div>
-                <div class="small">Total de Dossiês</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6 mb-3">
-        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #43A047 60%, #66BB6A 100%); color: #fff;">
-            <div class="card-body p-3">
-                <div class="mb-2"><i class="fas fa-check-circle fa-2x"></i></div>
-                <div class="fw-bold fs-3">{{ stats.dossies_ativos or 0 }}</div>
-                <div class="small">Dossiês Ativos</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6 mb-3">
-        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #FFA000 60%, #FFD54F 100%); color: #fff;">
-            <div class="card-body p-3">
-                <div class="mb-2"><i class="fas fa-exclamation-triangle fa-2x"></i></div>
-                <div class="fw-bold fs-3">{{ stats.dossies_pendentes or 0 }}</div>
-                <div class="small">Pendentes</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6 mb-3">
-        <div class="card text-center shadow border-0 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #8E24AA 60%, #BA68C8 100%); color: #fff;">
-            <div class="card-body p-3">
-                <div class="mb-2"><i class="fas fa-exchange-alt fa-2x"></i></div>
-                <div class="fw-bold fs-3">{{ stats.movimentacoes_mes or 0 }}</div>
-                <div class="small">Movimentações do Mês</div>
+    <div class="col-12">
+        <div class="alert alert-info border-0" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-school fa-2x me-3 text-primary"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">
+                        <strong>Escola Atual:</strong> {{ escola_nome }}
+                    </h5>
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-user me-1"></i>{{ usuario.nome }} | 
+                        <i class="fas fa-calendar me-1"></i>{{ current_date.strftime('%d/%m/%Y às %H:%M') }}
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Gráficos -->
+<!-- Cards Principais - Visão Geral -->
 <div class="row mb-4">
-    <div class="col-lg-6 mb-4">
-        <div class="card h-100 shadow border-0">
-            <div class="card-header bg-white border-0 pb-0">
-                <i class="fas fa-chart-line me-2 text-primary"></i>Evolução Mensal de Dossiês
-            </div>
-            <div class="card-body">
-                <canvas id="graficoEvolucao"></canvas>
+    <div class="col-12">
+        <h4 class="fw-bold mb-3">
+            <i class="fas fa-chart-bar me-2 text-primary"></i>Visão Geral
+        </h4>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Total de Dossiês -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #1976D2 0%, #42A5F5 100%);">
+            <div class="card-body text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ stats.total_dossies }}</h3>
+                        <p class="mb-0 small">Total de Dossiês</p>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-folder fa-2x opacity-75"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-3 mb-4">
-        <div class="card h-100 shadow border-0">
-            <div class="card-header bg-white border-0 pb-0">
-                <i class="fas fa-chart-pie me-2 text-success"></i>Tipos de Movimentação
-            </div>
-            <div class="card-body">
-                <canvas id="graficoTipos"></canvas>
+
+    <!-- Dossiês Ativos -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #43A047 0%, #66BB6A 100%);">
+            <div class="card-body text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ stats.dossies_ativos }}</h3>
+                        <p class="mb-0 small">Dossiês Ativos</p>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-3 mb-4">
-        <div class="card h-100 shadow border-0">
-            <div class="card-header bg-white border-0 pb-0">
-                <i class="fas fa-chart-pie me-2 text-warning"></i>Status dos Dossiês
+
+    <!-- Movimentações do Mês -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);">
+            <div class="card-body text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ stats.movimentacoes_mes }}</h3>
+                        <p class="mb-0 small">Movimentações do Mês</p>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-exchange-alt fa-2x opacity-75"></i>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="graficoStatus"></canvas>
+        </div>
+    </div>
+
+    <!-- Usuários Ativos -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%);">
+            <div class="card-body text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ stats.usuarios_ativos }}</h3>
+                        <p class="mb-0 small">Usuários Ativos</p>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Atalhos rápidos -->
+<!-- Cards Secundários - Detalhes -->
 <div class="row mb-4">
-    <div class="col-12 d-flex gap-2">
-        <a href="{{ url_for('dossie.novo') }}" class="btn btn-primary btn-lg animate__animated animate__fadeInLeft"><i class="fas fa-plus me-1"></i>Novo Dossiê</a>
-        <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-success btn-lg animate__animated animate__fadeInLeft"><i class="fas fa-exchange-alt me-1"></i>Nova Movimentação</a>
-        <a href="{{ url_for('configuracao.exportar') }}" class="btn btn-info btn-lg animate__animated animate__fadeInLeft"><i class="fas fa-file-export me-1"></i>Exportar Relatório</a>
+    <div class="col-12">
+        <h4 class="fw-bold mb-3">
+            <i class="fas fa-info-circle me-2 text-info"></i>Detalhes
+        </h4>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Status dos Dossiês -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>Status dos Dossiês
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success fw-bold">{{ stats.dossies_ativos }}</h4>
+                            <small class="text-muted">Ativos</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-warning fw-bold">{{ stats.dossies_pendentes }}</h4>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-secondary fw-bold">{{ stats.dossies_arquivados }}</h4>
+                            <small class="text-muted">Arquivados</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-info fw-bold">{{ stats.dossies_transferidos }}</h4>
+                            <small class="text-muted">Transferidos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Atividade Recente -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-success"></i>Atividade Hoje
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary fw-bold">{{ alertas.movimentacoes_hoje }}</h4>
+                            <small class="text-muted">Movimentações Hoje</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success fw-bold">{{ alertas.dossies_novos_mes }}</h4>
+                            <small class="text-muted">Novos Dossiês (Mês)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos e Visualizações -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold mb-3">
+            <i class="fas fa-chart-line me-2 text-warning"></i>Gráficos e Análises
+        </h4>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Evolução Mensal -->
+    <div class="col-lg-8 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Evolução de Dossiês (Últimos 6 Meses)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoEvolucao" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status dos Dossiês -->
+    <div class="col-lg-4 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-success"></i>Status dos Dossiês
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoStatus" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Movimentações dos Últimos 7 Dias -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-week me-2 text-info"></i>Movimentações dos Últimos 7 Dias
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoMovimentacoes" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabelas Informativas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="fw-bold mb-3">
+            <i class="fas fa-table me-2 text-secondary"></i>Atividade Recente
+        </h4>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Dossiês Recentes -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder me-2 text-primary"></i>Dossiês Recentes
+                </h5>
+                <a href="{{ url_for('dossie.listar') }}" class="btn btn-sm btn-outline-primary">
+                    Ver Todos
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if dossies_recentes %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dossie in dossies_recentes %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('dossie.ver', id=dossie.id_dossie) }}" class="text-decoration-none">
+                                        {{ dossie.nome_aluno }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if dossie.status == 'ativo' else 'warning' if dossie.status == 'pendente' else 'secondary' }}">
+                                        {{ dossie.status.title() }}
+                                    </span>
+                                </td>
+                                <td>{{ dossie.dt_cadastro.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Nenhum dossiê encontrado</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Movimentações Recentes -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-exchange-alt me-2 text-success"></i>Movimentações Recentes
+                </h5>
+                <a href="{{ url_for('movimentacao.listar') }}" class="btn btn-sm btn-outline-success">
+                    Ver Todas
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if movimentacoes_recentes %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Dossiê</th>
+                                <th>Tipo</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimentacoes_recentes %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('dossie.ver', id=mov.dossie.id_dossie) }}" class="text-decoration-none">
+                                        {{ mov.dossie.nome_aluno }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ mov.tipo_movimentacao.title() }}</span>
+                                </td>
+                                <td>{{ mov.data_movimentacao.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Nenhuma movimentação encontrada</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('dossie.novo') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Novo Dossiê
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('movimentacao.nova') }}" class="btn btn-success w-100">
+                            <i class="fas fa-exchange-alt me-2"></i>Nova Movimentação
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('relatorio.dashboard') }}" class="btn btn-info w-100">
+                            <i class="fas fa-chart-bar me-2"></i>Relatórios
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('configuracao.index') }}" class="btn btn-secondary w-100">
+                            <i class="fas fa-cog me-2"></i>Configurações
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -113,37 +401,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: 'Dossiês',
                     data: dadosEvolucao.map(function(item) { return item.count; }),
                     borderColor: '#1976D2',
-                    backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                    backgroundColor: 'rgba(25, 118, 210, 0.1)',
                     fill: true,
-                    tension: 0.4
+                    tension: 0.4,
+                    borderWidth: 3
                 }]
             },
             options: {
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.1)' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(0,0,0,0.1)' }
+                    }
+                }
             }
         });
     }
-    // Gráfico de tipos de movimentação
-    var ctxTipos = document.getElementById('graficoTipos');
-    if (ctxTipos) {
-        var dadosTipos = {{ graficos.tipos_movimentacao | tojson }};
-        new Chart(ctxTipos, {
-            type: 'doughnut',
-            data: {
-                labels: dadosTipos.map(function(item) { return item.tipo; }),
-                datasets: [{
-                    data: dadosTipos.map(function(item) { return item.count; }),
-                    backgroundColor: ['#1976D2', '#43A047', '#FFA000', '#8E24AA', '#F44336'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                plugins: { legend: { position: 'bottom' } },
-                cutout: '70%'
-            }
-        });
-    }
+
     // Gráfico de status dos dossiês
     var ctxStatus = document.getElementById('graficoStatus');
     if (ctxStatus) {
@@ -155,12 +442,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     data: dadosStatus.map(function(item) { return item.count; }),
                     backgroundColor: ['#43A047', '#FFA000', '#F44336', '#1976D2', '#BDBDBD'],
-                    borderWidth: 2
+                    borderWidth: 2,
+                    borderColor: '#fff'
                 }]
             },
             options: {
-                plugins: { legend: { position: 'bottom' } },
-                cutout: '70%'
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        labels: { padding: 20 }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    // Gráfico de movimentações dos últimos 7 dias
+    var ctxMovimentacoes = document.getElementById('graficoMovimentacoes');
+    if (ctxMovimentacoes) {
+        var dadosMovimentacoes = {{ graficos.movimentacoes_ultimos_7_dias | tojson }};
+        new Chart(ctxMovimentacoes, {
+            type: 'bar',
+            data: {
+                labels: dadosMovimentacoes.map(function(item) { return item.dia; }),
+                datasets: [{
+                    label: 'Movimentações',
+                    data: dadosMovimentacoes.map(function(item) { return item.count; }),
+                    backgroundColor: 'rgba(255, 152, 0, 0.8)',
+                    borderColor: '#FF9800',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.1)' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(0,0,0,0.1)' }
+                    }
+                }
             }
         });
     }

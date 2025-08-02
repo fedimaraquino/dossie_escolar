@@ -1,63 +1,35 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Backup{% endblock %}
-{% block header %}Gerenciar Backups{% endblock %}
+{% block title %}Backup B2{% endblock %}
+{% block header %}Gerenciar Backups B2{% endblock %}
 
 {% block content %}
-<!-- Criar Novo Backup -->
+<!-- Status do Sistema B2 -->
 <div class="row mb-4">
-    <div class="col-md-6">
+    <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-plus-circle me-2"></i>Criar Novo Backup</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">
-                    Crie um backup completo do banco de dados atual.
-                </p>
-                
-                <form method="POST" action="{{ url_for('admin.create_backup') }}">
-                    <div class="mb-3">
-                        <label class="form-label">Tipo de Backup:</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="backup_type" id="full" value="full" checked>
-                            <label class="form-check-label" for="full">
-                                <strong>Completo</strong> - Todos os dados
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="backup_type" id="structure" value="structure">
-                            <label class="form-check-label" for="structure">
-                                <strong>Estrutura</strong> - Apenas tabelas (sem dados)
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-download me-2"></i>Criar Backup
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-info-circle me-2"></i>Informações</h5>
+                <h5><i class="fas fa-cloud me-2"></i>Status do Sistema B2</h5>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-md-3">
                         <div class="text-center">
                             <i class="fas fa-database fa-2x text-primary mb-2"></i>
                             <h6>Banco Atual</h6>
                             <small class="text-muted">PostgreSQL</small>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-md-3">
                         <div class="text-center">
-                            <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                            <i class="fas fa-cloud fa-2x text-info mb-2"></i>
+                            <h6>Bucket B2</h6>
+                            <small class="text-muted">dossie-backups</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-clock fa-2x text-success mb-2"></i>
                             <h6>Último Backup</h6>
                             <small class="text-muted">
                                 {% if backup_files %}
@@ -68,31 +40,199 @@
                             </small>
                         </div>
                     </div>
-                </div>
-                
-                <hr>
-                
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Importante:</strong> Faça backups regulares para proteger seus dados.
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                            <h6>Retenção</h6>
+                            <small class="text-muted">30 dias</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Lista de Backups Existentes -->
+<!-- Backup Manual -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-hand-paper me-2"></i>Backup Manual</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Execute um backup manual e envie para o Backblaze B2.
+                </p>
+                
+                <form method="POST" action="{{ url_for('admin.backup_manual') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Backup:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="backup_type" id="simple" value="simple" checked>
+                            <label class="form-check-label" for="simple">
+                                <strong>Simples</strong> - Backup Python (Recomendado)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="backup_type" id="pg_dump" value="pg_dump">
+                            <label class="form-check-label" for="pg_dump">
+                                <strong>pg_dump</strong> - Backup PostgreSQL (Se disponível)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Upload para B2:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="upload_b2" id="upload_b2" checked>
+                            <label class="form-check-label" for="upload_b2">
+                                Enviar automaticamente para Backblaze B2
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success" id="btnBackupManual">
+                        <i class="fas fa-download me-2"></i>Executar Backup Manual
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-cog me-2"></i>Configuração B2</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.config_b2') }}">
+                    <div class="mb-3">
+                        <label for="b2_key_id" class="form-label">Application Key ID:</label>
+                        <input type="text" class="form-control" id="b2_key_id" name="b2_key_id" 
+                               value="{{ b2_config.key_id or '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="b2_key" class="form-label">Application Key:</label>
+                        <input type="password" class="form-control" id="b2_key" name="b2_key" 
+                               value="{{ b2_config.key or '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="b2_bucket" class="form-label">Bucket Name:</label>
+                        <input type="text" class="form-control" id="b2_bucket" name="b2_bucket" 
+                               value="{{ b2_config.bucket or 'dossie-backups' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="retention_days" class="form-label">Dias de Retenção:</label>
+                        <input type="number" class="form-control" id="retention_days" name="retention_days" 
+                               value="{{ b2_config.retention or 30 }}" min="1" max="365">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salvar Configuração
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Automático -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-robot me-2"></i>Backup Automático</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Status do Crontab:</h6>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {% if crontab_status.active %}
+                                <strong>Ativo</strong> - Backup automático configurado
+                                <br><small>Próxima execução: {{ crontab_status.next_run }}</small>
+                            {% else %}
+                                <strong>Inativo</strong> - Backup automático não configurado
+                            {% endif %}
+                        </div>
+                        
+                        <form method="POST" action="{{ url_for('admin.backup_auto_config') }}">
+                            <div class="mb-3">
+                                <label for="schedule" class="form-label">Agendamento:</label>
+                                <select class="form-control" id="schedule" name="schedule">
+                                    <option value="daily_02:00" {% if crontab_status.schedule == 'daily_02:00' %}selected{% endif %}>
+                                        Diário às 02:00
+                                    </option>
+                                    <option value="daily_03:00" {% if crontab_status.schedule == 'daily_03:00' %}selected{% endif %}>
+                                        Diário às 03:00
+                                    </option>
+                                    <option value="weekly_sunday" {% if crontab_status.schedule == 'weekly_sunday' %}selected{% endif %}>
+                                        Semanal (Domingo às 02:00)
+                                    </option>
+                                    <option value="custom" {% if crontab_status.schedule == 'custom' %}selected{% endif %}>
+                                        Personalizado
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3" id="custom_schedule" style="display: none;">
+                                <label for="custom_cron" class="form-label">Expressão Cron:</label>
+                                <input type="text" class="form-control" id="custom_cron" name="custom_cron" 
+                                       placeholder="0 2 * * * (diário às 02:00)">
+                                <small class="text-muted">Formato: minuto hora dia mês dia_semana</small>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="action" value="enable" class="btn btn-success">
+                                    <i class="fas fa-play me-2"></i>Ativar Automático
+                                </button>
+                                <button type="submit" name="action" value="disable" class="btn btn-warning">
+                                    <i class="fas fa-pause me-2"></i>Desativar
+                                </button>
+                                <button type="button" class="btn btn-info" onclick="testBackup()">
+                                    <i class="fas fa-vial me-2"></i>Testar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Logs Recentes:</h6>
+                        <div class="bg-dark text-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                            <pre id="logs" class="mb-0">{{ recent_logs }}</pre>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm mt-2" onclick="refreshLogs()">
+                            <i class="fas fa-sync me-2"></i>Atualizar Logs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Backups -->
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="fas fa-archive me-2"></i>Backups Existentes
+                    <i class="fas fa-archive me-2"></i>Backups Disponíveis
                     <span class="badge bg-secondary ms-2">{{ backup_files|length }}</span>
                 </h5>
-                <button class="btn btn-outline-danger btn-sm" onclick="cleanOldBackups()">
-                    <i class="fas fa-trash me-2"></i>Limpar Antigos
-                </button>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm" onclick="refreshBackups()">
+                        <i class="fas fa-sync me-2"></i>Atualizar
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="cleanOldBackups()">
+                        <i class="fas fa-trash me-2"></i>Limpar Antigos
+                    </button>
+                </div>
             </div>
             
             <div class="card-body p-0">
@@ -104,8 +244,9 @@
                                 <th>Nome do Arquivo</th>
                                 <th>Tamanho</th>
                                 <th>Data de Criação</th>
-                                <th>Tipo</th>
-                                <th width="150">Ações</th>
+                                <th>Local</th>
+                                <th>Status B2</th>
+                                <th width="200">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,12 +263,13 @@
                                 </td>
                                 <td>{{ backup.created.strftime('%d/%m/%Y %H:%M') }}</td>
                                 <td>
-                                    {% if 'postgresql' in backup.name %}
-                                        <span class="badge bg-info">PostgreSQL</span>
-                                    {% elif 'sqlite' in backup.name %}
-                                        <span class="badge bg-success">SQLite</span>
+                                    <span class="badge bg-success">Local</span>
+                                </td>
+                                <td>
+                                    {% if backup.b2_uploaded %}
+                                        <span class="badge bg-info">B2</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Desconhecido</span>
+                                        <span class="badge bg-warning">Local</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -135,6 +277,11 @@
                                         <a href="/download/{{ backup.name }}" class="btn btn-outline-primary" title="Download">
                                             <i class="fas fa-download"></i>
                                         </a>
+                                        {% if not backup.b2_uploaded %}
+                                        <button class="btn btn-outline-info" onclick="uploadToB2('{{ backup.name }}')" title="Upload B2">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </button>
+                                        {% endif %}
                                         <button class="btn btn-outline-danger" onclick="deleteBackup('{{ backup.name }}')" title="Excluir">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -149,7 +296,7 @@
                 <div class="text-center py-5">
                     <i class="fas fa-archive fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nenhum backup encontrado</h5>
-                    <p class="text-muted">Crie seu primeiro backup usando o formulário acima.</p>
+                    <p class="text-muted">Execute um backup manual para começar.</p>
                 </div>
                 {% endif %}
             </div>
@@ -157,29 +304,54 @@
     </div>
 </div>
 
-<!-- Comandos de Backup Manual -->
+<!-- Restauração -->
 <div class="row mt-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-terminal me-2"></i>Comandos Manuais</h5>
+                <h5><i class="fas fa-undo me-2"></i>Restauração</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted">Use estes comandos para fazer backup via linha de comando:</p>
-                
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>PostgreSQL:</h6>
-                        <div class="bg-dark text-light p-3 rounded">
-                            <code>python manage.py backup-db</code>
-                        </div>
+                        <h6>Restaurar do B2:</h6>
+                        <form method="POST" action="{{ url_for('admin.restore_from_b2') }}">
+                            <div class="mb-3">
+                                <label for="b2_file" class="form-label">Selecionar Backup:</label>
+                                <select class="form-control" id="b2_file" name="b2_file" required>
+                                    <option value="">Selecione um backup...</option>
+                                    {% for b2_file in b2_files %}
+                                    <option value="{{ b2_file.name }}">
+                                        {{ b2_file.name }} ({{ b2_file.date }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-undo me-2"></i>Restaurar do B2
+                            </button>
+                        </form>
                     </div>
+                    
                     <div class="col-md-6">
-                        <h6>Backup Completo:</h6>
-                        <div class="bg-dark text-light p-3 rounded">
-                            <code>pg_dump postgresql://dossie:fep09151@localhost/dossie_escola > backup.sql</code>
-                        </div>
+                        <h6>Restaurar Local:</h6>
+                        <form method="POST" action="{{ url_for('admin.restore_local') }}" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="local_file" class="form-label">Arquivo de Backup:</label>
+                                <input type="file" class="form-control" id="local_file" name="local_file" 
+                                       accept=".sql" required>
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-upload me-2"></i>Restaurar Local
+                            </button>
+                        </form>
                     </div>
+                </div>
+                
+                <div class="alert alert-danger mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atenção:</strong> A restauração irá substituir todos os dados atuais. 
+                    Faça um backup antes de restaurar.
                 </div>
             </div>
         </div>
@@ -189,6 +361,60 @@
 
 {% block extra_js %}
 <script>
+// Mostrar/ocultar campo personalizado
+document.getElementById('schedule').addEventListener('change', function() {
+    const customDiv = document.getElementById('custom_schedule');
+    if (this.value === 'custom') {
+        customDiv.style.display = 'block';
+    } else {
+        customDiv.style.display = 'none';
+    }
+});
+
+// Backup manual
+document.querySelector('form[action*="backup_manual"]').addEventListener('submit', function(e) {
+    const btn = document.getElementById('btnBackupManual');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Executando...';
+});
+
+// Funções de backup
+function testBackup() {
+    if (confirm('Deseja testar o backup automático?')) {
+        fetch('/admin/backup/test', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            showAlert(data.success ? 'success' : 'error', data.message);
+            if (data.success) {
+                setTimeout(() => location.reload(), 2000);
+            }
+        })
+        .catch(error => {
+            showAlert('error', 'Erro ao testar backup: ' + error.message);
+        });
+    }
+}
+
+function uploadToB2(filename) {
+    if (confirm('Deseja enviar "' + filename + '" para o B2?')) {
+        fetch('/admin/backup/upload-b2/' + filename, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            showAlert(data.success ? 'success' : 'error', data.message);
+            if (data.success) {
+                setTimeout(() => location.reload(), 2000);
+            }
+        })
+        .catch(error => {
+            showAlert('error', 'Erro ao fazer upload: ' + error.message);
+        });
+    }
+}
+
 function deleteBackup(filename) {
     if (confirm('Tem certeza que deseja excluir o backup "' + filename + '"?')) {
         fetch('/admin/backup/delete/' + filename, {
@@ -196,13 +422,30 @@ function deleteBackup(filename) {
         })
         .then(response => response.json())
         .then(data => {
+            showAlert(data.success ? 'success' : 'error', data.message);
             if (data.success) {
-                location.reload();
-            } else {
-                alert('Erro ao excluir backup: ' + data.error);
+                setTimeout(() => location.reload(), 1000);
             }
+        })
+        .catch(error => {
+            showAlert('error', 'Erro ao excluir backup: ' + error.message);
         });
     }
+}
+
+function refreshBackups() {
+    location.reload();
+}
+
+function refreshLogs() {
+    fetch('/admin/backup/logs')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('logs').textContent = data.logs;
+    })
+    .catch(error => {
+        showAlert('error', 'Erro ao atualizar logs: ' + error.message);
+    });
 }
 
 function cleanOldBackups() {
@@ -212,10 +455,33 @@ function cleanOldBackups() {
         })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
-            location.reload();
+            showAlert(data.success ? 'success' : 'error', data.message);
+            if (data.success) {
+                setTimeout(() => location.reload(), 2000);
+            }
+        })
+        .catch(error => {
+            showAlert('error', 'Erro ao limpar backups: ' + error.message);
         });
     }
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
 }
 </script>
 {% endblock %}

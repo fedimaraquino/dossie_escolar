@@ -114,8 +114,8 @@ def create_app():
         if 'user_id' not in session:
             return redirect(url_for('auth.login'))
 
-        from models import Usuario, Escola, Dossie, Movimentacao
-        usuario = Usuario.query.get(session['user_id'])
+        from models import Usuario, Escola, Dossie, Movimentacao, Solicitante
+        usuario = db.session.get(Usuario, session['user_id'])
         if not usuario:
             session.clear()
             flash('Sessão inválida. Faça login novamente.', 'error')
@@ -123,22 +123,31 @@ def create_app():
 
         hoje = datetime.now()
         inicio_mes = hoje.replace(day=1)
+        inicio_ano = hoje.replace(month=1, day=1)
         escola_atual_id = session.get('escola_atual_id') or usuario.escola_id
-        escola_atual = Escola.query.get(escola_atual_id)
+        escola_atual = db.session.get(Escola, escola_atual_id)
         escola_nome = escola_atual.nome if escola_atual else 'Escola Atual'
 
-        # Indicadores principais
+        # Indicadores principais expandidos
         stats = {
             'total_dossies': Dossie.query.filter_by(id_escola=escola_atual_id).count(),
             'dossies_ativos': Dossie.query.filter_by(id_escola=escola_atual_id, status='ativo').count(),
             'dossies_pendentes': Dossie.query.filter_by(id_escola=escola_atual_id, status='pendente').count(),
+            'dossies_arquivados': Dossie.query.filter_by(id_escola=escola_atual_id, status='arquivado').count(),
+            'dossies_transferidos': Dossie.query.filter_by(id_escola=escola_atual_id, status='transferido').count(),
             'movimentacoes_mes': Movimentacao.query.join(Dossie).filter(
                 Dossie.id_escola == escola_atual_id,
                 Movimentacao.data_movimentacao >= inicio_mes
-            ).count()
+            ).count(),
+            'movimentacoes_ano': Movimentacao.query.join(Dossie).filter(
+                Dossie.id_escola == escola_atual_id,
+                Movimentacao.data_movimentacao >= inicio_ano
+            ).count(),
+            'total_solicitantes': Solicitante.query.filter_by(escola_id=escola_atual_id).count(),
+            'usuarios_ativos': Usuario.query.filter_by(escola_id=escola_atual_id, situacao='ativo').count()
         }
 
-        # Alertas
+        # Alertas e notificações importantes
         alertas = {
             'dossies_pendentes': stats['dossies_pendentes'],
             'movimentacoes_atrasadas': Movimentacao.query.join(Dossie).filter(
@@ -146,11 +155,21 @@ def create_app():
                 Movimentacao.status == 'pendente',
                 Movimentacao.data_prevista_devolucao != None,
                 Movimentacao.data_prevista_devolucao < hoje
+            ).count(),
+            'movimentacoes_hoje': Movimentacao.query.join(Dossie).filter(
+                Dossie.id_escola == escola_atual_id,
+                Movimentacao.data_movimentacao >= hoje.replace(hour=0, minute=0, second=0, microsecond=0)
+            ).count(),
+            'dossies_novos_mes': Dossie.query.filter(
+                Dossie.id_escola == escola_atual_id,
+                Dossie.dt_cadastro >= inicio_mes
             ).count()
         }
 
-        # Gráficos
-        graficos = {'evolucao_mensal': [], 'tipos_movimentacao': [], 'status_dossies': []}
+        # Dados para gráficos melhorados
+        graficos = {'evolucao_mensal': [], 'tipos_movimentacao': [], 'status_dossies': [], 'movimentacoes_ultimos_7_dias': []}
+        
+        # Evolução mensal (últimos 6 meses)
         for i in range(5, -1, -1):
             mes_inicio = (hoje.replace(day=1) - timedelta(days=i*30)).replace(day=1)
             mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1) - timedelta(days=1)
@@ -163,6 +182,8 @@ def create_app():
                 'mes': mes_inicio.strftime('%b/%Y'),
                 'count': count
             })
+
+        # Tipos de movimentação
         tipos_mov = db.session.query(
             Movimentacao.tipo_movimentacao,
             func.count(Movimentacao.id)
@@ -170,6 +191,8 @@ def create_app():
         graficos['tipos_movimentacao'] = [
             {'tipo': tipo or 'Outro', 'count': count} for tipo, count in tipos_mov
         ]
+
+        # Status dos dossiês
         status_counts = db.session.query(
             Dossie.status,
             func.count(Dossie.id_dossie)
@@ -178,13 +201,34 @@ def create_app():
             {'status': status.title(), 'count': count} for status, count in status_counts
         ]
 
+        # Movimentações dos últimos 7 dias
+        for i in range(6, -1, -1):
+            data = hoje - timedelta(days=i)
+            count = Movimentacao.query.join(Dossie).filter(
+                Dossie.id_escola == escola_atual_id,
+                Movimentacao.data_movimentacao >= data.replace(hour=0, minute=0, second=0, microsecond=0),
+                Movimentacao.data_movimentacao < data.replace(hour=23, minute=59, second=59, microsecond=999999)
+            ).count()
+            graficos['movimentacoes_ultimos_7_dias'].append({
+                'dia': data.strftime('%d/%m'),
+                'count': count
+            })
+
+        # Dados para tabelas informativas
+        dossies_recentes = Dossie.query.filter_by(id_escola=escola_atual_id).order_by(Dossie.dt_cadastro.desc()).limit(5).all()
+        movimentacoes_recentes = Movimentacao.query.join(Dossie).filter(
+            Dossie.id_escola == escola_atual_id
+        ).order_by(Movimentacao.data_movimentacao.desc()).limit(5).all()
+
         return render_template('dashboard.html',
             usuario=usuario,
             stats=stats,
             alertas=alertas,
             graficos=graficos,
             escola_nome=escola_nome,
-            current_date=datetime.now()
+            current_date=datetime.now(),
+            dossies_recentes=dossies_recentes,
+            movimentacoes_recentes=movimentacoes_recentes
         )
 
     @app.route('/dashboard/avancado')
@@ -195,7 +239,7 @@ def create_app():
 
         from models import Usuario, Escola, Dossie, Movimentacao, Perfil
 
-        usuario = Usuario.query.get(session['user_id'])
+        usuario = db.session.get(Usuario, session['user_id'])
         if not usuario:
             session.clear()
             flash('Sessão inválida. Faça login novamente.', 'error')

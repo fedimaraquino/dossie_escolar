@@ -3,7 +3,7 @@ Controller para Relatórios - Integração com app.py
 """
 
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
-from models import Usuario, Dossie, Movimentacao, db
+from models import Usuario, Dossie, Movimentacao, Solicitante, db
 from datetime import datetime, timedelta
 
 # Criar blueprint
@@ -21,12 +21,19 @@ def dashboard():
         flash('Sessão inválida. Faça login novamente.', 'error')
         return redirect(url_for('auth.login'))
 
-    # Estatísticas para o dashboard
+    # Obter escola atual (pode ser da sessão ou do usuário)
+    escola_atual_id = session.get('escola_atual_id') or usuario.escola_id
+    
+    # Estatísticas para o dashboard - filtrar por escola atual
     stats = {
-        'total_dossies': Dossie.query.count(),
-        'total_movimentacoes': Movimentacao.query.count(),
-        'movimentacoes_pendentes': Movimentacao.query.filter_by(status='pendente').count(),
+        'total_dossies': Dossie.query.filter_by(id_escola=escola_atual_id).count(),
+        'total_movimentacoes': Movimentacao.query.join(Dossie).filter(Dossie.id_escola == escola_atual_id).count(),
+        'movimentacoes_pendentes': Movimentacao.query.join(Dossie).filter(
+            Dossie.id_escola == escola_atual_id,
+            Movimentacao.status == 'pendente'
+        ).count(),
         'dossies_mes_atual': Dossie.query.filter(
+            Dossie.id_escola == escola_atual_id,
             Dossie.dt_cadastro >= datetime.now().replace(day=1)
         ).count()
     }
@@ -45,8 +52,11 @@ def solicitante():
         flash('Sessão inválida. Faça login novamente.', 'error')
         return redirect(url_for('auth.login'))
 
-    # Dados para o relatório
-    solicitantes = Usuario.query.filter_by(tipo='solicitante').all()
+    # Obter escola atual (pode ser da sessão ou do usuário)
+    escola_atual_id = session.get('escola_atual_id') or usuario.escola_id
+    
+    # Dados para o relatório - filtrar apenas solicitantes da escola atual
+    solicitantes = Solicitante.query.filter_by(escola_id=escola_atual_id).all()
     return render_template('relatorios/solicitante.html', solicitantes=solicitantes)
 
 @relatorio_bp.route('/nao_devolvidos')
@@ -61,6 +71,12 @@ def nao_devolvidos():
         flash('Sessão inválida. Faça login novamente.', 'error')
         return redirect(url_for('auth.login'))
 
-    # Dados para o relatório
-    movimentacoes = Movimentacao.query.filter_by(status='emprestado').all()
+    # Obter escola atual (pode ser da sessão ou do usuário)
+    escola_atual_id = session.get('escola_atual_id') or usuario.escola_id
+    
+    # Dados para o relatório - filtrar apenas movimentações da escola atual
+    movimentacoes = Movimentacao.query.join(Dossie).filter(
+        Dossie.id_escola == escola_atual_id,
+        Movimentacao.status == 'emprestado'
+    ).all()
     return render_template('relatorios/nao_devolvidos.html', movimentacoes=movimentacoes) 
