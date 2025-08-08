@@ -398,22 +398,21 @@ def backup():
         'retention': int(os.getenv('BACKUP_RETENTION_DAYS', '30'))
     }
     
-    # Status do crontab
-    crontab_status = {
-        'active': False,
-        'schedule': 'daily_02:00',
-        'next_run': 'Não configurado'
-    }
-    
-    # Verificar se crontab está ativo
+    # Status do backup automático
+    auto_backup_status = "Desconhecido"
     try:
-        result = subprocess.run(['schtasks', '/query', '/tn', 'DossieBackupB2'], 
-                              capture_output=True, text=True)
+        result = subprocess.run(['python', 'check_backup_status.py'],
+                              capture_output=True, text=True, cwd='.')
         if result.returncode == 0:
-            crontab_status['active'] = True
-            crontab_status['next_run'] = 'Próxima execução automática'
+            auto_backup_status = result.stdout.strip()
     except:
-        pass
+        auto_backup_status = "Erro ao verificar"
+    
+    crontab_status = {
+        'active': auto_backup_status == "ATIVO",
+        'schedule': 'daily_02:00',
+        'next_run': 'Próxima execução automática' if auto_backup_status == "ATIVO" else 'Não configurado'
+    }
     
     # Logs recentes
     recent_logs = "Logs do sistema de backup B2..."
@@ -512,26 +511,42 @@ def backup_auto_config():
     """Configurar backup automático"""
     try:
         import subprocess
+        import platform
         
         action = request.form.get('action')
         schedule = request.form.get('schedule')
         
+        # Detectar sistema operacional
+        is_windows = platform.system().lower() == 'windows'
+        
         if action == 'enable':
-            # Configurar crontab
+            # Configurar agendamento
             if schedule == 'daily_02:00':
                 cron_expr = '0 2 * * *'
+                time_str = '02:00'
             elif schedule == 'daily_03:00':
                 cron_expr = '0 3 * * *'
+                time_str = '03:00'
             elif schedule == 'weekly_sunday':
                 cron_expr = '0 2 * * 0'
+                time_str = '02:00'
             else:
                 cron_expr = request.form.get('custom_cron', '0 2 * * *')
+                time_str = '02:00'
             
-            # Criar tarefa agendada no Windows
             script_path = os.path.abspath('backup_b2_complete.py')
             python_path = sys.executable
             
-            cmd = f'schtasks /create /tn "DossieBackupB2" /tr "{python_path} {script_path}" /sc daily /st 02:00 /f'
+            if is_windows:
+                # Windows Task Scheduler
+                cmd = f'schtasks /create /tn "DossieBackupB2" /tr "{python_path} {script_path}" /sc daily /st {time_str} /f'
+            else:
+                # Linux/Mac - Crontab
+                # Primeiro, criar o comando crontab
+                cron_line = f'{cron_expr} cd {os.getcwd()} && {python_path} {script_path} >> backup_b2_complete.log 2>&1'
+                
+                # Adicionar ao crontab
+                cmd = f'(crontab -l 2>/dev/null; echo "{cron_line}") | crontab -'
             
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             
@@ -541,8 +556,13 @@ def backup_auto_config():
                 flash(f'Erro ao ativar backup automático: {result.stderr}', 'error')
                 
         elif action == 'disable':
-            # Desativar crontab
-            cmd = 'schtasks /delete /tn DossieBackupB2 /f'
+            # Desativar agendamento
+            if is_windows:
+                cmd = 'schtasks /delete /tn DossieBackupB2 /f'
+            else:
+                # Remover do crontab
+                cmd = 'crontab -l | grep -v "backup_b2_complete.py" | crontab -'
+            
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             
             if result.returncode == 0:
