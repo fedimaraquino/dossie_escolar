@@ -6,9 +6,7 @@ ENV CACHE_BUSTER=202501270000
 WORKDIR /app
 
 # Instalar dependências do sistema
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
